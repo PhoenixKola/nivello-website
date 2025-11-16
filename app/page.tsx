@@ -1,8 +1,10 @@
 import Link from 'next/link'
+import TestimonialsSection from '@/components/TestimonialsSection'
+import FaqSection from '@/components/FaqSection'
 
 export default function Home() {
   return (
-    <main className="bg-gradient-to-b from-slate-950 via-slate-950 to-slate-950">
+    <main className="bg-linear-to-b from-slate-950 via-slate-950 to-slate-950">
       <section className="border-b border-slate-900">
         <div className="mx-auto grid max-w-6xl gap-12 px-4 pb-16 pt-12 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] md:pb-24 md:pt-16">
           <div>
@@ -340,6 +342,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+      <TestimonialsSection />
+      <FaqSection />
     </main>
   )
 }

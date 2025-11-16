@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 export default function BottomCta() {
   return (
-    <section className="border-t border-slate-900 bg-gradient-to-r from-emerald-500/10 via-slate-950 to-sky-500/10">
+    <section className="border-t border-slate-900 bg-linear-to-r from-emerald-500/10 via-slate-950 to-sky-500/10">
       <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
         <div className="grid gap-8 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] md:items-center">
           <div>

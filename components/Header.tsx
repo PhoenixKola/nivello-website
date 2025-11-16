@@ -7,6 +7,7 @@ const navItems = [
   { href: '/', label: 'Home' },
   { href: '/services', label: 'Services' },
   { href: '/work', label: 'Our Work' },
+  { href: '/process', label: 'How we work' },
   { href: '/contact', label: 'Contact' }
 ]
 
@@ -21,7 +22,7 @@ export default function Header() {
             <span className="text-sm font-semibold text-emerald-400">NV</span>
           </div>
           <div className="leading-tight">
-            <p className="text-sm font-semibold tracking-wide">Nivello Studio</p>
+            <p className="text-sm font-semibold tracking-wide">Nivello</p>
             <p className="text-xs text-slate-400">Marketing · Design · Development</p>
           </div>
         </Link>
