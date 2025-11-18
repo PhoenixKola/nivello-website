@@ -6,7 +6,7 @@ const FORM_ENDPOINT = 'https://formspree.io/f/xyzlpdkl'
 
 type Status = 'idle' | 'submitting' | 'success' | 'error'
 
-export default function ContactPage() {
+export default function ContactPageIt() {
   const [status, setStatus] = useState<Status>('idle')
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -17,6 +17,7 @@ export default function ContactPage() {
 
     const form = event.currentTarget
     const formData = new FormData(form)
+    formData.append('language', 'it')
 
     try {
       const response = await fetch(FORM_ENDPOINT, {
@@ -43,14 +44,14 @@ export default function ContactPage() {
       <section className="border-b border-slate-900">
         <div className="mx-auto max-w-6xl px-4 pb-10 pt-10 md:pb-14 md:pt-14">
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
-            Contact
+            Contatti
           </p>
           <h1 className="text-2xl font-semibold text-slate-50 md:text-3xl">
-            Tell us about your project.
+            Raccontaci del tuo progetto.
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-slate-300">
-            Share a bit about your brand, your goals, and your timing. We
-            usually reply within one business day.
+            Parlaci del tuo brand, dei tuoi obiettivi e delle tempistiche.
+            Di solito rispondiamo entro un giorno lavorativo.
           </p>
         </div>
       </section>
@@ -65,14 +66,14 @@ export default function ContactPage() {
                     htmlFor="name"
                     className="mb-1 block text-xs font-medium text-slate-200"
                   >
-                    Name
+                    Nome
                   </label>
                   <input
                     id="name"
                     name="name"
                     required
                     className="w-full rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-50 outline-none ring-emerald-500/40 placeholder:text-slate-500 focus:border-emerald-500/70 focus:ring-2"
-                    placeholder="Your full name"
+                    placeholder="Il tuo nome completo"
                   />
                 </div>
                 <div>
@@ -88,7 +89,7 @@ export default function ContactPage() {
                     type="email"
                     required
                     className="w-full rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-50 outline-none ring-emerald-500/40 placeholder:text-slate-500 focus:border-emerald-500/70 focus:ring-2"
-                    placeholder="you@company.com"
+                    placeholder="tu@azienda.it"
                   />
                 </div>
               </div>
@@ -98,7 +99,7 @@ export default function ContactPage() {
                   htmlFor="company"
                   className="mb-1 block text-xs font-medium text-slate-200"
                 >
-                  Company
+                  Azienda
                 </label>
                 <input
                   id="company"
@@ -114,7 +115,7 @@ export default function ContactPage() {
                     htmlFor="budget"
                     className="mb-1 block text-xs font-medium text-slate-200"
                   >
-                    Approx. budget
+                    Budget indicativo
                   </label>
                   <select
                     id="budget"
@@ -123,12 +124,12 @@ export default function ContactPage() {
                     defaultValue=""
                   >
                     <option value="" disabled>
-                      Select a range
+                      Seleziona una fascia
                     </option>
-                    <option value="under-3k">Under €3,000</option>
-                    <option value="3-7k">€3,000 – €7,000</option>
-                    <option value="7-15k">€7,000 – €15,000</option>
-                    <option value="15k-plus">€15,000+</option>
+                    <option value="under-3k">Meno di 3.000 €</option>
+                    <option value="3-7k">3.000 – 7.000 €</option>
+                    <option value="7-15k">7.000 – 15.000 €</option>
+                    <option value="15k-plus">Oltre 15.000 €</option>
                   </select>
                 </div>
                 <div>
@@ -136,7 +137,7 @@ export default function ContactPage() {
                     htmlFor="timeline"
                     className="mb-1 block text-xs font-medium text-slate-200"
                   >
-                    Ideal timeline
+                    Tempistiche ideali
                   </label>
                   <select
                     id="timeline"
@@ -145,12 +146,12 @@ export default function ContactPage() {
                     defaultValue=""
                   >
                     <option value="" disabled>
-                      Choose an option
+                      Scegli un&apos;opzione
                     </option>
-                    <option value="asap">As soon as possible</option>
-                    <option value="1-2-months">Within 1–2 months</option>
-                    <option value="3-plus-months">In 3+ months</option>
-                    <option value="not-sure">Not sure yet</option>
+                    <option value="asap">Il prima possibile</option>
+                    <option value="1-2-months">Entro 1–2 mesi</option>
+                    <option value="3-plus-months">Tra 3+ mesi</option>
+                    <option value="not-sure">Non sono sicuro</option>
                   </select>
                 </div>
               </div>
@@ -160,7 +161,7 @@ export default function ContactPage() {
                   htmlFor="message"
                   className="mb-1 block text-xs font-medium text-slate-200"
                 >
-                  Tell us about your project
+                  Raccontaci il progetto
                 </label>
                 <textarea
                   id="message"
@@ -168,7 +169,7 @@ export default function ContactPage() {
                   required
                   rows={5}
                   className="w-full rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2 text-sm text-slate-50 outline-none ring-emerald-500/40 placeholder:text-slate-500 focus:border-emerald-500/70 focus:ring-2"
-                  placeholder="Share what you do, what you need, and any links we should see."
+                  placeholder="Descrivi cosa fai, cosa ti serve e inserisci eventuali link utili."
                 />
               </div>
 
@@ -176,30 +177,30 @@ export default function ContactPage() {
                 <button
                   type="submit"
                   disabled={status === 'submitting' || status === 'success'}
-                  className="inline-flex items-center justify-center w-44 rounded-full bg-slate-50 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-sm shadow-emerald-500/30 hover:bg-slate-200 disabled:cursor-default disabled:bg-slate-300"
+                  className="inline-flex w-44 items-center justify-center rounded-full bg-slate-50 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-sm shadow-emerald-500/30 hover:bg-slate-200 disabled:cursor-default disabled:bg-slate-300"
                 >
                   {status === 'submitting'
-                    ? 'Sending...'
+                    ? 'Invio in corso...'
                     : status === 'success'
-                    ? 'Message sent'
-                    : 'Send message'}
+                    ? 'Messaggio inviato'
+                    : 'Invia il messaggio'}
                 </button>
                 <p className="text-xs text-slate-400">
-                  By sending this form you agree we can use your details to
-                  contact you about this project.
+                  Inviando questo form ci autorizzi a contattarti in merito al
+                  progetto.
                 </p>
               </div>
 
               {status === 'success' && (
                 <p className="mt-3 text-xs text-emerald-300">
-                  Thank you for your message. We&apos;ll get back to you shortly.
+                  Grazie per il messaggio. Ti risponderemo al più presto.
                 </p>
               )}
 
               {status === 'error' && (
                 <p className="mt-3 text-xs text-rose-300">
-                  Something went wrong while sending your message. Please try
-                  again in a moment or email us directly at{' '}
+                  Qualcosa è andato storto durante l&apos;invio. Riprova tra
+                  poco oppure scrivici direttamente a{' '}
                   <a
                     href="mailto:hello@nivello.studio"
                     className="underline"
@@ -215,26 +216,26 @@ export default function ContactPage() {
           <aside className="space-y-4 rounded-2xl border border-slate-800 bg-slate-950/90 p-6 text-sm text-slate-300">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                Preferred collaboration
+                Collaborazioni ideali
               </p>
               <p className="mt-2">
-                We enjoy long-term collaborations with brands, agencies, and
-                startups that value clear communication and clean design.
+                Lavoriamo volentieri con brand, agenzie e startup che apprezzano
+                una comunicazione chiara e un design curato.
               </p>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                Typical projects
+                Progetti tipici
               </p>
               <ul className="mt-2 space-y-1 text-sm text-slate-300">
-                <li>New marketing site for a product or service</li>
-                <li>Full redesign of an outdated website</li>
-                <li>Brand and UX refresh for a SaaS or platform</li>
+                <li>Nuovo sito marketing per un prodotto o servizio</li>
+                <li>Restyling completo di un sito esistente</li>
+                <li>Refresh di brand e UX per SaaS o piattaforme</li>
               </ul>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                Direct contact
+                Contatto diretto
               </p>
               <p className="mt-2">
                 Email:{' '}
@@ -246,7 +247,8 @@ export default function ContactPage() {
                 </a>
               </p>
               <p className="mt-1 text-xs text-slate-400">
-                Based in Italy, comfortable working across European time zones.
+                Siamo in Italia e lavoriamo senza problemi con fusi orari
+                europei.
               </p>
             </div>
           </aside>

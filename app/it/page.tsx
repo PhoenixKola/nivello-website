@@ -1,8 +1,8 @@
 import Link from 'next/link'
-import TestimonialsSection from '@/components/TestimonialsSection'
-import FaqSection from '@/components/FaqSection'
+import TestimonialsSectionIt from '@/components/TestimonialsSectionIt'
+import FaqSectionIt from '@/components/FaqSectionIt'
 
-export default function Home() {
+export default function HomeIt() {
   return (
     <main className="bg-slate-950">
       {/* HERO – gradient like BottomCta */}
@@ -10,28 +10,28 @@ export default function Home() {
         <div className="mx-auto grid max-w-6xl gap-12 px-4 pb-16 pt-12 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] md:pb-24 md:pt-16">
           <div>
             <p className="mb-3 inline-flex rounded-full border border-emerald-500/40 bg-emerald-500/5 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-emerald-300">
-              Italian digital studio
+              Studio digitale italiano
             </p>
             <h1 className="mb-4 text-3xl font-semibold tracking-tight text-slate-50 sm:text-4xl md:text-5xl">
-              Marketing, design and custom software for ambitious brands.
+              Marketing, design e software su misura per brand ambiziosi.
             </h1>
             <p className="mb-6 max-w-xl text-sm text-slate-200 sm:text-base">
-              Nivello Studio blends strategy, aesthetics, and technology to help
-              Italian companies look sharp, communicate clearly, and sell better.
-              From landing pages to full digital ecosystems.
+              Nivello Studio unisce strategia, estetica e tecnologia per aiutare le
+              aziende italiane a presentarsi meglio, comunicare in modo chiaro e
+              vendere di più. Dai landing site ai veri ecosistemi digitali.
             </p>
             <div className="mb-8 flex flex-wrap gap-3">
               <Link
-                href="/work"
+                href="/it/work"
                 className="rounded-full bg-slate-50 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-sm shadow-emerald-500/30 hover:bg-slate-200"
               >
-                View our work
+                Vedi i lavori
               </Link>
               <Link
-                href="/contact"
+                href="/it/contact"
                 className="rounded-full border border-slate-700 bg-slate-900/50 px-5 py-2.5 text-sm font-medium text-slate-100 hover:border-emerald-500/60 hover:bg-slate-900/80"
               >
-                Book a call
+                Prenota una call
               </Link>
             </div>
             <div className="grid gap-4 text-xs text-slate-400 sm:grid-cols-3">
@@ -40,7 +40,7 @@ export default function Home() {
                   Marketing
                 </p>
                 <p className="mt-1 text-sm text-slate-100">
-                  Funnels, campaigns and automation adapted to the Italian market.
+                  Funnel, campagne e automazioni pensati per il mercato italiano.
                 </p>
               </div>
               <div className="rounded-xl border border-sky-500/40 bg-linear-to-b from-sky-500/15 via-slate-950 to-slate-950 p-4">
@@ -48,7 +48,8 @@ export default function Home() {
                   Design
                 </p>
                 <p className="mt-1 text-sm text-slate-100">
-                  Brand-aligned visuals and clean interfaces that feel premium.
+                  Visual coerenti con il brand e interfacce pulite che trasmettono
+                  qualità.
                 </p>
               </div>
               <div className="rounded-xl border border-fuchsia-500/40 bg-linear-to-b from-fuchsia-500/15 via-slate-950 to-slate-950 p-4">
@@ -56,7 +57,7 @@ export default function Home() {
                   Development
                 </p>
                 <p className="mt-1 text-sm text-slate-100">
-                  Fast, responsive websites built with modern React and Next.js.
+                  Siti veloci e responsive sviluppati con React e Next.js.
                 </p>
               </div>
             </div>
@@ -69,24 +70,24 @@ export default function Home() {
               <div className="space-y-4">
                 <div className="rounded-2xl border border-slate-700/80 bg-slate-950/95 p-4 shadow-lg shadow-emerald-500/30">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                    Typical project
+                    Progetto tipo
                   </p>
                   <p className="mt-2 text-sm font-semibold text-slate-50">
-                    Launch-ready marketing site in 4–6 weeks.
+                    Sito marketing pronto al lancio in 4–6 settimane.
                   </p>
                   <p className="mt-2 text-xs text-slate-400">
-                    Ideal for SaaS, agencies, and service brands that need a modern
-                    presence without a huge internal team.
+                    Ideale per SaaS, agenzie e aziende di servizi che vogliono una
+                    presenza moderna senza costruire un grande team interno.
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-[0.7rem] font-medium text-emerald-300">
-                      Strategy &amp; positioning
+                      Strategia e posizionamento
                     </span>
                     <span className="rounded-full bg-sky-500/10 px-3 py-1 text-[0.7rem] font-medium text-sky-300">
-                      UX &amp; visual design
+                      UX e visual design
                     </span>
                     <span className="rounded-full bg-fuchsia-500/10 px-3 py-1 text-[0.7rem] font-medium text-fuchsia-300">
-                      Next.js development
+                      Sviluppo Next.js
                     </span>
                   </div>
                 </div>
@@ -94,20 +95,20 @@ export default function Home() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="rounded-2xl border border-emerald-500/40 bg-slate-950/95 p-3 text-xs text-slate-300 shadow-md shadow-emerald-500/30">
                     <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-emerald-300">
-                      For Italian teams
+                      Per team italiani
                     </p>
                     <p className="mt-1">
-                      Bilingual sites, local SEO and messaging tuned for the Italian
-                      and European market.
+                      Siti bilingue, SEO locale e messaggi calibrati sul mercato
+                      italiano ed europeo.
                     </p>
                   </div>
                   <div className="rounded-2xl border border-slate-700/70 bg-slate-950/95 p-3 text-xs text-slate-300 shadow-md shadow-sky-500/30">
                     <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                      Collaboration style
+                      Modo di lavorare
                     </p>
                     <p className="mt-1">
-                      Async-friendly, clear milestones, and one small team handling
-                      strategy, design and build.
+                      Collaborazione anche in modalità async, milestone chiare e un
+                      unico team snello che segue strategia, design e sviluppo.
                     </p>
                   </div>
                 </div>
@@ -123,62 +124,63 @@ export default function Home() {
           <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
             <div>
               <h2 className="text-xl font-semibold text-slate-50 md:text-2xl">
-                Why Italian brands work with us
+                Perché i brand italiani scelgono noi
               </h2>
               <p className="mt-2 text-sm text-slate-300 md:max-w-xl">
-                We mix international standards with a clear understanding of
-                local expectations, from language nuance to visual style.
+                Uniamo standard internazionali a una conoscenza concreta del
+                contesto italiano, dal tono di voce allo stile visivo.
               </p>
             </div>
             <Link
-              href="/services"
+              href="/it/services"
               className="text-sm font-medium text-emerald-300 hover:text-emerald-200"
             >
-              Explore our services →
+              Scopri i servizi →
             </Link>
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-2xl border border-slate-800 bg-slate-950/80 p-5">
               <p className="text-sm font-semibold text-slate-50">
-                Strategy first
+                Strategia prima di tutto
               </p>
               <p className="mt-2 text-sm text-slate-300">
-                Every project starts with positioning, goals, and a simple plan.
+                Ogni progetto parte da posizionamento, obiettivi e un piano
+                semplice ma chiaro.
               </p>
             </div>
             <div className="rounded-2xl border border-slate-800 bg-slate-950/80 p-5">
               <p className="text-sm font-semibold text-slate-50">
-                Clear communication
+                Comunicazione trasparente
               </p>
               <p className="mt-2 text-sm text-slate-300">
-                English or Italian, async-friendly, structured updates and
-                timelines.
+                Italiano o inglese, aggiornamenti strutturati e poche call
+                davvero utili.
               </p>
             </div>
             <div className="rounded-2xl border border-slate-800 bg-slate-950/80 p-5">
               <p className="text-sm font-semibold text-slate-50">
-                Modern tech stack
+                Stack moderno
               </p>
               <p className="mt-2 text-sm text-slate-300">
-                React, Next.js, and best practices so your site stays fast and
-                easy to maintain.
+                React, Next.js e buone pratiche, per siti veloci e facili da
+                evolvere nel tempo.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* SECTION 3 – gradient again */}
+      {/* SECTION 3 – gradient */}
       <section className="border-b border-slate-900 bg-linear-to-r from-slate-950 via-slate-950 to-fuchsia-500/10">
         <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
           <div className="mb-8">
             <h2 className="text-xl font-semibold text-slate-50 md:text-2xl">
-              A simple three-step process
+              Un processo semplice in tre passi
             </h2>
             <p className="mt-2 text-sm text-slate-300 md:max-w-xl">
-              No endless calls, no messy handovers. Just a clear path from idea
-              to launch.
+              Niente call infinite, niente passaggi confusi. Solo un percorso
+              chiaro dall&apos;idea al lancio.
             </p>
           </div>
           <div className="grid gap-6 md:grid-cols-3">
@@ -187,11 +189,11 @@ export default function Home() {
                 1
               </span>
               <p className="text-sm font-semibold text-slate-50">
-                Discovery and audit
+                Ascolto e analisi
               </p>
               <p className="mt-2 text-sm text-slate-300">
-                We understand your goals, products, and market, then suggest a
-                concrete scope.
+                Capire il tuo brand, gli obiettivi e i vincoli per proporre uno
+                scope concreto.
               </p>
             </div>
             <div className="relative rounded-2xl border border-slate-800 bg-slate-950/85 p-5 shadow-sm shadow-sky-500/20">
@@ -199,11 +201,11 @@ export default function Home() {
                 2
               </span>
               <p className="text-sm font-semibold text-slate-50">
-                Design and content
+                Design e contenuti
               </p>
               <p className="mt-2 text-sm text-slate-300">
-                We craft the visual language, layouts, and copy tailored to your
-                audience.
+                Costruiamo il linguaggio visivo, le pagine chiave e i testi
+                allineati al pubblico.
               </p>
             </div>
             <div className="relative rounded-2xl border border-slate-800 bg-slate-950/85 p-5 shadow-sm shadow-fuchsia-500/20">
@@ -211,94 +213,94 @@ export default function Home() {
                 3
               </span>
               <p className="text-sm font-semibold text-slate-50">
-                Build and launch
+                Sviluppo e lancio
               </p>
               <p className="mt-2 text-sm text-slate-300">
-                We build, test, and deploy your site, then iterate based on
-                real-life usage.
+                Sviluppiamo, testiamo e pubblichiamo il sito, poi miglioriamo
+                sulla base dei dati reali.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* SECTION 4 – flat again */}
+      {/* SECTION 4 – flat */}
       <section className="border-t border-slate-900 bg-slate-950">
         <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
           <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
-                Featured work
+                Progetti
               </p>
               <h2 className="text-xl font-semibold text-slate-50 md:text-2xl">
-                A snapshot of what we build.
+                Una fotografia di ciò che realizziamo.
               </h2>
               <p className="mt-2 max-w-xl text-sm text-slate-300">
-                Real-world projects across hospitality, SaaS, and e-commerce.
-                Names and details can be adapted to match your own portfolio.
+                Esempi reali tra hospitality, SaaS ed e-commerce. Puoi adattare
+                nomi e dettagli ai tuoi casi studio.
               </p>
             </div>
             <Link
-              href="/work"
+              href="/it/work"
               className="text-sm font-medium text-emerald-300 hover:text-emerald-200"
             >
-              See more projects →
+              Vedi altri progetti →
             </Link>
           </div>
 
           <div className="grid gap-6 md:grid-cols-3">
             <article className="rounded-2xl border border-slate-800 bg-slate-950/90 p-5 shadow-sm shadow-emerald-500/20">
               <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                Hospitality · Website
+                Hospitality · Sito web
               </p>
               <h3 className="mt-2 text-sm font-semibold text-slate-50">
-                Boutique hotel in Tuscany
+                Boutique hotel in Toscana
               </h3>
               <p className="mt-2 text-sm text-slate-300">
-                New brand direction and a booking-focused site that speaks to
-                international guests.
+                Nuova direzione visiva e sito orientato alle prenotazioni, con
+                storytelling pensato per ospiti internazionali.
               </p>
               <p className="mt-3 text-xs text-emerald-300">
-                +42% direct bookings in six months.
+                +42% prenotazioni dirette in sei mesi.
               </p>
             </article>
 
             <article className="rounded-2xl border border-slate-800 bg-slate-950/90 p-5 shadow-sm shadow-sky-500/20">
               <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                SaaS · Product site
+                SaaS · Sito prodotto
               </p>
               <h3 className="mt-2 text-sm font-semibold text-slate-50">
-                Workflow platform for SMEs
+                Piattaforma di workflow per PMI
               </h3>
               <p className="mt-2 text-sm text-slate-300">
-                Clear positioning and UX aimed at non-technical Italian business
-                owners.
+                Posizionamento e UX pensati per imprenditori e manager non
+                tecnici.
               </p>
               <p className="mt-3 text-xs text-emerald-300">
-                More demo signups from organic traffic.
+                Più richieste demo da traffico organico.
               </p>
             </article>
 
             <article className="rounded-2xl border border-slate-800 bg-slate-950/90 p-5 shadow-sm shadow-fuchsia-500/20">
               <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                E-commerce · Brand refresh
+                E-commerce · Refresh brand
               </p>
               <h3 className="mt-2 text-sm font-semibold text-slate-50">
-                Direct-to-consumer fashion label
+                Brand fashion direct-to-consumer
               </h3>
               <p className="mt-2 text-sm text-slate-300">
-                A more premium visual language aligned with European streetwear
-                aesthetics.
+                Linguaggio visivo più premium, in linea con l&apos;estetica
+                streetwear europea.
               </p>
               <p className="mt-3 text-xs text-emerald-300">
-                Higher add-to-cart rate on new drops.
+                Maggior tasso di aggiunta al carrello sulle nuove collezioni.
               </p>
             </article>
           </div>
         </div>
       </section>
 
-      {/* SECTION 5 – gradient again */}
+      {/* SECTION 5 – gradient */}
       <section className="border-t border-slate-900 bg-linear-to-l from-slate-950 via-slate-950 to-sky-500/10">
         <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
           <div className="mb-8">
@@ -306,55 +308,66 @@ export default function Home() {
               Fit
             </p>
             <h2 className="text-xl font-semibold text-slate-50 md:text-2xl">
-              Who we work best with.
+              I clienti con cui lavoriamo meglio.
             </h2>
             <p className="mt-2 max-w-xl text-sm text-slate-300">
-              We are a good match if you care about details, want honest input,
-              and prefer a partner that feels like part of your team.
+              Siamo il partner giusto se ti interessano i dettagli, vuoi un
+              confronto onesto e preferisci una collaborazione che sembri un
+              team interno.
             </p>
           </div>
 
           <div className="grid gap-8 md:grid-cols-2">
             <div className="rounded-2xl border border-slate-800 bg-slate-950/90 p-5 shadow-sm shadow-emerald-500/20">
               <p className="text-sm font-semibold text-slate-50">
-                You&apos;ll feel at home if
+                Ti troverai bene se
               </p>
               <ul className="mt-3 space-y-2 text-sm text-slate-300">
-                <li>You want a modern, clean look that still feels human.</li>
-                <li>You are open to clear feedback on messaging and UX.</li>
-                <li>You prefer structured updates over endless meetings.</li>
+                <li>Cerchi un look moderno e pulito, ma ancora umano.</li>
                 <li>
-                  You&apos;re selling something real and want the site to match
-                  that quality.
+                  Sei aperto a feedback chiari su messaggi, struttura e UX.
+                </li>
+                <li>
+                  Preferisci aggiornamenti strutturati a riunioni infinite.
+                </li>
+                <li>
+                  Vendi qualcosa di reale e vuoi che il sito rifletta quella
+                  qualità.
                 </li>
               </ul>
             </div>
 
             <div className="rounded-2xl border border-slate-800 bg-slate-950/90 p-5 shadow-sm shadow-sky-500/20">
               <p className="text-sm font-semibold text-slate-50">
-                What you can expect
+                Cosa puoi aspettarti
               </p>
               <ul className="mt-3 space-y-2 text-sm text-slate-300">
-                <li>A clear timeline and defined milestones before we start.</li>
-                <li>Designs reviewed in Figma or similar before development.</li>
-                <li>Fast, responsive implementation using React and Next.js.</li>
                 <li>
-                  Thoughtful details tailored to the Italian and European
-                  market.
+                  Una timeline chiara e milestone definite prima di iniziare.
+                </li>
+                <li>
+                  Design rivisti insieme in Figma o strumenti simili prima
+                  dello sviluppo.
+                </li>
+                <li>
+                  Implementazione veloce e responsive con React e Next.js.
+                </li>
+                <li>
+                  Dettagli pensati per il mercato italiano ed europeo.
                 </li>
               </ul>
               <div className="mt-4 flex flex-wrap gap-3">
                 <Link
-                  href="/contact"
+                  href="/it/contact"
                   className="rounded-full bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-950 shadow-sm hover:bg-slate-200"
                 >
-                  Start a project conversation
+                  Inizia una conversazione
                 </Link>
                 <Link
-                  href="/services"
+                  href="/it/services"
                   className="flex items-center text-xs font-medium text-emerald-300 hover:text-emerald-200"
                 >
-                  Learn more about how we work →
+                  Scopri come lavoriamo →
                 </Link>
               </div>
             </div>
@@ -362,8 +375,8 @@ export default function Home() {
         </div>
       </section>
 
-      <TestimonialsSection />
-      <FaqSection />
+      <TestimonialsSectionIt />
+      <FaqSectionIt />
     </main>
   )
 }

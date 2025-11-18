@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://your-domain.com'
+  const baseUrl = 'https://www.nivello.it'
 
   return [
     {
@@ -22,6 +22,26 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${baseUrl}/contact`,
+      lastModified: new Date()
+    },
+    {
+      url: `${baseUrl}/it`,
+      lastModified: new Date()
+    },
+    {
+      url: `${baseUrl}/it/services`,
+      lastModified: new Date()
+    },
+    {
+      url: `${baseUrl}/it/work`,
+      lastModified: new Date()
+    },
+    {
+      url: `${baseUrl}/it/process`,
+      lastModified: new Date()
+    },
+    {
+      url: `${baseUrl}/it/contact`,
       lastModified: new Date()
     }
   ]

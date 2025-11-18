@@ -5,28 +5,28 @@ import Link from 'next/link'
 
 const faqs = [
   {
-    question: 'How long does a typical website project take?',
+    question: 'Quanto dura in media un progetto di sito web?',
     answer:
-      'Most projects take between two and six weeks depending on scope, content readiness, and feedback speed.'
+      'La maggior parte dei progetti dura tra le due e le sei settimane, in base a contenuti, complessità e velocità di feedback.'
   },
   {
-    question: 'Do you only work with Italian companies?',
+    question: 'Lavorate solo con aziende italiane?',
     answer:
-      'We are based in Italy but work comfortably with clients across Europe. Communication can be in Italian or English.'
+      'Siamo basati in Italia ma lavoriamo con clienti in tutta Europa. Possiamo comunicare in italiano o in inglese.'
   },
   {
-    question: 'Can you help with content and copy, not just design?',
+    question: 'Potete aiutarci anche con i testi, non solo con il design?',
     answer:
-      'Yes. We often refine structure, messaging, and microcopy to make sure the design supports a clear narrative.'
+      'Sì. Spesso lavoriamo su struttura, messaggi e microcopy per allineare i contenuti al design e agli obiettivi.'
   },
   {
-    question: 'What does collaboration look like week to week?',
+    question: 'Come funziona la collaborazione nel concreto, settimana per settimana?',
     answer:
-      'You get a clear plan, async updates, and specific checkpoints for feedback. No endless status calls unless you want them.'
+      'Definiamo prima un piano, con milestone e momenti di revisione. Ricevi aggiornamenti async chiari, senza call infinite.'
   }
 ]
 
-export default function FaqSection() {
+export default function FaqSectionIt() {
   const [activeIndex, setActiveIndex] = useState<number | null>(0)
 
   return (
@@ -37,11 +37,11 @@ export default function FaqSection() {
             FAQ
           </p>
           <h2 className="text-xl font-semibold text-slate-50 md:text-2xl">
-            Questions we hear a lot.
+            Le domande che ci fanno più spesso.
           </h2>
           <p className="mt-2 max-w-xl text-sm text-slate-300">
-            If something is not covered here, send us a short message and we
-            will answer directly.
+            Se non trovi qui la risposta che cerchi, scrivici un messaggio
+            breve e ti risponderemo direttamente.
           </p>
         </div>
 
@@ -83,14 +83,14 @@ export default function FaqSection() {
         </div>
 
         <p className="mt-4 text-xs text-slate-400">
-          Still unsure?{' '}
+          Hai ancora dubbi?{' '}
           <Link
-            href="/contact"
+            href="/it/contact"
             className="text-emerald-300 hover:text-emerald-200"
           >
-            Send us a quick message
+            Inviaci un messaggio veloce
           </Link>{' '}
-          and we&apos;ll let you know if we are the right fit or not.
+          e ti diremo se siamo il partner giusto per il tuo progetto.
         </p>
       </div>
     </section>
