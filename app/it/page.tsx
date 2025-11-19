@@ -63,7 +63,7 @@ export default function HomeIt() {
             </div>
           </div>
 
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-end">
             <div className="relative w-full max-w-sm">
               <div className="pointer-events-none absolute -inset-10 -z-10 rounded-4xl bg-[conic-gradient(at_top,rgba(16,185,129,0.5),rgba(56,189,248,0.35),rgba(244,114,182,0.35),transparent_70%)] opacity-80 blur-3xl" />
 

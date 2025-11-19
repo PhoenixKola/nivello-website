@@ -39,10 +39,6 @@ export default function Header() {
     return { key: item.key, href, label }
   })
 
-  const tagline = isItalian
-    ? 'Sviluppo · Marketing · Design'
-    : 'Development · Marketing · Design'
-
   const ctaLabel = isItalian ? 'Prenota una call' : 'Book a call'
 
   const englishPath = isItalian
@@ -69,12 +65,6 @@ export default function Header() {
             priority
             className="h-9 w-9"
           />
-          <div className="leading-tight">
-            <p className="text-sm text-slate-300 font-semibold tracking-wide">
-              Nivello Studio
-            </p>
-            <p className="text-xs text-slate-400">{tagline}</p>
-          </div>
         </Link>
 
         <nav className="hidden items-center gap-1 rounded-full border border-slate-800 bg-slate-900/70 px-1 py-1 text-sm text-slate-200 md:flex">
