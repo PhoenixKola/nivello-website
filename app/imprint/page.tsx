@@ -68,10 +68,10 @@ export default function ImprintPage() {
             <p>
               Email:{' '}
               <a
-                href="mailto:hello@nivello.studio"
+                href="mailto:office@nivello.it"
                 className="text-emerald-300 hover:text-emerald-200"
               >
-                hello@nivello.studio
+                office@nivello.it
               </a>
             </p>
           </div>

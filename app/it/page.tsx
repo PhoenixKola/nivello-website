@@ -1,12 +1,29 @@
+'use client'
+
+import { motion } from 'framer-motion'
 import Link from 'next/link'
 import TestimonialsSectionIt from '@/components/TestimonialsSectionIt'
 import FaqSectionIt from '@/components/FaqSectionIt'
 
+const fadeInUp = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: 'easeOut' as const }
+  }
+}
+
 export default function HomeIt() {
   return (
     <main className="bg-slate-950">
-      {/* HERO – gradient like BottomCta */}
-      <section className="border-b border-slate-900 bg-linear-to-r from-emerald-500/8 via-slate-950 to-sky-500/8">
+      <motion.section
+        className="border-b border-slate-900 bg-linear-to-r from-emerald-500/8 via-slate-950 to-sky-500/8"
+        variants={fadeInUp}
+        initial="hidden"
+        animate="visible"
+        viewport={{ once: true, amount: 0.25 }}
+      >
         <div className="mx-auto grid max-w-6xl gap-12 px-4 pb-16 pt-12 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] md:pb-24 md:pt-16">
           <div>
             <p className="mb-3 inline-flex rounded-full border border-emerald-500/40 bg-emerald-500/5 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-emerald-300">
@@ -63,7 +80,7 @@ export default function HomeIt() {
             </div>
           </div>
 
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-end max-sm:justify-center">
             <div className="relative w-full max-w-sm">
               <div className="pointer-events-none absolute -inset-10 -z-10 rounded-4xl bg-[conic-gradient(at_top,rgba(16,185,129,0.5),rgba(56,189,248,0.35),rgba(244,114,182,0.35),transparent_70%)] opacity-80 blur-3xl" />
 
@@ -116,10 +133,15 @@ export default function HomeIt() {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* SECTION 2 – flat */}
-      <section className="border-b border-slate-900 bg-slate-950">
+      <motion.section
+        className="border-b border-slate-900 bg-slate-950"
+        variants={fadeInUp}
+        initial="hidden"
+        animate="visible"
+        viewport={{ once: true, amount: 0.25 }}
+      >
         <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
           <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
             <div>
@@ -169,10 +191,15 @@ export default function HomeIt() {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* SECTION 3 – gradient */}
-      <section className="border-b border-slate-900 bg-linear-to-r from-slate-950 via-slate-950 to-fuchsia-500/10">
+      <motion.section
+        className="border-b border-slate-900 bg-linear-to-r from-slate-950 via-slate-950 to-fuchsia-500/10"
+        variants={fadeInUp}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.25 }}
+      >
         <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
           <div className="mb-8">
             <h2 className="text-xl font-semibold text-slate-50 md:text-2xl">
@@ -222,10 +249,15 @@ export default function HomeIt() {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* SECTION 4 – flat */}
-      <section className="border-t border-slate-900 bg-slate-950">
+      <motion.section
+        className="border-t border-slate-900 bg-slate-950"
+        variants={fadeInUp}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.25 }}
+      >
         <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
           <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
             <div>
@@ -298,10 +330,15 @@ export default function HomeIt() {
             </article>
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* SECTION 5 – gradient */}
-      <section className="border-t border-slate-900 bg-linear-to-l from-slate-950 via-slate-950 to-sky-500/10">
+      <motion.section
+        className="border-t border-slate-900 bg-linear-to-l from-slate-950 via-slate-950 to-sky-500/10"
+        variants={fadeInUp}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.25 }}
+      >
         <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
           <div className="mb-8">
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
@@ -373,7 +410,7 @@ export default function HomeIt() {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       <TestimonialsSectionIt />
       <FaqSectionIt />

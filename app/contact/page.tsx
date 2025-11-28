@@ -201,10 +201,10 @@ export default function ContactPage() {
                   Something went wrong while sending your message. Please try
                   again in a moment or email us directly at{' '}
                   <a
-                    href="mailto:hello@nivello.studio"
+                    href="mailto:office@nivello.it"
                     className="underline"
                   >
-                    hello@nivello.studio
+                    office@nivello.it
                   </a>
                   .
                 </p>
@@ -239,10 +239,10 @@ export default function ContactPage() {
               <p className="mt-2">
                 Email:{' '}
                 <a
-                  href="mailto:hello@nivello.studio"
+                  href="mailto:office@nivello.it"
                   className="text-emerald-300 hover:text-emerald-200"
                 >
-                  hello@nivello.studio
+                  office@nivello.it
                 </a>
               </p>
               <p className="mt-1 text-xs text-slate-400">

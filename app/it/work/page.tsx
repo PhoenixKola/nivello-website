@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import BottomCtaIt from '@/components/BottomCtaIt'
 
 export default function WorkPageIt() {
@@ -12,64 +13,92 @@ export default function WorkPageIt() {
             Selezione di lavori e collaborazioni.
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-slate-300">
-            Una combinazione di progetti di prodotto, marketing e brand. Nomi e
-            dettagli possono essere adattati al tuo portfolio reale.
+            Una fotografia di lanci recenti tra ristorazione, ospitalità e
+            editoria – progettati e sviluppati da Nivello Studio.
           </p>
         </div>
       </section>
 
       <section className="border-b border-slate-900">
         <div className="mx-auto grid max-w-6xl gap-6 px-4 py-10 md:grid-cols-3 md:py-14">
-          <article className="flex flex-col rounded-2xl border border-slate-800 bg-slate-950/90 p-5">
-            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-              Hospitality · Sito web
-            </p>
-            <h2 className="mt-2 text-sm font-semibold text-slate-50">
-              Boutique hotel in Toscana
-            </h2>
-            <p className="mt-2 text-sm text-slate-300">
-              Nuova identità visiva, sito orientato alle prenotazioni e
-              campagne mirate per ospiti internazionali.
-            </p>
-            <ul className="mt-3 space-y-1 text-xs text-slate-400">
-              <li>+42% prenotazioni dirette in 6 mesi</li>
-              <li>Migliore UX mobile per prenotazioni last-minute</li>
-            </ul>
-          </article>
 
-          <article className="flex flex-col rounded-2xl border border-slate-800 bg-slate-950/90 p-5">
+          <Link
+            href="https://rombonord.com/it/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col justify-between rounded-2xl border border-slate-800 bg-slate-950/90 p-5 transition hover:border-emerald-500/40 hover:bg-slate-950 hover:shadow-md hover:shadow-emerald-500/20"
+          >
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-              SaaS · Sito prodotto
+              Hospitality · Ristorante e Cocktail Bar
             </p>
             <h2 className="mt-2 text-sm font-semibold text-slate-50">
-              Piattaforma di workflow per PMI italiane
+              Rombo Nord · Genova Pegli
             </h2>
             <p className="mt-2 text-sm text-slate-300">
-              Posizionamento, landing page e onboarding pensati per team non
-              tecnici.
+              Sito bilingue per un ristorante e cocktail bar storico sul mare a
+              Pegli, con percorsi chiari verso menù, eventi e contatti.
             </p>
             <ul className="mt-3 space-y-1 text-xs text-slate-400">
-              <li>Presentazione chiara delle funzionalità e dei piani</li>
-              <li>Più richieste demo da traffico organico</li>
+              <li>Menù distinti per ristorante e drink</li>
+              <li>Struttura pensata per prenotazioni e richieste</li>
+              <li>Immagini e tono in linea con l&apos;atmosfera del locale</li>
             </ul>
-          </article>
+            <span className="mt-4 text-xs text-emerald-300">
+              Visita il sito ↗
+            </span>
+          </Link>
 
-          <article className="flex flex-col rounded-2xl border border-slate-800 bg-slate-950/90 p-5">
+          <Link
+            href="https://le-camelie.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col justify-between rounded-2xl border border-slate-800 bg-slate-950/90 p-5 transition hover:border-sky-500/40 hover:bg-slate-950 hover:shadow-md hover:shadow-sky-500/20"
+          >
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-              E-commerce · Refresh brand
+              Hospitality · Affittacamere
             </p>
             <h2 className="mt-2 text-sm font-semibold text-slate-50">
-              Brand fashion direct-to-consumer
+              Le Camelie · Camere a Genova
             </h2>
             <p className="mt-2 text-sm text-slate-300">
-              Nuovo linguaggio visivo, storytelling di prodotto e landing
-              dedicate per le uscite stagionali.
+              Sito compatto per una struttura ricettiva nel centro di Genova,
+              focalizzato su chiarezza, comfort e prenotazioni online.
             </p>
             <ul className="mt-3 space-y-1 text-xs text-slate-400">
-              <li>Percezione più premium del brand</li>
-              <li>Maggiore tasso di aggiunta al carrello</li>
+              <li>Schede camera con foto e servizi in evidenza</li>
+              <li>Testi orientati alla fiducia e alle recensioni</li>
+              <li>Call to action chiara verso il canale di prenotazione</li>
             </ul>
-          </article>
+            <span className="mt-4 text-xs text-sky-300">
+              Visita il sito ↗
+            </span>
+          </Link>
+
+          <Link
+            href="https://gjergj-jozef-kola.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col justify-between rounded-2xl border border-slate-800 bg-slate-950/90 p-5 transition hover:border-fuchsia-500/40 hover:bg-slate-950 hover:shadow-md hover:shadow-fuchsia-500/20"
+          >
+            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+              Editoria · Sito autore
+            </p>
+            <h2 className="mt-2 text-sm font-semibold text-slate-50">
+              Gjergj Jozef Kola · Sito autore
+            </h2>
+            <p className="mt-2 text-sm text-slate-300">
+              Sito multilingue per uno scrittore, con catalogo libri, biografia
+              e un piccolo shop in un impianto visivo sobrio e letterario.
+            </p>
+            <ul className="mt-3 space-y-1 text-xs text-slate-400">
+              <li>Presentazione dell&apos;autore e dei titoli principali</li>
+              <li>Pagine libro pronte per l&apos;e-commerce</li>
+              <li>Sezione contatti per lettori e stampa</li>
+            </ul>
+            <span className="mt-4 text-xs text-fuchsia-300">
+              Visita il sito ↗
+            </span>
+          </Link>
         </div>
       </section>
 

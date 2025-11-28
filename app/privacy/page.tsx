@@ -118,10 +118,10 @@ export default function PrivacyPage() {
             <p className="mt-2">
               To exercise these rights, please contact us at{' '}
               <a
-                href="mailto:hello@nivello.studio"
+                href="mailto:office@nivello.it"
                 className="text-emerald-300 hover:text-emerald-200"
               >
-                hello@nivello.studio
+                office@nivello.it
               </a>
               .
             </p>

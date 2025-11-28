@@ -63,10 +63,10 @@ export default function Footer() {
           <p className="text-[0.7rem] text-slate-400">
             Email:{' '}
             <a
-              href="mailto:hello@nivello.studio"
+              href="mailto:office@nivello.it"
               className="text-emerald-300 hover:text-emerald-200"
             >
-              hello@nivello.studio
+              office@nivello.it
             </a>
           </p>
         </div>

@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import BottomCta from '@/components/BottomCta'
 
 export default function WorkPage() {
@@ -12,64 +13,92 @@ export default function WorkPage() {
             Selected projects and collaborations.
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-slate-300">
-            A mix of product, marketing, and brand work. Names and details can
-            be adapted to match your actual portfolio.
+            A snapshot of recent launches across hospitality, publishing, and
+            local businesses – all designed and built by Nivello Studio.
           </p>
         </div>
       </section>
 
       <section className="border-b border-slate-900">
         <div className="mx-auto grid max-w-6xl gap-6 px-4 py-10 md:grid-cols-3 md:py-14">
-          <article className="flex flex-col rounded-2xl border border-slate-800 bg-slate-950/90 p-5">
-            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-              Hospitality · Website
-            </p>
-            <h2 className="mt-2 text-sm font-semibold text-slate-50">
-              Boutique hotel in Tuscany
-            </h2>
-            <p className="mt-2 text-sm text-slate-300">
-              New visual identity, booking-focused website, and targeted
-              campaigns for international visitors.
-            </p>
-            <ul className="mt-3 space-y-1 text-xs text-slate-400">
-              <li>+42% direct bookings in 6 months</li>
-              <li>Improved mobile UX for last-minute reservations</li>
-            </ul>
-          </article>
 
-          <article className="flex flex-col rounded-2xl border border-slate-800 bg-slate-950/90 p-5">
+          <Link
+            href="https://rombonord.com/it/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col justify-between rounded-2xl border border-slate-800 bg-slate-950/90 p-5 transition hover:border-emerald-500/40 hover:bg-slate-950 hover:shadow-md hover:shadow-emerald-500/20"
+          >
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-              SaaS · Product site
+              Hospitality · Restaurant & Cocktail Bar
             </p>
             <h2 className="mt-2 text-sm font-semibold text-slate-50">
-              Workflow platform for Italian SMEs
+              Rombo Nord · Genova Pegli
             </h2>
             <p className="mt-2 text-sm text-slate-300">
-              Positioning, landing page, and onboarding experience adapted to
-              non-technical teams.
+              Bilingual website for a historic seaside restaurant and cocktail
+              bar in Pegli, with clear paths to menus, events, and reservations.
             </p>
             <ul className="mt-3 space-y-1 text-xs text-slate-400">
-              <li>Clear pricing presentation and feature breakdown</li>
-              <li>Improved demo signups from organic traffic</li>
+              <li>Separate drink and restaurant menus</li>
+              <li>Online booking flow linked to the contact channel</li>
+              <li>Atmospheric visuals aligned with the brand</li>
             </ul>
-          </article>
+            <span className="mt-4 text-xs text-emerald-300">
+              Visit site ↗
+            </span>
+          </Link>
 
-          <article className="flex flex-col rounded-2xl border border-slate-800 bg-slate-950/90 p-5">
+          <Link
+            href="https://le-camelie.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col justify-between rounded-2xl border border-slate-800 bg-slate-950/90 p-5 transition hover:border-sky-500/40 hover:bg-slate-950 hover:shadow-md hover:shadow-sky-500/20"
+          >
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-              E-commerce · Brand refresh
+              Hospitality · Guesthouse Website
             </p>
             <h2 className="mt-2 text-sm font-semibold text-slate-50">
-              Direct-to-consumer fashion label
+              Le Camelie · Rooms in Genova
             </h2>
             <p className="mt-2 text-sm text-slate-300">
-              New brand language, product storytelling, and campaign landing
-              pages for seasonal drops.
+              Compact property site for a guesthouse in the centre of Genova,
+              focused on clarity, comfort details, and Booking.com conversions.
             </p>
             <ul className="mt-3 space-y-1 text-xs text-slate-400">
-              <li>More premium visual language</li>
-              <li>Higher add-to-cart rate on new collections</li>
+              <li>Room galleries and amenities overview</li>
+              <li>Trust-focused layout with review highlights</li>
+              <li>Clear call-to-action to booking engine</li>
             </ul>
-          </article>
+            <span className="mt-4 text-xs text-sky-300">
+              Visit site ↗
+            </span>
+          </Link>
+
+          <Link
+            href="https://gjergj-jozef-kola.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col justify-between rounded-2xl border border-slate-800 bg-slate-950/90 p-5 transition hover:border-fuchsia-500/40 hover:bg-slate-950 hover:shadow-md hover:shadow-fuchsia-500/20"
+          >
+            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+              Publishing · Author Portfolio
+            </p>
+            <h2 className="mt-2 text-sm font-semibold text-slate-50">
+              Gjergj Jozef Kola · Author site
+            </h2>
+            <p className="mt-2 text-sm text-slate-300">
+              Multilingual author website with a small shop, presenting books,
+              biography, and contact in a calm, literary layout.
+            </p>
+            <ul className="mt-3 space-y-1 text-xs text-slate-400">
+              <li>Author intro and featured books</li>
+              <li>Book pages ready for e-commerce</li>
+              <li>Contact for readers and media</li>
+            </ul>
+            <span className="mt-4 text-xs text-fuchsia-300">
+              Visit site ↗
+            </span>
+          </Link>
         </div>
       </section>
 

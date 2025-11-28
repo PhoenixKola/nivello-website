@@ -58,12 +58,12 @@ export default function Header() {
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:py-4">
         <Link href={isItalian ? '/it' : '/'} className="flex items-center gap-2">
           <Image
-            src="/nivello-logo.svg"
+            src="/nivello-logo-text.svg"
             alt="Nivello Studio Logo"
-            width={36}
-            height={36}
+            width={150}
+            height={150}
             priority
-            className="h-9 w-9"
+            // className="h-9 w-9"
           />
         </Link>
 
