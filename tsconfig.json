@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-  ],
+, "app/sitemap.ts.bak", "app/robots.ts.bak"  ],
   "exclude": ["node_modules"]
 }
