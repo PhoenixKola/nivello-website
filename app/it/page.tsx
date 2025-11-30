@@ -33,7 +33,7 @@ export default function HomeIt() {
               Marketing, design e software su misura per brand ambiziosi.
             </h1>
             <p className="mb-6 max-w-xl text-sm text-slate-200 sm:text-base">
-              Nivello Studio unisce strategia, estetica e tecnologia per aiutare le
+              Nivello unisce strategia, estetica e tecnologia per aiutare le
               aziende italiane a presentarsi meglio, comunicare in modo chiaro e
               vendere di più. Dai landing site ai veri ecosistemi digitali.
             </p>

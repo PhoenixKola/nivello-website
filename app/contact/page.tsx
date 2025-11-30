@@ -66,6 +66,9 @@ export default function ContactPage() {
                     className="mb-1 block text-xs font-medium text-slate-200"
                   >
                     Name
+                    <span className="ml-0.5 text-rose-400" aria-hidden="true">
+                      *
+                    </span>
                   </label>
                   <input
                     id="name"
@@ -81,6 +84,9 @@ export default function ContactPage() {
                     className="mb-1 block text-xs font-medium text-slate-200"
                   >
                     Email
+                    <span className="ml-0.5 text-rose-400" aria-hidden="true">
+                      *
+                    </span>
                   </label>
                   <input
                     id="email"
@@ -99,6 +105,9 @@ export default function ContactPage() {
                   className="mb-1 block text-xs font-medium text-slate-200"
                 >
                   Company
+                  <span className="ml-0.5 text-rose-400" aria-hidden="true">
+                    *
+                  </span>
                 </label>
                 <input
                   id="company"
@@ -115,6 +124,9 @@ export default function ContactPage() {
                     className="mb-1 block text-xs font-medium text-slate-200"
                   >
                     Approx. budget
+                    <span className="ml-0.5 text-rose-400" aria-hidden="true">
+                      *
+                    </span>
                   </label>
                   <select
                     id="budget"
@@ -137,6 +149,9 @@ export default function ContactPage() {
                     className="mb-1 block text-xs font-medium text-slate-200"
                   >
                     Ideal timeline
+                    <span className="ml-0.5 text-rose-400" aria-hidden="true">
+                      *
+                    </span>
                   </label>
                   <select
                     id="timeline"
@@ -161,6 +176,9 @@ export default function ContactPage() {
                   className="mb-1 block text-xs font-medium text-slate-200"
                 >
                   Tell us about your project
+                  <span className="ml-0.5 text-rose-400" aria-hidden="true">
+                    *
+                  </span>
                 </label>
                 <textarea
                   id="message"

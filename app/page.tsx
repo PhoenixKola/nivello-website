@@ -33,7 +33,7 @@ export default function Home() {
               Marketing, design and custom software for ambitious brands.
             </h1>
             <p className="mb-6 max-w-xl text-sm text-slate-200 sm:text-base">
-              Nivello Studio blends strategy, aesthetics, and technology to help
+              Nivello blends strategy, aesthetics, and technology to help
               Italian companies look sharp, communicate clearly, and sell better.
               From landing pages to full digital ecosystems.
             </p>

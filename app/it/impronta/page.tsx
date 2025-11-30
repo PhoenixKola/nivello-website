@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Impronta | Nivello Studio',
+  title: 'Impronta | Nivello',
   description:
-    'Informazioni legali e dati di contatto di Nivello Studio, studio digitale per marketing, design e sviluppo.'
+    'Informazioni legali e dati di contatto di Nivello, studio digitale per marketing, design e sviluppo.'
 }
 
 export default function ImprontaPageIt() {
@@ -18,7 +18,7 @@ export default function ImprontaPageIt() {
             Informazioni legali
           </h1>
           <p className="mt-3 text-sm text-slate-300">
-            In questa pagina trovi i principali dati legali di Nivello Studio.
+            In questa pagina trovi i principali dati legali di Nivello.
             Prima di pubblicare il sito, sostituisci i seguenti campi con i
             dati ufficiali della tua attività.
           </p>
@@ -29,13 +29,13 @@ export default function ImprontaPageIt() {
         <div className="mx-auto max-w-3xl px-4 py-10 text-sm text-slate-300 md:py-14">
           <div className="space-y-1">
             <h2 className="text-sm font-semibold text-slate-100">
-              Nivello Studio
+              Nivello
             </h2>
-            <p>Denominazione: Nivello Studio</p>
-            <p>Indirizzo sede: [Indirizzo completo, città, paese]</p>
+            <p>Denominazione: Nivello</p>
+            {/* <p>Indirizzo sede: [Indirizzo completo, città, paese]</p>
             <p>Titolare / legale rappresentante: [Nome o ragione sociale]</p>
             <p>Registro imprese: [Città e numero di iscrizione]</p>
-            <p>Partita IVA: [Inserisci la tua Partita IVA]</p>
+            <p>Partita IVA: [Inserisci la tua Partita IVA]</p> */}
           </div>
 
           <div className="mt-8 space-y-2">

@@ -56,7 +56,7 @@ export default function ProcessPage() {
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-slate-300">
             The details of every project change, but the way we collaborate
-            stays predictable. This page shows what working with Nivello Studio
+            stays predictable. This page shows what working with Nivello
             feels like from your side.
           </p>
         </div>

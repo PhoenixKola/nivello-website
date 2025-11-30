@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'About | Nivello Studio',
+  title: 'About | Nivello',
   description:
-    'Learn more about Nivello Studio, an Italian digital studio focused on marketing, design and modern web development.'
+    'Learn more about Nivello, an Italian digital studio focused on marketing, design and modern web development.'
 }
 
 export default function AboutPage() {

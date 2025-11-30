@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Disclaimer | Nivello Studio',
+  title: 'Disclaimer | Nivello',
   description:
-    'Disclaimer per l’utilizzo del sito web di Nivello Studio e delle informazioni in esso contenute.'
+    'Disclaimer per l’utilizzo del sito web di Nivello e delle informazioni in esso contenute.'
 }
 
 export default function DisclaimerPageIt() {
@@ -38,7 +38,7 @@ export default function DisclaimerPageIt() {
               puramente informativo e possono essere soggette a modifiche.
               Nonostante l&apos;impegno nel mantenere i contenuti aggiornati, non
               possiamo garantire che tutte le informazioni siano sempre complete
-              o prive di errori. Nivello Studio non si assume responsabilità per
+              o prive di errori. Nivello non si assume responsabilità per
               eventuali inesattezze o omissioni.
             </p>
           </div>
@@ -62,7 +62,7 @@ export default function DisclaimerPageIt() {
               3. Responsabilità limitata
             </h2>
             <p className="mt-2">
-              Nivello Studio non sarà responsabile per danni diretti o
+              Nivello non sarà responsabile per danni diretti o
               indiretti, perdite o inconvenienti derivanti dall&apos;uso di
               questo sito, dal fare affidamento sulle informazioni in esso
               contenute o dall&apos;impossibilità temporanea di accedere al
@@ -77,7 +77,7 @@ export default function DisclaimerPageIt() {
             </h2>
             <p className="mt-2">
               Il sito può contenere collegamenti a siti esterni di terze parti.
-              Tali link sono forniti solo per comodità. Nivello Studio non ha
+              Tali link sono forniti solo per comodità. Nivello non ha
               controllo su tali siti e non è responsabile per i loro contenuti,
               la loro disponibilità o le relative pratiche in materia di
               privacy.
@@ -90,7 +90,7 @@ export default function DisclaimerPageIt() {
             </h2>
             <p className="mt-2">
               Tutti i contenuti presenti su questo sito, inclusi testi, immagini,
-              loghi e layout grafici, sono di proprietà di Nivello Studio o dei
+              loghi e layout grafici, sono di proprietà di Nivello o dei
               rispettivi titolari dei diritti e sono protetti dalle normative
               vigenti in materia di diritto d&apos;autore e proprietà
               intellettuale. È vietato l&apos;utilizzo, la copia o la
@@ -104,7 +104,7 @@ export default function DisclaimerPageIt() {
               6. Aggiornamenti del disclaimer
             </h2>
             <p className="mt-2">
-              Nivello Studio si riserva il diritto di aggiornare o modificare il
+              Nivello si riserva il diritto di aggiornare o modificare il
               presente disclaimer in qualsiasi momento. La versione valida è
               sempre quella pubblicata su questa pagina. Si consiglia di
               consultare periodicamente questa sezione per rimanere aggiornati

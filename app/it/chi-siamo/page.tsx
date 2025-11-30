@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Chi siamo | Nivello Studio',
+  title: 'Chi siamo | Nivello',
   description:
-    'Scopri Nivello Studio, studio digitale italiano specializzato in marketing, design e sviluppo front-end moderno.'
+    'Scopri Nivello, studio digitale italiano specializzato in marketing, design e sviluppo front-end moderno.'
 }
 
 export default function ChiSiamoPageIt() {

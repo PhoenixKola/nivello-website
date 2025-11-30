@@ -14,7 +14,7 @@ export default function WorkPage() {
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-slate-300">
             A snapshot of recent launches across hospitality, publishing, and
-            local businesses – all designed and built by Nivello Studio.
+            local businesses – all designed and built by Nivello.
           </p>
         </div>
       </section>
@@ -29,7 +29,7 @@ export default function WorkPage() {
             className="flex flex-col justify-between rounded-2xl border border-slate-800 bg-slate-950/90 p-5 transition hover:border-emerald-500/40 hover:bg-slate-950 hover:shadow-md hover:shadow-emerald-500/20"
           >
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-              Hospitality · Restaurant & Cocktail Bar
+              Hospitality · Restaurant &amp; Cocktail Bar
             </p>
             <h2 className="mt-2 text-sm font-semibold text-slate-50">
               Rombo Nord · Genova Pegli
@@ -62,7 +62,7 @@ export default function WorkPage() {
             </h2>
             <p className="mt-2 text-sm text-slate-300">
               Compact property site for a guesthouse in the centre of Genova,
-              focused on clarity, comfort details, and Booking.com conversions.
+              focused on clarity, comfort details, and booking-engine conversions.
             </p>
             <ul className="mt-3 space-y-1 text-xs text-slate-400">
               <li>Room galleries and amenities overview</li>
@@ -99,6 +99,33 @@ export default function WorkPage() {
               Visit site ↗
             </span>
           </Link>
+
+          <Link
+            href="https://consteam.eu/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col justify-between rounded-2xl border border-slate-800 bg-slate-950/90 p-5 transition hover:border-emerald-500/40 hover:bg-slate-950 hover:shadow-md hover:shadow-emerald-500/20"
+          >
+            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+              Local Business · Home Services
+            </p>
+            <h2 className="mt-2 text-sm font-semibold text-slate-50">
+              Consteam · Professional Cleaning & Maintenance
+            </h2>
+            <p className="mt-2 text-sm text-slate-300">
+              Responsive multi-page site for a cleaning & maintenance company,
+              emphasizing services, contact flows and trust signals for clients.
+            </p>
+            <ul className="mt-3 space-y-1 text-xs text-slate-400">
+              <li>Service overview with clear sections per offer</li>
+              <li>Contact form and easy-to-access request flow</li>
+              <li>Clean, professional layout suited for B2B / B2C conversions</li>
+            </ul>
+            <span className="mt-4 text-xs text-emerald-300">
+              Visit site ↗
+            </span>
+          </Link>
+
         </div>
       </section>
 

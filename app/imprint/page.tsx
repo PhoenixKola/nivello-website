@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Imprint | Nivello Studio',
+  title: 'Imprint | Nivello',
   description:
-    'Legal information and contact details for Nivello Studio, a digital studio for marketing, design and development.'
+    'Legal information and contact details for Nivello, a digital studio for marketing, design and development.'
 }
 
 export default function ImprintPage() {
@@ -18,7 +18,7 @@ export default function ImprintPage() {
             Legal information
           </h1>
           <p className="mt-3 text-sm text-slate-300">
-            This page provides the main legal details for Nivello Studio. Please
+            This page provides the main legal details for Nivello. Please
             replace the placeholders below with your official registered company
             data before going live.
           </p>
@@ -29,13 +29,13 @@ export default function ImprintPage() {
         <div className="mx-auto max-w-3xl px-4 py-10 text-sm text-slate-300 md:py-14">
           <div className="space-y-1">
             <h2 className="text-sm font-semibold text-slate-100">
-              Nivello Studio
+              Nivello
             </h2>
-            <p>Studio name: Nivello Studio</p>
-            <p>Registered office: [Your full address, city, country]</p>
+            <p>Studio name: Nivello</p>
+            {/* <p>Registered office: [Your full address, city, country]</p>
             <p>Owner / legal representative: [Name or company]</p>
             <p>Business register: [City + register number]</p>
-            <p>VAT number: [Your VAT number]</p>
+            <p>VAT number: [Your VAT number]</p> */}
           </div>
 
           <div className="mt-8 space-y-2">

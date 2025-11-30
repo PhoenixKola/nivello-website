@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | Nivello Studio',
+  title: 'Privacy Policy | Nivello',
   description:
-    'How Nivello Studio handles personal data collected through this website and project enquiries.'
+    'How Nivello handles personal data collected through this website and project enquiries.'
 }
 
 export default function PrivacyPage() {
@@ -23,7 +23,7 @@ export default function PrivacyPage() {
       <section>
         <div className="mx-auto max-w-3xl px-4 py-10 text-sm text-slate-300 md:py-14 space-y-6">
           <p>
-            Nivello Studio respects the privacy of visitors and clients and is
+            Nivello respects the privacy of visitors and clients and is
             committed to protecting the personal data collected through this
             website and in the context of project collaborations.
           </p>

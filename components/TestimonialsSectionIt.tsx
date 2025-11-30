@@ -4,28 +4,36 @@ import { motion } from 'framer-motion'
 
 const testimonials = [
   {
-    name: 'Marco B.',
-    role: 'Titolare, boutique hotel in Toscana',
+    name: 'Eduard',
+    role: 'Titolare, ristorante Rombo Nord',
     quote:
       'Nivello ci ha dato un sito moderno e una storia più chiara. Ora siamo felici di condividere il link con gli ospiti.',
     detail:
       'Le prenotazioni dirette sono aumentate e i clienti internazionali capiscono subito l’offerta.'
   },
   {
-    name: 'Elena R.',
-    role: 'Responsabile marketing, piattaforma SaaS',
+    name: 'Camelie',
+    role: 'Titolare, guesthouse Le Camelie',
     quote:
-      'Hanno tradotto un prodotto complesso in un racconto semplice. Le richieste demo sono più qualificate.',
+      'Hanno tradotto un prodotto complesso in un racconto semplice. Le richieste risultano più qualificate.',
     detail:
-      'Il nuovo sito parla ai decisori non tecnici senza banalizzare il prodotto.'
+      'Il nuovo sito parla ai visitatori in modo chiaro, senza perdere credibilità o dettaglio.'
   },
   {
-    name: 'Luca P.',
-    role: 'Founder, studio creativo',
+    name: 'Gjergj',
+    role: 'Autore, sito portfolio',
     quote:
       'Comunicazione chiara, rispetto delle scadenze e scelte di design sempre motivate.',
     detail:
-      'Sembrava di lavorare con un team interno di prodotto più che con un’agenzia esterna.'
+      'Sembrava di lavorare con un piccolo team interno più che con un fornitore esterno.'
+  },
+  {
+    name: 'Consteam',
+    role: 'Studio di consulenza e ingegneria',
+    quote:
+      'Ci serviva un sito pulito, professionale e facile da aggiornare: il risultato rispecchia esattamente chi siamo.',
+    detail:
+      'Struttura chiara dei servizi, immagine più coerente e una presenza online finalmente allineata al nostro posizionamento.'
   }
 ]
 

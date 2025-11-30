@@ -67,6 +67,9 @@ export default function ContactPageIt() {
                     className="mb-1 block text-xs font-medium text-slate-200"
                   >
                     Nome
+                    <span className="ml-0.5 text-rose-400" aria-hidden="true">
+                      *
+                    </span>
                   </label>
                   <input
                     id="name"
@@ -82,6 +85,9 @@ export default function ContactPageIt() {
                     className="mb-1 block text-xs font-medium text-slate-200"
                   >
                     Email
+                    <span className="ml-0.5 text-rose-400" aria-hidden="true">
+                      *
+                    </span>
                   </label>
                   <input
                     id="email"
@@ -100,6 +106,9 @@ export default function ContactPageIt() {
                   className="mb-1 block text-xs font-medium text-slate-200"
                 >
                   Azienda
+                  <span className="ml-0.5 text-rose-400" aria-hidden="true">
+                      *
+                  </span>
                 </label>
                 <input
                   id="company"
@@ -116,6 +125,9 @@ export default function ContactPageIt() {
                     className="mb-1 block text-xs font-medium text-slate-200"
                   >
                     Budget indicativo
+                    <span className="ml-0.5 text-rose-400" aria-hidden="true">
+                      *
+                    </span>
                   </label>
                   <select
                     id="budget"
@@ -138,6 +150,9 @@ export default function ContactPageIt() {
                     className="mb-1 block text-xs font-medium text-slate-200"
                   >
                     Tempistiche ideali
+                    <span className="ml-0.5 text-rose-400" aria-hidden="true">
+                      *
+                    </span>
                   </label>
                   <select
                     id="timeline"
@@ -162,6 +177,9 @@ export default function ContactPageIt() {
                   className="mb-1 block text-xs font-medium text-slate-200"
                 >
                   Raccontaci il progetto
+                  <span className="ml-0.5 text-rose-400" aria-hidden="true">
+                    *
+                  </span>
                 </label>
                 <textarea
                   id="message"

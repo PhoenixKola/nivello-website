@@ -54,12 +54,12 @@ export default function Header() {
   const isActive = (href: string) => pathname === href
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-800/60 bg-slate-950/85 backdrop-blur">
+    <header className="sticky top-0 z-30 border-b border-slate-800/60 bg-linear-to-r from-emerald-500/8 via-slate-950 to-sky-500/8 bg-slate-950">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:py-4">
         <Link href={isItalian ? '/it' : '/'} className="flex items-center gap-2">
           <Image
             src="/nivello-logo-text.svg"
-            alt="Nivello Studio Logo"
+            alt="Nivello Logo"
             width={150}
             height={150}
             priority

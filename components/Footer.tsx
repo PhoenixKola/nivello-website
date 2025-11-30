@@ -35,7 +35,7 @@ export default function Footer() {
         <div className="flex items-center gap-3">
           <Image
             src="/nivello-logo.svg"
-            alt="Nivello Studio Logo"
+            alt="Nivello Logo"
             width={36}
             height={36}
             className="h-9 w-9"

@@ -57,7 +57,7 @@ export default function ProcessPageIt() {
           <p className="mt-3 max-w-2xl text-sm text-slate-300">
             Ogni progetto è diverso nei dettagli, ma il modo in cui
             collaboriamo rimane prevedibile. Qui trovi cosa significa lavorare
-            con Nivello Studio dal tuo punto di vista.
+            con Nivello dal tuo punto di vista.
           </p>
         </div>
       </section>

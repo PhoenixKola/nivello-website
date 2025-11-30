@@ -4,25 +4,36 @@ import { motion } from 'framer-motion'
 
 const testimonials = [
   {
-    name: 'Marco B.',
-    role: 'Owner, boutique hotel in Tuscany',
+    name: 'Eduard',
+    role: 'Owner, restaurant RomboNord',
     quote:
       'Nivello gave us a modern site and a clearer story. We finally feel proud to share the link with guests.',
-    detail: 'Direct bookings increased and our international clients understand the offer faster.'
+    detail:
+      'Direct bookings increased and our international clients understand the offer faster.'
   },
   {
-    name: 'Elena R.',
-    role: 'Marketing lead, SaaS platform',
+    name: 'Camelie',
+    role: 'Owner, guesthouse LeCamelie',
     quote:
       'They translated a complex product into a simple narrative. Our demo requests are more qualified.',
-    detail: 'The new site speaks to non-technical decision makers without feeling dumbed down.'
+    detail:
+      'The new site speaks to non-technical decision makers without feeling dumbed down.'
   },
   {
-    name: 'Luca P.',
-    role: 'Founder, creative studio',
+    name: 'Gjergj',
+    role: 'Owner, author portfolio',
     quote:
       'Communication was clear, deadlines were respected, and every design choice had a reason behind it.',
-    detail: 'It felt like working with an internal product team rather than an external agency.'
+    detail:
+      'It felt like working with an internal product team rather than an external agency.'
+  },
+  {
+    name: 'ConstTeam',
+    role: 'Founders, Consteam',
+    quote:
+      'They helped us turn a complex consulting offer into a clean, trustworthy presence that feels truly European.',
+    detail:
+      'The new site explains what we do in seconds and gives us a solid base for future content and lead generation.'
   }
 ]
 
