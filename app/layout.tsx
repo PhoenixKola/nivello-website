@@ -3,8 +3,9 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import { ThemeProvider } from '@/components/ThemeProvider'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://nivello.it'),
@@ -38,13 +39,15 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={`${inter.className} bg-slate-950 text-slate-50`}>
-        <div className="flex min-h-screen flex-col">
-          <Header />
-          <main className="flex-1 bg-slate-950">{children}</main>
-          <Footer />
-        </div>
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning className={`${inter.variable} bg-white text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-50`}>
+        <ThemeProvider>
+          <div className="flex min-h-screen flex-col">
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   )

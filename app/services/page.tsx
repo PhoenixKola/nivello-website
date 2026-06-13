@@ -1,82 +1,186 @@
+'use client'
+
+import { motion } from 'framer-motion'
+import Link from 'next/link'
 import BottomCta from '@/components/BottomCta'
+
+const serviceCards = [
+  {
+    accent: 'emerald',
+    label: 'Strategy',
+    title: 'Marketing & strategy',
+    desc: 'Turn visibility into real leads with clear offers and structured campaigns.',
+    items: ['Positioning and messaging', 'Landing pages and sales pages', 'Email flows and lead magnets', 'Basic analytics and tracking setup'],
+    ideal: 'Ideal for launches, new products, and rebrands.'
+  },
+  {
+    accent: 'sky',
+    label: 'Design',
+    title: 'Brand & product design',
+    desc: 'Clean, contemporary visuals that feel at home in the Italian and European market.',
+    items: ['Brand look and feel', 'Website and app UI design', 'Design systems and components', 'Marketing visuals and assets'],
+    ideal: 'Ideal for SaaS, agencies, and service businesses.'
+  },
+  {
+    accent: 'fuchsia',
+    label: 'Development',
+    title: 'Development & implementation',
+    desc: 'Fast, SEO-friendly websites built on modern tools with a focus on maintainability.',
+    items: ['Corporate sites and landing pages', 'Custom React and Next.js frontends', 'Headless CMS integration (on request)', 'Performance and accessibility in mind'],
+    ideal: 'Ideal when you want a long-term technical partner.'
+  }
+]
+
+const accentMap: Record<string, { dot: string; badge: string; badgeBg: string; border: string; idealText: string }> = {
+  emerald: {
+    dot: 'bg-emerald-500 dark:bg-emerald-400',
+    badge: 'text-emerald-700 dark:text-emerald-300',
+    badgeBg: 'bg-emerald-50 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/30',
+    border: 'border-emerald-200 dark:border-emerald-500/25',
+    idealText: 'text-emerald-600 dark:text-emerald-300'
+  },
+  sky: {
+    dot: 'bg-sky-500 dark:bg-sky-400',
+    badge: 'text-sky-700 dark:text-sky-300',
+    badgeBg: 'bg-sky-50 border-sky-200 dark:bg-sky-500/10 dark:border-sky-500/30',
+    border: 'border-sky-200 dark:border-sky-500/25',
+    idealText: 'text-sky-600 dark:text-sky-300'
+  },
+  fuchsia: {
+    dot: 'bg-fuchsia-500 dark:bg-fuchsia-400',
+    badge: 'text-fuchsia-700 dark:text-fuchsia-300',
+    badgeBg: 'bg-fuchsia-50 border-fuchsia-200 dark:bg-fuchsia-500/10 dark:border-fuchsia-500/30',
+    border: 'border-fuchsia-200 dark:border-fuchsia-500/25',
+    idealText: 'text-fuchsia-600 dark:text-fuchsia-300'
+  }
+}
 
 export default function ServicesPage() {
   return (
-    <div>
-      <section className="border-b border-slate-900">
-        <div className="mx-auto max-w-6xl px-4 pb-12 pt-10 md:pb-16 md:pt-14">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
-            Services
-          </p>
-          <h1 className="text-2xl font-semibold text-slate-50 md:text-3xl">
-            Everything you need for a modern digital presence.
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm text-slate-300">
-            From first impression to final conversion, we design and build the
-            full journey for your customers. Ideal for Italian SMEs, agencies,
-            and founders who want quality without a huge internal team.
-          </p>
+    <div className="bg-white dark:bg-slate-950">
+
+      {/* ─── HERO ──────────────────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden border-b border-slate-100 bg-white dark:border-slate-900 dark:bg-slate-950">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute left-0 top-0 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/4 rounded-full bg-emerald-400/8 blur-[120px] dark:bg-emerald-500/10" />
+          <div className="absolute right-0 bottom-0 h-[400px] w-[400px] translate-x-1/3 translate-y-1/4 rounded-full bg-sky-400/6 blur-[100px] dark:bg-sky-500/8" />
+        </div>
+
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid items-center gap-12 py-20 md:py-28 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-16">
+
+            {/* Left: copy */}
+            <motion.div
+              initial={{ opacity: 0, y: 28 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, ease: 'easeOut' }}
+            >
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 shadow-sm dark:border-slate-700/60 dark:bg-slate-900/70">
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400" />
+                <span className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400">Services</span>
+              </div>
+
+              <h1 className="mb-5 text-4xl font-bold leading-[1.08] tracking-tight text-slate-900 sm:text-5xl lg:text-[3rem] dark:text-slate-50">
+                Everything your digital{' '}
+                <span
+                  className="bg-clip-text text-transparent"
+                  style={{ backgroundImage: 'linear-gradient(135deg, #059669 0%, #0284c7 55%, #c026d3 100%)' }}
+                >
+                  presence needs
+                </span>
+                , from strategy to launch.
+              </h1>
+
+              <p className="mb-7 max-w-[480px] text-base leading-relaxed text-slate-500 dark:text-slate-400">
+                From first impression to final conversion — we design and build the full digital journey. One studio, one team, no handover friction.
+              </p>
+
+              <div className="flex flex-wrap gap-3">
+                <Link href="/contact" className="rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-black/10 transition-all hover:bg-slate-700 dark:bg-slate-50 dark:text-slate-950 dark:hover:bg-white">
+                  Start a project
+                </Link>
+                <Link href="/process" className="rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-medium text-slate-600 transition-all hover:border-slate-400 hover:text-slate-900 dark:border-slate-700/70 dark:bg-slate-900/60 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:text-slate-100">
+                  How we work →
+                </Link>
+              </div>
+            </motion.div>
+
+            {/* Right: 2×2 service card grid */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.25, ease: 'easeOut' }}
+              className="grid grid-cols-2 gap-3"
+            >
+              {[
+                { accent: 'emerald', icon: '🎯', label: 'Strategy', desc: 'Positioning & messaging' },
+                { accent: 'sky', icon: '✏️', label: 'Design', desc: 'UI/UX & brand visuals' },
+                { accent: 'fuchsia', icon: '⚡', label: 'Development', desc: 'React & Next.js builds' },
+                { accent: 'amber', icon: '📈', label: 'Marketing', desc: 'Campaigns & funnels' }
+              ].map((s, i) => {
+                const colors: Record<string, string> = {
+                  emerald: 'border-emerald-200 bg-emerald-50/60 dark:border-emerald-500/20 dark:bg-emerald-500/5',
+                  sky: 'border-sky-200 bg-sky-50/60 dark:border-sky-500/20 dark:bg-sky-500/5',
+                  fuchsia: 'border-fuchsia-200 bg-fuchsia-50/60 dark:border-fuchsia-500/20 dark:bg-fuchsia-500/5',
+                  amber: 'border-amber-200 bg-amber-50/60 dark:border-amber-500/20 dark:bg-amber-500/5'
+                }
+                const labelColors: Record<string, string> = {
+                  emerald: 'text-emerald-700 dark:text-emerald-300',
+                  sky: 'text-sky-700 dark:text-sky-300',
+                  fuchsia: 'text-fuchsia-700 dark:text-fuchsia-300',
+                  amber: 'text-amber-700 dark:text-amber-300'
+                }
+                return (
+                  <motion.div
+                    key={s.label}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.35 + i * 0.1 }}
+                    className={`rounded-2xl border p-4 ${colors[s.accent]}`}
+                  >
+                    <div className="mb-3 text-2xl">{s.icon}</div>
+                    <p className={`text-sm font-semibold ${labelColors[s.accent]}`}>{s.label}</p>
+                    <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{s.desc}</p>
+                  </motion.div>
+                )
+              })}
+            </motion.div>
+          </div>
         </div>
       </section>
 
-      <section className="border-b border-slate-900">
-        <div className="mx-auto grid max-w-6xl gap-6 px-4 py-10 md:grid-cols-3 md:py-14">
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/90 p-5">
-            <p className="text-sm font-semibold text-slate-50">
-              Marketing and strategy
-            </p>
-            <p className="mt-2 text-sm text-slate-300">
-              Turn visibility into real leads with clear offers and structured
-              campaigns.
-            </p>
-            <ul className="mt-4 space-y-2 text-sm text-slate-300">
-              <li>Positioning and messaging</li>
-              <li>Landing pages and sales pages</li>
-              <li>Email flows and lead magnets</li>
-              <li>Basic analytics and tracking setup</li>
-            </ul>
-            <p className="mt-4 text-xs text-emerald-300">
-              Ideal for launches, new products, and rebrands.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/90 p-5">
-            <p className="text-sm font-semibold text-slate-50">
-              Brand and product design
-            </p>
-            <p className="mt-2 text-sm text-slate-300">
-              Clean, contemporary visuals that feel at home in the Italian and
-              European market.
-            </p>
-            <ul className="mt-4 space-y-2 text-sm text-slate-300">
-              <li>Brand look and feel</li>
-              <li>Website and app UI design</li>
-              <li>Design systems and components</li>
-              <li>Marketing visuals and assets</li>
-            </ul>
-            <p className="mt-4 text-xs text-emerald-300">
-              Ideal for SaaS, agencies, and service businesses.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/90 p-5">
-            <p className="text-sm font-semibold text-slate-50">
-              Development and implementation
-            </p>
-            <p className="mt-2 text-sm text-slate-300">
-              Fast, SEO-friendly websites built on modern tools with a focus on
-              maintainability.
-            </p>
-            <ul className="mt-4 space-y-2 text-sm text-slate-300">
-              <li>Corporate sites and landing pages</li>
-              <li>Custom React and Next.js frontends</li>
-              <li>Headless CMS integration (on request)</li>
-              <li>Performance and accessibility in mind</li>
-            </ul>
-            <p className="mt-4 text-xs text-emerald-300">
-              Ideal when you want a long-term technical partner.
-            </p>
-          </div>
+      {/* ─── Service detail cards ──────────────────────────────────────────── */}
+      <section className="border-b border-slate-100 bg-slate-50 dark:border-slate-900 dark:bg-slate-950">
+        <div className="mx-auto grid max-w-6xl gap-6 px-4 py-12 md:grid-cols-3 md:py-16">
+          {serviceCards.map((s, i) => {
+            const c = accentMap[s.accent]
+            return (
+              <motion.div
+                key={s.title}
+                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/90"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+              >
+                <div className={`mb-3 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] ${c.badge} ${c.badgeBg}`}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
+                  {s.label}
+                </div>
+                <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">{s.title}</p>
+                <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">{s.desc}</p>
+                <ul className="mt-4 space-y-1.5">
+                  {s.items.map(item => (
+                    <li key={item} className="flex items-start gap-2 text-sm text-slate-500 dark:text-slate-300">
+                      <span className={`mt-1.5 h-1 w-1 shrink-0 rounded-full ${c.dot}`} />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <p className={`mt-4 text-xs font-medium ${c.idealText}`}>{s.ideal}</p>
+              </motion.div>
+            )
+          })}
         </div>
       </section>
 

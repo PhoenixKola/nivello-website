@@ -2,27 +2,24 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { AnimatePresence, motion } from 'framer-motion'
 
 const faqs = [
   {
     question: 'Quanto dura in media un progetto di sito web?',
-    answer:
-      'La maggior parte dei progetti dura tra le due e le sei settimane, in base a contenuti, complessità e velocità di feedback.'
+    answer: 'La maggior parte dei progetti dura tra le due e le sei settimane, in base a contenuti, complessità e velocità di feedback.'
   },
   {
     question: 'Lavorate solo con aziende italiane?',
-    answer:
-      'Siamo basati in Italia ma lavoriamo con clienti in tutta Europa. Possiamo comunicare in italiano o in inglese.'
+    answer: 'Siamo basati in Italia ma lavoriamo con clienti in tutta Europa. Possiamo comunicare in italiano o in inglese.'
   },
   {
     question: 'Potete aiutarci anche con i testi, non solo con il design?',
-    answer:
-      'Sì. Spesso lavoriamo su struttura, messaggi e microcopy per allineare i contenuti al design e agli obiettivi.'
+    answer: 'Sì. Spesso lavoriamo su struttura, messaggi e microcopy per allineare i contenuti al design e agli obiettivi.'
   },
   {
     question: 'Come funziona la collaborazione nel concreto, settimana per settimana?',
-    answer:
-      'Definiamo prima un piano, con milestone e momenti di revisione. Ricevi aggiornamenti async chiari, senza call infinite.'
+    answer: 'Definiamo prima un piano, con milestone e momenti di revisione. Ricevi aggiornamenti async chiari, senza call infinite.'
   }
 ]
 
@@ -30,64 +27,75 @@ export default function FaqSectionIt() {
   const [activeIndex, setActiveIndex] = useState<number | null>(0)
 
   return (
-    <section className="border-t border-slate-900 bg-slate-950">
+    <section className="border-t border-slate-200 bg-white dark:border-slate-900 dark:bg-slate-950">
       <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
         <div className="mb-6 md:mb-8">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
             FAQ
           </p>
-          <h2 className="text-xl font-semibold text-slate-50 md:text-2xl">
+          <h2 className="text-xl font-semibold text-slate-900 md:text-2xl dark:text-slate-50">
             Le domande che ci fanno più spesso.
           </h2>
-          <p className="mt-2 max-w-xl text-sm text-slate-300">
-            Se non trovi qui la risposta che cerchi, scrivici un messaggio
-            breve e ti risponderemo direttamente.
+          <p className="mt-2 max-w-xl text-sm text-slate-500 dark:text-slate-300">
+            Se non trovi qui la risposta che cerchi, scrivici un messaggio breve e ti risponderemo direttamente.
           </p>
         </div>
 
-        <div className="divide-y divide-slate-800 rounded-2xl border border-slate-800 bg-slate-950/80">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950/80">
           {faqs.map((item, index) => {
             const isOpen = index === activeIndex
-            const isFirst = index === 0
             const isLast = index === faqs.length - 1
 
-            const roundedHover = isFirst
-              ? 'hover:rounded-t-2xl'
-              : isLast
-              ? 'hover:rounded-b-2xl'
-              : ''
-
             return (
-              <div key={item.question}>
+              <div key={item.question} className={!isLast ? 'border-b border-slate-100 dark:border-slate-800' : ''}>
                 <button
                   type="button"
-                  onClick={() =>
-                    setActiveIndex(prev => (prev === index ? null : index))
-                  }
-                  className={`flex w-full items-center justify-between gap-4 px-4 py-4 text-left text-sm text-slate-100 hover:bg-slate-900/80 md:px-5 ${roundedHover}`}
+                  onClick={() => setActiveIndex(prev => (prev === index ? null : index))}
+                  className={`flex w-full cursor-pointer items-center justify-between gap-4 px-5 py-4 text-left text-sm font-medium transition-colors ${
+                    isOpen
+                      ? 'bg-slate-100/60 text-slate-900 dark:bg-slate-900/60 dark:text-slate-50'
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-800/50 dark:hover:text-slate-50'
+                  }`}
                   aria-expanded={isOpen}
                 >
                   <span>{item.question}</span>
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-700 text-xs text-slate-400">
-                    {isOpen ? '−' : '+'}
-                  </span>
+                  <motion.span
+                    animate={{ rotate: isOpen ? 45 : 0 }}
+                    transition={{ duration: 0.2, ease: 'easeInOut' }}
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-base leading-none transition-colors ${
+                      isOpen
+                        ? 'border-emerald-400 text-emerald-500 dark:border-emerald-500 dark:text-emerald-400'
+                        : 'border-slate-200 text-slate-400 dark:border-slate-700 dark:text-slate-500'
+                    }`}
+                  >
+                    +
+                  </motion.span>
                 </button>
-                {isOpen && (
-                  <div className="px-4 pb-4 text-sm text-slate-300 md:px-5">
-                    <p>{item.answer}</p>
-                  </div>
-                )}
+
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      key="answer"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25, ease: 'easeInOut' }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-5 pb-5 pt-3">
+                        <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">{item.answer}</p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             )
           })}
         </div>
 
-        <p className="mt-4 text-xs text-slate-400">
+        <p className="mt-4 text-xs text-slate-400 dark:text-slate-500">
           Hai ancora dubbi?{' '}
-          <Link
-            href="/it/contact"
-            className="text-emerald-300 hover:text-emerald-200"
-          >
+          <Link href="/it/contact" className="text-emerald-600 hover:text-emerald-500 dark:text-emerald-300 dark:hover:text-emerald-200">
             Inviaci un messaggio veloce
           </Link>{' '}
           e ti diremo se siamo il partner giusto per il tuo progetto.
