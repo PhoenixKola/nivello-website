@@ -8,27 +8,27 @@ export const metadata: Metadata = {
 
 export default function DisclaimerPage() {
   return (
-    <main className="bg-slate-950">
-      <section className="border-b border-slate-900">
+    <main className="bg-white dark:bg-ink">
+      <section className="border-b border-slate-200 dark:border-white/10">
         <div className="mx-auto max-w-3xl px-4 pb-12 pt-10 md:pb-16 md:pt-14">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
             Disclaimer
           </p>
-          <h1 className="text-2xl font-semibold text-slate-50 md:text-3xl">
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 md:text-4xl">
             Use of this website.
           </h1>
         </div>
       </section>
 
       <section>
-        <div className="mx-auto max-w-3xl px-4 py-10 text-sm text-slate-300 md:py-14 space-y-6">
+        <div className="mx-auto max-w-3xl px-4 py-10 text-sm text-slate-600 dark:text-slate-300 md:py-14 space-y-6">
           <p>
             Access to and use of this website are subject to the following terms
             and conditions. By continuing to browse, you accept these terms.
           </p>
 
           <div>
-            <h2 className="text-sm font-semibold text-slate-100">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               1. Purpose and accuracy of information
             </h2>
             <p className="mt-2">
@@ -43,7 +43,7 @@ export default function DisclaimerPage() {
           </div>
 
           <div>
-            <h2 className="text-sm font-semibold text-slate-100">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               2. Changes to services
             </h2>
             <p className="mt-2">
@@ -56,7 +56,7 @@ export default function DisclaimerPage() {
           </div>
 
           <div>
-            <h2 className="text-sm font-semibold text-slate-100">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               3. Limitation of liability
             </h2>
             <p className="mt-2">
@@ -69,7 +69,7 @@ export default function DisclaimerPage() {
           </div>
 
           <div>
-            <h2 className="text-sm font-semibold text-slate-100">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               4. Links to third-party sites
             </h2>
             <p className="mt-2">
@@ -81,7 +81,7 @@ export default function DisclaimerPage() {
           </div>
 
           <div>
-            <h2 className="text-sm font-semibold text-slate-100">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               5. Intellectual property
             </h2>
             <p className="mt-2">
@@ -95,7 +95,7 @@ export default function DisclaimerPage() {
           </div>
 
           <div>
-            <h2 className="text-sm font-semibold text-slate-100">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               6. Updates to this disclaimer
             </h2>
             <p className="mt-2">

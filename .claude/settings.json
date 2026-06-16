@@ -1,7 +1,27 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:yourassistinitaly.it)"
+      "WebFetch(domain:yourassistinitaly.it)",
+      "WebFetch(domain:www.omniux.io)",
+      "Bash(echo \"---exit:$?---\")",
+      "Bash(curl -sL --max-time 45 \"https://image.thum.io/get/width/1200/crop/1400/noanimate/https://rombonord.com/it/\" -o test-shot.png)",
+      "Bash(file test-shot.png)",
+      "Bash(ls -la test-shot.png)",
+      "Bash(command -v magick)",
+      "Bash(echo \"magick: $\\(command -v magick\\)\")",
+      "Bash(command -v convert)",
+      "Bash(echo \"convert: $\\(command -v convert\\)\")",
+      "Bash(command -v cwebp)",
+      "Bash(node -e ' *)",
+      "Bash(rm -f work-*.png)",
+      "Bash(awk '{print $5, $9}')",
+      "Bash(echo \"exit:$?\")",
+      "Bash(perl -0pi -e ' *)",
+      "Bash(echo \"tsc-exit:$?\")",
+      "Bash(cp out/opengraph-image /tmp/og-check.png)",
+      "Read(//tmp/**)",
+      "Bash(echo \"tsc:$?\")",
+      "Bash(grep -vE \"npm warn|baseline-browser-mapping|^$\")"
     ]
   }
 }

@@ -38,7 +38,7 @@ export default function Footer() {
             alt="Nivello Logo"
             width={36}
             height={36}
-            className="h-8 w-8 dark:invert-0 invert"
+            className="h-8 w-8"
           />
           <div className="leading-tight">
             <p className="text-[0.7rem] text-slate-700 dark:text-slate-200">{tagline}</p>

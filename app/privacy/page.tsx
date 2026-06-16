@@ -8,20 +8,20 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <main className="bg-slate-950">
-      <section className="border-b border-slate-900">
+    <main className="bg-white dark:bg-ink">
+      <section className="border-b border-slate-200 dark:border-white/10">
         <div className="mx-auto max-w-3xl px-4 pb-12 pt-10 md:pb-16 md:pt-14">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
             Privacy Policy
           </p>
-          <h1 className="text-2xl font-semibold text-slate-50 md:text-3xl">
+          <h1 className="font-display text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 md:text-4xl">
             How we treat your data.
           </h1>
         </div>
       </section>
 
       <section>
-        <div className="mx-auto max-w-3xl px-4 py-10 text-sm text-slate-300 md:py-14 space-y-6">
+        <div className="mx-auto max-w-3xl px-4 py-10 text-sm text-slate-600 dark:text-slate-300 md:py-14 space-y-6">
           <p>
             Nivello respects the privacy of visitors and clients and is
             committed to protecting the personal data collected through this
@@ -29,7 +29,7 @@ export default function PrivacyPage() {
           </p>
 
           <div>
-            <h2 className="text-sm font-semibold text-slate-100">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               1. Personal data we collect
             </h2>
             <p className="mt-2">
@@ -61,7 +61,7 @@ export default function PrivacyPage() {
           </div>
 
           <div>
-            <h2 className="text-sm font-semibold text-slate-100">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               2. How we use the data
             </h2>
             <p className="mt-2">
@@ -89,7 +89,7 @@ export default function PrivacyPage() {
           </div>
 
           <div>
-            <h2 className="text-sm font-semibold text-slate-100">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               3. Storage and security
             </h2>
             <p className="mt-2">
@@ -102,7 +102,7 @@ export default function PrivacyPage() {
           </div>
 
           <div>
-            <h2 className="text-sm font-semibold text-slate-100">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               4. Your rights
             </h2>
             <p className="mt-2">
@@ -119,7 +119,7 @@ export default function PrivacyPage() {
               To exercise these rights, please contact us at{' '}
               <a
                 href="mailto:office@nivello.it"
-                className="text-emerald-300 hover:text-emerald-200"
+                className="text-emerald-600 dark:text-emerald-300 hover:text-emerald-500 dark:hover:text-emerald-200"
               >
                 office@nivello.it
               </a>
@@ -128,7 +128,7 @@ export default function PrivacyPage() {
           </div>
 
           <div>
-            <h2 className="text-sm font-semibold text-slate-100">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
               5. Updates to this policy
             </h2>
             <p className="mt-2">

@@ -2,11 +2,13 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import Image from 'next/image'
 import BottomCtaIt from '@/components/BottomCtaIt'
 
 const projects = [
   {
     href: 'https://rombonord.com/it/',
+    shot: '/work-rombonord.webp',
     category: 'Ristorazione · Ristorante e Cocktail Bar',
     title: 'Rombo Nord · Genova Pegli',
     desc: 'Sito bilingue per uno storico ristorante e cocktail bar sul mare a Pegli, con percorsi chiari verso menu, eventi e prenotazioni.',
@@ -16,6 +18,7 @@ const projects = [
   },
   {
     href: 'https://le-camelie.com/',
+    shot: '/work-lecamelie.webp',
     category: 'Ospitalità · Sito per B&B',
     title: 'Le Camelie · Camere a Genova',
     desc: 'Sito compatto per un B&B nel centro di Genova, pensato per la chiarezza, i dettagli del soggiorno e le conversioni al motore di prenotazione.',
@@ -25,6 +28,7 @@ const projects = [
   },
   {
     href: 'https://gjergj-jozef-kola.com/',
+    shot: '/work-gjergj.webp',
     category: 'Editoria · Portfolio autore',
     title: 'Gjergj Jozef Kola · Sito autore',
     desc: 'Sito multilingue per un autore con piccolo shop, che presenta libri, biografia e contatti in un layout letterario e sobrio.',
@@ -34,6 +38,7 @@ const projects = [
   },
   {
     href: 'https://consteam.eu/',
+    shot: '/work-consteam.webp',
     category: 'Impresa locale · Pulizie e manutenzione',
     title: 'Consteam · Pulizie e Manutenzione',
     desc: 'Sito multi-pagina per una ditta di pulizie e manutenzione, con enfasi su servizi, contatto e segnali di fiducia per i clienti.',
@@ -43,6 +48,7 @@ const projects = [
   },
   {
     href: 'https://yourassistinitaly.it/',
+    shot: '/work-yourassist.webp',
     category: 'Servizi per expat · Consulenza immigrazione',
     title: 'Your Assist in Italy · Firenze',
     desc: 'Sito bilingue per una consulenza immigrazione con sede a Firenze, che aiuta gli expat a gestire permessi, partite IVA e autorizzazioni lavorative.',
@@ -60,9 +66,9 @@ const accentStyles: Record<string, { hover: string; text: string; dot: string }>
 
 export default function WorkPageIt() {
   return (
-    <div className="bg-white dark:bg-slate-950">
+    <div className="bg-white dark:bg-ink">
 
-      <section className="relative overflow-hidden border-b border-slate-100 bg-white dark:border-slate-900 dark:bg-slate-950">
+      <section className="relative overflow-hidden border-b border-slate-100 bg-white dark:border-white/10 dark:bg-ink">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute right-0 top-0 h-[500px] w-[500px] translate-x-1/3 -translate-y-1/3 rounded-full bg-sky-400/8 blur-[130px] dark:bg-sky-500/10" />
           <div className="absolute left-1/4 bottom-0 h-[400px] w-[400px] translate-y-1/4 rounded-full bg-fuchsia-400/6 blur-[100px] dark:bg-fuchsia-500/8" />
@@ -76,7 +82,7 @@ export default function WorkPageIt() {
                 <span className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400">I nostri lavori</span>
               </div>
 
-              <h1 className="mb-5 max-w-3xl text-4xl font-bold leading-[1.08] tracking-tight text-slate-900 sm:text-5xl lg:text-[3rem] dark:text-slate-50">
+              <h1 className="mb-5 max-w-3xl font-display text-[2.7rem] font-bold leading-[1.05] tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem] dark:text-white">
                 Lavori selezionati costruiti per{' '}
                 <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(135deg, #0284c7 0%, #7c3aed 55%, #db2777 100%)' }}>
                   essere nitidi
@@ -93,7 +99,7 @@ export default function WorkPageIt() {
               {projects.map((p, i) => {
                 const s = accentStyles[p.accent]
                 return (
-                  <motion.div key={p.title} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 + i * 0.08 }} className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-900/50">
+                  <motion.div key={p.title} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 + i * 0.08 }} className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 dark:border-white/10 dark:bg-slate-900/50">
                     <div className={`mb-1.5 h-1.5 w-8 rounded-full ${s.dot}`} />
                     <p className="text-[11px] font-semibold leading-tight text-slate-700 dark:text-slate-200">{p.title.split('·')[0].trim()}</p>
                     <p className="mt-0.5 text-[10px] text-slate-400 dark:text-slate-500">{p.category.split('·')[0].trim()}</p>
@@ -105,27 +111,38 @@ export default function WorkPageIt() {
         </div>
       </section>
 
-      <section className="border-b border-slate-100 bg-slate-50 dark:border-slate-900 dark:bg-slate-950">
-        <div className="mx-auto grid max-w-6xl gap-6 px-4 py-12 md:grid-cols-3 md:py-16">
+      <section className="border-b border-slate-100 bg-slate-50 dark:border-white/10 dark:bg-ink">
+        <div className="mx-auto grid max-w-6xl gap-6 px-4 py-20 md:grid-cols-3 md:py-28">
           {projects.map((p, i) => {
             const s = accentStyles[p.accent]
             return (
               <motion.div key={p.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.08 }}>
-                <Link href={p.href} target="_blank" rel="noopener noreferrer" className={`flex h-full flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-950/90 ${s.hover}`}>
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">{p.category}</p>
-                    <h2 className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-50">{p.title}</h2>
-                    <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">{p.desc}</p>
-                    <ul className="mt-3 space-y-1">
-                      {p.details.map(d => (
-                        <li key={d} className="flex items-start gap-1.5 text-xs text-slate-400">
-                          <span className={`mt-1.5 h-1 w-1 shrink-0 rounded-full ${s.dot} opacity-60`} />
-                          {d}
-                        </li>
-                      ))}
-                    </ul>
+                <Link href={p.href} target="_blank" rel="noopener noreferrer" className={`group flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl dark:border-white/10 dark:bg-white/[0.03] ${s.hover}`}>
+                  <div className="relative aspect-[16/10] overflow-hidden border-b border-slate-100 dark:border-white/10">
+                    <Image
+                      src={p.shot}
+                      alt={`Sito ${p.title}`}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      className="object-cover object-top transition-transform duration-700 group-hover:scale-[1.04]"
+                    />
                   </div>
-                  <span className={`mt-4 text-xs font-medium ${s.text}`}>{p.linkText}</span>
+                  <div className="flex flex-1 flex-col justify-between p-6">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">{p.category}</p>
+                      <h2 className="mt-2 font-display text-lg font-semibold text-slate-900 dark:text-slate-50">{p.title}</h2>
+                      <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-300/80">{p.desc}</p>
+                      <ul className="mt-3 space-y-1">
+                        {p.details.map(d => (
+                          <li key={d} className="flex items-start gap-1.5 text-xs text-slate-400">
+                            <span className={`mt-1.5 h-1 w-1 shrink-0 rounded-full ${s.dot} opacity-60`} />
+                            {d}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <span className={`mt-4 text-xs font-medium ${s.text}`}>{p.linkText}</span>
+                  </div>
                 </Link>
               </motion.div>
             )

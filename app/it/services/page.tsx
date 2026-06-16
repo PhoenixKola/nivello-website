@@ -39,9 +39,9 @@ const accentMap: Record<string, { dot: string; badge: string; badgeBg: string; i
 
 export default function ServicesPageIt() {
   return (
-    <div className="bg-white dark:bg-slate-950">
+    <div className="bg-white dark:bg-ink">
 
-      <section className="relative overflow-hidden border-b border-slate-100 bg-white dark:border-slate-900 dark:bg-slate-950">
+      <section className="relative overflow-hidden border-b border-slate-100 bg-white dark:border-white/10 dark:bg-ink">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute left-0 top-0 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/4 rounded-full bg-emerald-400/8 blur-[120px] dark:bg-emerald-500/10" />
           <div className="absolute right-0 bottom-0 h-[400px] w-[400px] translate-x-1/3 translate-y-1/4 rounded-full bg-sky-400/6 blur-[100px] dark:bg-sky-500/8" />
@@ -55,7 +55,7 @@ export default function ServicesPageIt() {
                 <span className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400">Servizi</span>
               </div>
 
-              <h1 className="mb-5 text-4xl font-bold leading-[1.08] tracking-tight text-slate-900 sm:text-5xl lg:text-[3rem] dark:text-slate-50">
+              <h1 className="mb-5 font-display text-[2.7rem] font-bold leading-[1.05] tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem] dark:text-white">
                 Tutto ciò che la tua{' '}
                 <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(135deg, #059669 0%, #0284c7 55%, #c026d3 100%)' }}>
                   presenza digitale
@@ -99,12 +99,12 @@ export default function ServicesPageIt() {
         </div>
       </section>
 
-      <section className="border-b border-slate-100 bg-slate-50 dark:border-slate-900 dark:bg-slate-950">
-        <div className="mx-auto grid max-w-6xl gap-6 px-4 py-12 md:grid-cols-3 md:py-16">
+      <section className="border-b border-slate-100 bg-slate-50 dark:border-white/10 dark:bg-ink">
+        <div className="mx-auto grid max-w-6xl gap-6 px-4 py-20 md:grid-cols-3 md:py-28">
           {serviceCards.map((s, i) => {
             const c = accentMap[s.accent]
             return (
-              <motion.div key={s.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950/90" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }}>
+              <motion.div key={s.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.03]" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }}>
                 <div className={`mb-3 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] ${c.badge} ${c.badgeBg}`}>
                   <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
                   {s.label}

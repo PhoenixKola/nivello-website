@@ -34,9 +34,9 @@ export default function ContactPageIt() {
   }
 
   return (
-    <main className="bg-white dark:bg-slate-950">
+    <main className="bg-white dark:bg-ink">
 
-      <section className="relative overflow-hidden border-b border-slate-100 bg-white dark:border-slate-900 dark:bg-slate-950">
+      <section className="relative overflow-hidden border-b border-slate-100 bg-white dark:border-white/10 dark:bg-ink">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute left-0 top-0 h-[500px] w-[500px] -translate-x-1/3 -translate-y-1/4 rounded-full bg-emerald-400/8 blur-[130px] dark:bg-emerald-500/10" />
           <div className="absolute right-1/3 bottom-0 h-[400px] w-[400px] translate-y-1/4 rounded-full bg-sky-400/6 blur-[100px] dark:bg-sky-500/8" />
@@ -78,10 +78,10 @@ export default function ContactPageIt() {
         </div>
       </section>
 
-      <section className="bg-slate-50 dark:bg-slate-950">
+      <section className="bg-slate-50 dark:bg-ink">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] md:py-16">
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-950/90">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
             <form onSubmit={handleSubmit} className="space-y-4 text-sm">
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
@@ -164,7 +164,7 @@ export default function ContactPageIt() {
             </form>
           </motion.div>
 
-          <motion.aside initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 text-sm shadow-sm dark:border-slate-800 dark:bg-slate-950/90">
+          <motion.aside initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 text-sm shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
             {[
               { label: 'Collaborazioni ideali', body: 'Lavoriamo volentieri con brand, agenzie e startup che apprezzano una comunicazione chiara e un design curato.' },
               { label: 'Progetti tipici', list: ['Nuovo sito marketing per un prodotto o servizio', 'Restyling completo di un sito esistente', 'Refresh di brand e UX per SaaS o piattaforme'] },

@@ -57,12 +57,20 @@ export default function Header() {
         {/* Logo */}
         <Link href={isItalian ? '/it' : '/'} className="flex shrink-0 items-center gap-2">
           <Image
+            src="/nivello-logo-text-light.svg"
+            alt="Nivello Logo"
+            width={160}
+            height={46}
+            priority
+            className="block h-auto w-[120px] dark:hidden md:w-[130px]"
+          />
+          <Image
             src="/nivello-logo-text.svg"
             alt="Nivello Logo"
-            width={120}
-            height={36}
+            width={160}
+            height={46}
             priority
-            className="invert dark:invert-0"
+            className="hidden h-auto w-[120px] dark:block md:w-[130px]"
           />
         </Link>
 

@@ -57,10 +57,10 @@ const miniStepItems = [
 
 export default function ProcessPage() {
   return (
-    <div className="bg-white dark:bg-slate-950">
+    <div className="bg-white dark:bg-ink">
 
       {/* ─── HERO ──────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden border-b border-slate-100 bg-white dark:border-slate-900 dark:bg-slate-950">
+      <section className="relative overflow-hidden border-b border-slate-100 bg-white dark:border-white/10 dark:bg-ink">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute left-0 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-400/7 blur-[120px] dark:bg-sky-500/8" />
           <div className="absolute right-0 top-0 h-[400px] w-[400px] translate-x-1/3 -translate-y-1/3 rounded-full bg-fuchsia-400/6 blur-[100px] dark:bg-fuchsia-500/8" />
@@ -80,7 +80,7 @@ export default function ProcessPage() {
                 <span className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400">How we work</span>
               </div>
 
-              <h1 className="mb-5 text-4xl font-bold leading-[1.08] tracking-tight text-slate-900 sm:text-5xl lg:text-[3rem] dark:text-slate-50">
+              <h1 className="mb-5 font-display text-[2.7rem] font-bold leading-[1.05] tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem] dark:text-white">
                 A clear process from{' '}
                 <span
                   className="bg-clip-text text-transparent"
@@ -113,7 +113,7 @@ export default function ProcessPage() {
                   initial={{ opacity: 0, x: 16 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.45, delay: 0.35 + i * 0.1 }}
-                  className="flex items-center gap-4 rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/50"
+                  className="flex items-center gap-4 rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3 dark:border-white/10 dark:bg-slate-900/50"
                 >
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
                     <span className="text-base">{s.icon}</span>
@@ -133,9 +133,9 @@ export default function ProcessPage() {
       </section>
 
       {/* ─── Detailed step timeline ───────────────────────────────────────── */}
-      <section className="border-b border-slate-100 bg-slate-50 dark:border-slate-900 dark:bg-slate-950">
-        <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
-          <ol className="space-y-8 border-l-2 border-slate-200 pl-10 md:space-y-10 md:pl-12 dark:border-slate-800">
+      <section className="border-b border-slate-100 bg-slate-50 dark:border-white/10 dark:bg-ink">
+        <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
+          <ol className="space-y-8 border-l-2 border-slate-200 pl-10 md:space-y-10 md:pl-12 dark:border-white/10">
             {steps.map((step, index) => (
               <motion.li
                 key={step.title}
@@ -166,13 +166,13 @@ export default function ProcessPage() {
       </section>
 
       {/* ─── CTA ──────────────────────────────────────────────────────────── */}
-      <section className="bg-white dark:bg-slate-950">
-        <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm md:p-8 dark:border-slate-800 dark:bg-slate-950/90">
+      <section className="bg-white dark:bg-ink">
+        <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm md:p-8 dark:border-white/10 dark:bg-white/[0.03]">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="max-w-xl">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">Next step</p>
-                <h2 className="mt-2 text-xl font-semibold text-slate-900 md:text-2xl dark:text-slate-50">
+                <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
                   Share a short brief and we will map the project for you.
                 </h2>
                 <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">

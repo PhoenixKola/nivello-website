@@ -27,21 +27,21 @@ export default function FaqSectionIt() {
   const [activeIndex, setActiveIndex] = useState<number | null>(0)
 
   return (
-    <section className="border-t border-slate-200 bg-white dark:border-slate-900 dark:bg-slate-950">
-      <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">
-        <div className="mb-6 md:mb-8">
+    <section className="border-t border-slate-200 bg-white dark:border-white/10 dark:bg-ink">
+      <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
+        <div className="mb-10">
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
             FAQ
           </p>
-          <h2 className="text-xl font-semibold text-slate-900 md:text-2xl dark:text-slate-50">
+          <h2 className="font-display text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.75rem] dark:text-white">
             Le domande che ci fanno più spesso.
           </h2>
-          <p className="mt-2 max-w-xl text-sm text-slate-500 dark:text-slate-300">
+          <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-500 dark:text-slate-300/80">
             Se non trovi qui la risposta che cerchi, scrivici un messaggio breve e ti risponderemo direttamente.
           </p>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950/80">
+        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/[0.03]">
           {faqs.map((item, index) => {
             const isOpen = index === activeIndex
             const isLast = index === faqs.length - 1

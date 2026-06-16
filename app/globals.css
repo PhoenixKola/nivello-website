@@ -3,9 +3,31 @@
 /* ─── Dark mode: applies when <html class="dark"> (managed by next-themes) ─── */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ─── Design tokens ───────────────────────────────────────────────────────── */
+@theme {
+  /* Display serif (Fraunces) for headlines — paired with Inter for body */
+  --font-display: var(--font-fraunces), Georgia, 'Times New Roman', serif;
+
+  /* Unified near-black canvas so every section matches the hero */
+  --color-ink: #020408;
+  --color-ink-soft: #080b12;
+}
+
 /* ─── Base reset ─────────────────────────────────────────────────────────── */
 html {
   scroll-behavior: smooth;
+}
+
+/* ─── Respect users who prefer reduced motion ─────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 body {

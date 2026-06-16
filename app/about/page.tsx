@@ -23,10 +23,10 @@ const values = [
 
 export default function AboutPage() {
   return (
-    <main className="bg-white dark:bg-slate-950">
+    <main className="bg-white dark:bg-ink">
 
       {/* ─── HERO ──────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden border-b border-slate-100 bg-white dark:border-slate-900 dark:bg-slate-950">
+      <section className="relative overflow-hidden border-b border-slate-100 bg-white dark:border-white/10 dark:bg-ink">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute left-1/4 top-0 h-[500px] w-[500px] -translate-y-1/4 rounded-full bg-fuchsia-400/6 blur-[130px] dark:bg-fuchsia-500/8" />
           <div className="absolute right-0 bottom-0 h-[400px] w-[400px] translate-x-1/4 translate-y-1/4 rounded-full bg-emerald-400/6 blur-[100px] dark:bg-emerald-500/8" />
@@ -46,7 +46,7 @@ export default function AboutPage() {
                 <span className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400">About Nivello</span>
               </div>
 
-              <h1 className="mb-5 text-4xl font-bold leading-[1.08] tracking-tight text-slate-900 sm:text-5xl lg:text-[3rem] dark:text-slate-50">
+              <h1 className="mb-5 font-display text-[2.7rem] font-bold leading-[1.05] tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem] dark:text-white">
                 A focused digital studio helping brands{' '}
                 <span
                   className="bg-clip-text text-transparent"
@@ -84,7 +84,7 @@ export default function AboutPage() {
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.35 + i * 0.1 }}
-                  className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 dark:border-slate-800 dark:bg-slate-900/50"
+                  className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 dark:border-white/10 dark:bg-slate-900/50"
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
                     <span className="text-xl">{v.icon}</span>
@@ -101,8 +101,8 @@ export default function AboutPage() {
       </section>
 
       {/* ─── Studio story ──────────────────────────────────────────────────── */}
-      <section className="border-b border-slate-100 bg-slate-50 dark:border-slate-900 dark:bg-slate-950">
-        <div className="mx-auto max-w-3xl px-4 py-12 md:py-16">
+      <section className="border-b border-slate-100 bg-slate-50 dark:border-white/10 dark:bg-ink">
+        <div className="mx-auto max-w-3xl px-4 py-20 md:py-28">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
