@@ -21,7 +21,11 @@
       "Bash(cp out/opengraph-image /tmp/og-check.png)",
       "Read(//tmp/**)",
       "Bash(echo \"tsc:$?\")",
-      "Bash(grep -vE \"npm warn|baseline-browser-mapping|^$\")"
+      "Bash(grep -vE \"npm warn|baseline-browser-mapping|^$\")",
+      "Read(//e/Programming/Projects/ai-avatar/frontend/**)"
+    ],
+    "additionalDirectories": [
+      "e:\\Programming\\Projects\\ai-avatar\\frontend\\app\\create"
     ]
   }
 }
