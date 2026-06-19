@@ -1,17 +1,14 @@
 import type { Metadata } from 'next'
+import { pageSeo } from '../seo'
 
-export const metadata: Metadata = {
-  title: 'Imprint | Nivello',
-  description:
-    'Legal information and contact details for Nivello, a digital studio for marketing, design and development.'
-}
+export const metadata: Metadata = pageSeo.imprint
 
 export default function ImprintPage() {
   return (
     <main className="bg-white dark:bg-ink">
       <section className="border-b border-slate-200 dark:border-white/10">
         <div className="mx-auto max-w-3xl px-4 pb-12 pt-10 md:pb-16 md:pt-14">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
             Imprint
           </p>
           <h1 className="font-display text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 md:text-4xl">
@@ -49,7 +46,7 @@ export default function ImprintPage() {
                 href="https://ec.europa.eu/odr"
                 target="_blank"
                 rel="noreferrer"
-                className="text-emerald-600 dark:text-emerald-300 hover:text-emerald-500 dark:hover:text-emerald-200"
+                className="text-[var(--brand-blue)] dark:text-[var(--brand-gold)] hover:text-blue-500 dark:hover:text-yellow-300"
               >
                 https://ec.europa.eu/odr
               </a>
@@ -69,7 +66,7 @@ export default function ImprintPage() {
               Email:{' '}
               <a
                 href="mailto:office@nivello.it"
-                className="text-emerald-600 dark:text-emerald-300 hover:text-emerald-500 dark:hover:text-emerald-200"
+                className="text-[var(--brand-blue)] dark:text-[var(--brand-gold)] hover:text-blue-500 dark:hover:text-yellow-300"
               >
                 office@nivello.it
               </a>

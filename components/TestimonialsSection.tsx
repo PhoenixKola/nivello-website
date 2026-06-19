@@ -6,35 +6,35 @@ const testimonials = [
   {
     name: 'Eduard',
     role: 'Owner, restaurant RomboNord',
-    avatar: 'from-emerald-400 to-teal-500',
+    avatar: 'bg-[var(--brand-gold)] text-slate-950',
     quote: 'Nivello gave us a modern site and a clearer story. We finally feel proud to share the link with guests.',
     detail: 'Direct bookings increased and our international clients understand the offer faster.'
   },
   {
     name: 'Camelie',
     role: 'Owner, guesthouse LeCamelie',
-    avatar: 'from-sky-400 to-indigo-500',
+    avatar: 'bg-[var(--brand-blue)] text-white',
     quote: 'They translated a complex product into a simple narrative. Our demo requests are more qualified.',
     detail: 'The new site speaks to non-technical decision makers without feeling dumbed down.'
   },
   {
     name: 'Gjergj',
     role: 'Owner, author portfolio',
-    avatar: 'from-fuchsia-400 to-purple-500',
+    avatar: 'bg-[var(--brand-purple)] text-white',
     quote: 'Communication was clear, deadlines were respected, and every design choice had a reason behind it.',
     detail: 'It felt like working with an internal product team rather than an external agency.'
   },
   {
     name: 'Consteam',
     role: 'Founders, Consteam',
-    avatar: 'from-amber-400 to-orange-500',
+    avatar: 'bg-[var(--brand-gold)] text-slate-950',
     quote: 'They helped us turn a complex consulting offer into a clean, trustworthy presence that feels truly European.',
     detail: 'The new site explains what we do in seconds and gives us a solid base for future content and lead generation.'
   },
   {
     name: 'Davide',
     role: 'Founder, Your Assist in Italy',
-    avatar: 'from-rose-400 to-pink-500',
+    avatar: 'bg-[#DC2626] text-white',
     quote: 'Nivello made our services immediately clear. International clients now understand what we offer before even booking a call.',
     detail: 'The site structure and copy changed how expats perceive us — professional, approachable, and trustworthy.'
   }
@@ -60,7 +60,7 @@ export default function TestimonialsSection() {
       <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
         <div className="mb-12 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
               Testimonials
             </p>
             <h2 className="font-display text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.75rem] dark:text-white">
@@ -84,7 +84,7 @@ export default function TestimonialsSection() {
           {testimonials.map((t, index) => (
             <motion.figure
               key={t.name}
-              className="flex h-full flex-col justify-between rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-200/60 dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none dark:hover:border-white/20"
+              className="flex h-full flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-[0_16px_50px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none dark:hover:border-white/20 dark:hover:shadow-[0_16px_50px_rgba(0,0,0,0.22)]"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-80px' }}
@@ -98,7 +98,7 @@ export default function TestimonialsSection() {
                 <p className="mt-3 text-xs leading-relaxed text-slate-400 dark:text-slate-500">{t.detail}</p>
               </div>
               <figcaption className="mt-5 flex items-center gap-3 border-t border-slate-100 pt-4 dark:border-white/10">
-                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-linear-to-br ${t.avatar} text-sm font-semibold text-white shadow-sm`}>
+                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${t.avatar} text-sm font-semibold shadow-sm`}>
                   {t.name.charAt(0)}
                 </span>
                 <span>

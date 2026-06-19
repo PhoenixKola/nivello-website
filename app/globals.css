@@ -13,6 +13,12 @@
   --color-ink-soft: #080b12;
 }
 
+:root {
+  --brand-gold: #ffbf43;
+  --brand-blue: #159bff;
+  --brand-purple: #7c3aed;
+}
+
 /* ─── Base reset ─────────────────────────────────────────────────────────── */
 html {
   scroll-behavior: smooth;
@@ -39,7 +45,7 @@ body {
 
 /* ─── Selection highlight ─────────────────────────────────────────────────── */
 ::selection {
-  background-color: rgb(16 185 129 / 0.25);
+  background-color: rgb(255 191 67 / 0.35);
   color: inherit;
 }
 

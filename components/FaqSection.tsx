@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
+import { Plus } from 'lucide-react'
 
 const faqs = [
   {
@@ -30,7 +31,7 @@ export default function FaqSection() {
     <section className="border-t border-slate-200 bg-white dark:border-white/10 dark:bg-ink">
       <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
         <div className="mb-10">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
             FAQ
           </p>
           <h2 className="font-display text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.75rem] dark:text-white">
@@ -41,7 +42,7 @@ export default function FaqSection() {
           </p>
         </div>
 
-        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/[0.03]">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-[0_16px_50px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-white/[0.03] dark:shadow-[0_16px_50px_rgba(0,0,0,0.18)]">
           {faqs.map((item, index) => {
             const isOpen = index === activeIndex
             const isLast = index === faqs.length - 1
@@ -53,8 +54,8 @@ export default function FaqSection() {
                   onClick={() => setActiveIndex(prev => (prev === index ? null : index))}
                   className={`flex w-full cursor-pointer items-center justify-between gap-4 px-5 py-4 text-left text-sm font-medium transition-colors ${
                     isOpen
-                      ? 'bg-slate-100/60 text-slate-900 dark:bg-slate-900/60 dark:text-slate-50'
-                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-800/50 dark:hover:text-slate-50'
+                      ? 'bg-white text-slate-900 dark:bg-slate-900/60 dark:text-slate-50'
+                      : 'text-slate-700 hover:bg-white/70 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-800/50 dark:hover:text-slate-50'
                   }`}
                   aria-expanded={isOpen}
                 >
@@ -62,13 +63,13 @@ export default function FaqSection() {
                   <motion.span
                     animate={{ rotate: isOpen ? 45 : 0 }}
                     transition={{ duration: 0.2, ease: 'easeInOut' }}
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-base leading-none transition-colors ${
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors ${
                       isOpen
-                        ? 'border-emerald-400 text-emerald-500 dark:border-emerald-500 dark:text-emerald-400'
+                        ? 'border-[var(--brand-gold)] text-[var(--brand-gold)]'
                         : 'border-slate-200 text-slate-400 dark:border-slate-700 dark:text-slate-500'
                     }`}
                   >
-                    +
+                    <Plus className="h-3.5 w-3.5" />
                   </motion.span>
                 </button>
 
@@ -95,10 +96,10 @@ export default function FaqSection() {
 
         <p className="mt-4 text-xs text-slate-400 dark:text-slate-500">
           Still unsure?{' '}
-          <Link href="/contact" className="text-emerald-600 hover:text-emerald-500 dark:text-emerald-300 dark:hover:text-emerald-200">
+          <Link href="/contact" className="text-[var(--brand-blue)] hover:text-blue-500 dark:text-[var(--brand-gold)] dark:hover:text-yellow-300">
             Send us a quick message
           </Link>{' '}
-          and we&apos;ll let you know if we are the right fit or not.
+          and we will let you know if we are the right fit or not.
         </p>
       </div>
     </section>

@@ -4,7 +4,7 @@ export default function NotFound() {
   return (
     <div className="flex min-h-[70vh] items-center bg-slate-950">
       <div className="mx-auto flex max-w-xl flex-col items-center px-4 text-center">
-        <p className="text-7xl font-semibold tracking-tight text-emerald-400 md:text-9xl">
+        <p className="text-7xl font-semibold tracking-tight text-[var(--brand-gold)] md:text-9xl">
           404
         </p>
         <h1 className="mt-4 text-xl font-semibold text-slate-50 md:text-2xl">
@@ -23,7 +23,7 @@ export default function NotFound() {
           </Link>
           <Link
             href="/contact"
-            className="rounded-full border border-slate-700 bg-slate-900/40 px-5 py-2.5 text-sm font-medium text-slate-100 hover:border-emerald-500/60 hover:bg-slate-900/70"
+            className="rounded-full border border-slate-700 bg-slate-900/40 px-5 py-2.5 text-sm font-medium text-slate-100 hover:border-[var(--brand-gold)]/70 hover:bg-slate-900/70"
           >
             Contact us
           </Link>

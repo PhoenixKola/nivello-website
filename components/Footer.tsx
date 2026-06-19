@@ -26,24 +26,33 @@ export default function Footer() {
       ]
 
   const tagline = isItalian
-    ? 'Basato in Italia · Collaboriamo con clienti in tutta Europa'
-    : 'Based in Italy · Working with clients across Europe'
+    ? 'Basato in Italia. Collaboriamo con clienti in tutta Europa'
+    : 'Based in Italy. Working with clients across Europe'
 
   return (
     <footer className="border-t border-slate-200 bg-white dark:border-slate-800/60 dark:bg-slate-950">
-      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 text-xs text-slate-500 md:flex-row md:items-center md:justify-between dark:text-slate-400">
+      <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-7 text-xs text-slate-500 md:flex-row md:items-center md:justify-between dark:text-slate-400">
         <div className="flex items-center gap-3">
-          <Image
-            src="/nivello-logo.svg"
-            alt="Nivello Logo"
-            width={36}
-            height={36}
-            className="h-8 w-8"
-          />
+          <Link href={isItalian ? '/it' : '/'} aria-label="Nivello home" className="shrink-0">
+            <Image
+              src="/nivello-logo-text-light.svg"
+              alt="Nivello"
+              width={160}
+              height={46}
+              className="block h-auto w-[116px] dark:hidden"
+            />
+            <Image
+              src="/nivello-logo-text.svg"
+              alt="Nivello"
+              width={160}
+              height={46}
+              className="hidden h-auto w-[116px] dark:block"
+            />
+          </Link>
           <div className="leading-tight">
-            <p className="text-[0.7rem] text-slate-700 dark:text-slate-200">{tagline}</p>
+            <p className="text-[0.72rem] text-slate-700 dark:text-slate-200">{tagline}</p>
             <p className="mt-0.5 text-[0.7rem] text-slate-400 dark:text-slate-500">
-              © {year} Nivello. All rights reserved.
+              Copyright {year} Nivello. All rights reserved.
             </p>
           </div>
         </div>
@@ -64,7 +73,7 @@ export default function Footer() {
             Email:{' '}
             <a
               href="mailto:office@nivello.it"
-              className="text-emerald-600 hover:text-emerald-500 dark:text-emerald-300 dark:hover:text-emerald-200"
+              className="text-[var(--brand-blue)] hover:text-blue-500 dark:text-[var(--brand-gold)] dark:hover:text-yellow-300"
             >
               office@nivello.it
             </a>

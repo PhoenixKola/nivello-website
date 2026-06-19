@@ -6,35 +6,35 @@ const testimonials = [
   {
     name: 'Eduard',
     role: 'Titolare, ristorante Rombo Nord',
-    avatar: 'from-emerald-400 to-teal-500',
+    avatar: 'bg-[var(--brand-gold)] text-slate-950',
     quote: 'Nivello ci ha dato un sito moderno e una storia più chiara. Ora siamo felici di condividere il link con gli ospiti.',
     detail: 'Le prenotazioni dirette sono aumentate e i clienti internazionali capiscono subito l\'offerta.'
   },
   {
     name: 'Camelie',
     role: 'Titolare, guesthouse Le Camelie',
-    avatar: 'from-sky-400 to-indigo-500',
+    avatar: 'bg-[var(--brand-blue)] text-white',
     quote: 'Hanno tradotto un prodotto complesso in un racconto semplice. Le richieste risultano più qualificate.',
     detail: 'Il nuovo sito parla ai visitatori in modo chiaro, senza perdere credibilità o dettaglio.'
   },
   {
     name: 'Gjergj',
     role: 'Autore, sito portfolio',
-    avatar: 'from-fuchsia-400 to-purple-500',
+    avatar: 'bg-[var(--brand-purple)] text-white',
     quote: 'Comunicazione chiara, rispetto delle scadenze e scelte di design sempre motivate.',
     detail: 'Sembrava di lavorare con un piccolo team interno più che con un fornitore esterno.'
   },
   {
     name: 'Consteam',
     role: 'Studio di consulenza e ingegneria',
-    avatar: 'from-amber-400 to-orange-500',
+    avatar: 'bg-[var(--brand-gold)] text-slate-950',
     quote: 'Ci serviva un sito pulito, professionale e facile da aggiornare: il risultato rispecchia esattamente chi siamo.',
     detail: 'Struttura chiara dei servizi, immagine più coerente e una presenza online finalmente allineata al nostro posizionamento.'
   },
   {
     name: 'Davide',
     role: 'Fondatore, Your Assist in Italy',
-    avatar: 'from-rose-400 to-pink-500',
+    avatar: 'bg-[#DC2626] text-white',
     quote: 'Nivello ha reso chiari i nostri servizi in modo immediato. I clienti internazionali ora capiscono cosa facciamo prima ancora di prenotare una consulenza.',
     detail: 'La struttura del sito e i testi hanno cambiato la percezione che gli expat hanno di noi: professionali, accessibili e affidabili.'
   }
@@ -60,7 +60,7 @@ export default function TestimonialsSectionIt() {
       <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
         <div className="mb-12 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
               Testimonianze
             </p>
             <h2 className="font-display text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.75rem] dark:text-white">
@@ -84,7 +84,7 @@ export default function TestimonialsSectionIt() {
           {testimonials.map((t, index) => (
             <motion.figure
               key={t.name}
-              className="flex h-full flex-col justify-between rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-200/60 dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none dark:hover:border-white/20"
+              className="flex h-full flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-[0_16px_50px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none dark:hover:border-white/20 dark:hover:shadow-[0_16px_50px_rgba(0,0,0,0.22)]"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-80px' }}
@@ -98,7 +98,7 @@ export default function TestimonialsSectionIt() {
                 <p className="mt-3 text-xs leading-relaxed text-slate-400 dark:text-slate-500">{t.detail}</p>
               </div>
               <figcaption className="mt-5 flex items-center gap-3 border-t border-slate-100 pt-4 dark:border-white/10">
-                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-linear-to-br ${t.avatar} text-sm font-semibold text-white shadow-sm`}>
+                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${t.avatar} text-sm font-semibold shadow-sm`}>
                   {t.name.charAt(0)}
                 </span>
                 <span>

@@ -1,17 +1,14 @@
 import type { Metadata } from 'next'
+import { pageSeo } from '../seo'
 
-export const metadata: Metadata = {
-  title: 'Privacy Policy | Nivello',
-  description:
-    'How Nivello handles personal data collected through this website and project enquiries.'
-}
+export const metadata: Metadata = pageSeo.privacy
 
 export default function PrivacyPage() {
   return (
     <main className="bg-white dark:bg-ink">
       <section className="border-b border-slate-200 dark:border-white/10">
         <div className="mx-auto max-w-3xl px-4 pb-12 pt-10 md:pb-16 md:pt-14">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
             Privacy Policy
           </p>
           <h1 className="font-display text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 md:text-4xl">
@@ -119,7 +116,7 @@ export default function PrivacyPage() {
               To exercise these rights, please contact us at{' '}
               <a
                 href="mailto:office@nivello.it"
-                className="text-emerald-600 dark:text-emerald-300 hover:text-emerald-500 dark:hover:text-emerald-200"
+                className="text-[var(--brand-blue)] dark:text-[var(--brand-gold)] hover:text-blue-500 dark:hover:text-yellow-300"
               >
                 office@nivello.it
               </a>
