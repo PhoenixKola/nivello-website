@@ -1,0 +1,44 @@
+name: Deploy Nivello to Hetzner
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: nivello-production-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Clean previous build
+        run: rm -rf .next out
+
+      - name: Build static site
+        run: npm run build
+
+      - name: Install lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
+      - name: Upload static files to Hetzner
+        run: |
+          lftp -u "${{ secrets.HETZNER_USER }}","${{ secrets.HETZNER_PASSWORD }}" -p "${{ secrets.HETZNER_PORT }}" sftp://"${{ secrets.HETZNER_HOST }}" <<EOF
+          set sftp:auto-confirm yes
+          mirror -R --delete --verbose ./out /public_html
+          bye
+          EOF
