@@ -56,7 +56,7 @@ function Stars() {
 
 export default function TestimonialsSectionIt() {
   return (
-    <section className="border-t border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-ink-soft">
+    <section className="bg-stone-50 dark:bg-slate-950/95">
       <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
         <div className="mb-12 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
           <div>
@@ -73,7 +73,7 @@ export default function TestimonialsSectionIt() {
         </div>
 
         {/* Striscia di fiducia clienti */}
-        <div className="mb-10 flex flex-wrap items-center gap-x-8 gap-y-3 border-y border-slate-200/70 py-5 dark:border-white/10">
+        <div className="mb-10 flex flex-wrap items-center gap-x-8 gap-y-3 py-5">
           <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Hanno scelto Nivello</span>
           {clients.map(c => (
             <span key={c} className="font-display text-base font-medium text-slate-500 dark:text-slate-300/70">{c}</span>
@@ -97,7 +97,7 @@ export default function TestimonialsSectionIt() {
                 </blockquote>
                 <p className="mt-3 text-xs leading-relaxed text-slate-400 dark:text-slate-500">{t.detail}</p>
               </div>
-              <figcaption className="mt-5 flex items-center gap-3 border-t border-slate-100 pt-4 dark:border-white/10">
+              <figcaption className="mt-5 flex items-center gap-3 pt-4">
                 <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${t.avatar} text-sm font-semibold shadow-sm`}>
                   {t.name.charAt(0)}
                 </span>

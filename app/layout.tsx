@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     // TODO: Add /apple-touch-icon.png when a production touch icon is available.
   },
   openGraph: {
-    title: 'Nivello | Premium websites for Italian brands',
+    title: 'Nivello',
     description:
       'Nivello blends strategy, marketing, design, and technology for Italian and European brands.',
     url: '/',
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Nivello | Premium websites for Italian brands',
+    title: 'Nivello',
     description:
       'Strategy, marketing, design, and Next.js development for brands that want to look sharper and convert better.',
     images: ['/og/home']
@@ -59,7 +59,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning className={`${inter.variable} ${fraunces.variable} bg-white text-slate-900 antialiased dark:bg-ink dark:text-slate-50`}>
+      <body suppressHydrationWarning className={`${inter.variable} ${fraunces.variable} bg-stone-50 text-slate-900 antialiased dark:bg-slate-950/95 dark:text-slate-50`}>
         <ThemeProvider>
           <StructuredData />
           <div className="flex min-h-screen flex-col">

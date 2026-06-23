@@ -5,8 +5,8 @@ export const metadata: Metadata = pageSeo.disclaimerIt
 
 export default function DisclaimerPageIt() {
   return (
-    <main className="bg-white dark:bg-ink">
-      <section className="border-b border-slate-200 dark:border-white/10">
+    <main className="bg-stone-50 dark:bg-slate-950/95">
+      <section className="bg-stone-50 dark:bg-slate-950/95">
         <div className="mx-auto max-w-3xl px-4 pb-12 pt-10 md:pb-16 md:pt-14">
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
             Disclaimer

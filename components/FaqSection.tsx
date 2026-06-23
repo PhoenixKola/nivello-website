@@ -28,7 +28,7 @@ export default function FaqSection() {
   const [activeIndex, setActiveIndex] = useState<number | null>(0)
 
   return (
-    <section className="border-t border-slate-200 bg-white dark:border-white/10 dark:bg-ink">
+    <section className="bg-stone-50 dark:bg-slate-950/95">
       <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
         <div className="mb-10">
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">

@@ -71,8 +71,8 @@ export default function HomeItClient() {
   }
 
   return (
-    <main className="bg-white dark:bg-ink">
-      <section className="relative overflow-hidden border-b border-slate-100 bg-stone-50 dark:border-white/10 dark:bg-ink">
+    <main className="bg-stone-50 dark:bg-slate-950/95">
+      <section className="relative overflow-hidden bg-stone-50 dark:bg-slate-950/95">
         <div className="relative z-10 mx-auto grid min-h-[88vh] max-w-7xl items-center gap-12 px-6 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:px-10 lg:py-20">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: 'easeOut' as const }} className="text-center lg:text-left">
             <div className="mb-7 inline-flex items-center gap-2.5 rounded-full border border-slate-200/80 bg-white/85 px-4 py-2 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-white/5">
@@ -83,7 +83,7 @@ export default function HomeItClient() {
             </div>
 
             <h1 className="text-[2.7rem] font-bold leading-[1.03] tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem] xl:text-[4rem] dark:text-white">
-              Siti web premium per brand italiani{' '}
+              Siti web premium per brand{' '}
               <span className="italic text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">ambiziosi.</span>
             </h1>
 
@@ -122,7 +122,7 @@ export default function HomeItClient() {
         </div>
       </section>
 
-      <motion.section className="border-b border-slate-100 bg-white dark:border-white/10 dark:bg-ink" variants={fadeInUp} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.25 }}>
+      <motion.section className="bg-stone-50 dark:bg-slate-950/95" variants={fadeInUp} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.25 }}>
         <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
           <div className="mb-12">
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">Metodo</p>
@@ -144,7 +144,7 @@ export default function HomeItClient() {
         </div>
       </motion.section>
 
-      <motion.section className="border-b border-slate-100 bg-slate-50 dark:border-white/10 dark:bg-ink-soft" variants={fadeInUp} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.25 }}>
+      <motion.section className="bg-stone-50 dark:bg-slate-950/95" variants={fadeInUp} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.25 }}>
         <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
           <div className="mb-10 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
             <div>
@@ -161,7 +161,7 @@ export default function HomeItClient() {
                   <Link href={project.href} target="_blank" rel="noopener noreferrer" className="group/image relative aspect-[16/10] cursor-pointer overflow-hidden bg-slate-100 md:aspect-[16/9] dark:bg-slate-900">
                     <Image src={project.shot} alt={`Sito ${project.title}`} fill sizes="(max-width: 768px) 100vw, 780px" className="object-cover object-top transition-transform duration-700 group-hover/image:scale-[1.025]" />
                   </Link>
-                  <div className="flex flex-col justify-center border-t border-slate-100 p-6 md:border-l md:border-t-0 dark:border-white/10">
+                  <div className="flex flex-col justify-center p-6">
                     <div className="mb-4 h-1 w-12 rounded-full" style={{ backgroundColor: project.color }} />
                     <p className="text-xs uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">{project.category}</p>
                     <h3 className="mt-2 font-display text-2xl font-semibold text-slate-900 dark:text-slate-50">{project.title}</h3>

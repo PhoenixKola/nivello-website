@@ -3,7 +3,7 @@ import { ArrowRight, CheckCircle2, Clock3 } from 'lucide-react'
 
 export default function BottomCtaIt() {
   return (
-    <section className="border-t border-slate-200 bg-white dark:border-white/10 dark:bg-ink">
+    <section className="bg-stone-50 dark:bg-slate-950/95">
       <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
         <div className="grid gap-6 rounded-2xl border border-slate-200 bg-stone-50 p-6 shadow-[0_10px_30px_rgba(15,23,42,0.06)] md:grid-cols-[1fr_0.42fr] md:p-9 dark:border-white/10 dark:bg-white/[0.035] dark:shadow-none">
           <div className="flex flex-col justify-between gap-8">
@@ -39,7 +39,7 @@ export default function BottomCtaIt() {
                 </div>
               ))}
             </div>
-            <div className="mt-5 border-t border-slate-100 pt-4 text-xs leading-relaxed text-slate-500 dark:border-white/10 dark:text-slate-400">
+            <div className="mt-5 pt-4 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
               La maggior parte dei siti procede per fasi concentrate, con checkpoint chiari e decisioni pratiche.
             </div>
           </div>

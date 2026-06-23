@@ -38,8 +38,8 @@ export default function ContactItClient() {
   }
 
   return (
-    <main className="bg-white dark:bg-ink">
-      <section className="border-b border-slate-100 bg-stone-50 dark:border-white/10 dark:bg-ink">
+    <main className="bg-stone-50 dark:bg-slate-950/95">
+      <section className="bg-stone-50 dark:bg-slate-950/95">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 md:py-28 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: 'easeOut' }} className="max-w-3xl">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 shadow-sm dark:border-slate-700/60 dark:bg-slate-900/70">
@@ -68,7 +68,7 @@ export default function ContactItClient() {
         </div>
       </section>
 
-      <section className="bg-white dark:bg-ink">
+      <section className="bg-stone-50 dark:bg-slate-950/95">
         <div className="mx-auto grid max-w-6xl gap-8 px-4 py-20 md:grid-cols-[minmax(0,1.25fr)_minmax(280px,0.75fr)] md:py-28">
           <motion.form onSubmit={handleSubmit} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
             <div className="grid gap-4 sm:grid-cols-2">

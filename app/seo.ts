@@ -50,14 +50,14 @@ export function makeMetadata({
 
 export const pageSeo = {
   home: makeMetadata({
-    title: 'Nivello | Premium websites for Italian brands',
+    title: 'Nivello',
     description: 'Strategy, marketing, design, and Next.js development for Italian and European brands that need a sharper digital presence.',
     path: '/',
     itPath: '/it',
     ogSlug: 'home'
   }),
   homeIt: makeMetadata({
-    title: 'Nivello | Siti web premium per brand italiani',
+    title: 'Nivello',
     description: 'Strategia, marketing, design e sviluppo Next.js per brand italiani ed europei che vogliono una presenza digitale piu chiara.',
     path: '/it',
     itPath: '/it',

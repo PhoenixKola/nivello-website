@@ -44,8 +44,8 @@ const serviceCards = [
 
 export default function ServicesItClient() {
   return (
-    <main className="bg-white dark:bg-ink">
-      <section className="relative overflow-hidden border-b border-slate-100 bg-stone-50 dark:border-white/10 dark:bg-ink">
+    <main className="bg-stone-50 dark:bg-slate-950/95">
+      <section className="relative overflow-hidden bg-stone-50 dark:bg-slate-950/95">
         <div className="relative z-10 mx-auto grid max-w-7xl gap-10 px-4 py-20 sm:px-6 md:py-28 lg:grid-cols-[1fr_0.48fr] lg:items-center lg:px-8">
           <motion.div initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: 'easeOut' }} className="max-w-3xl">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 shadow-sm dark:border-slate-700/60 dark:bg-slate-900/70">
@@ -73,7 +73,7 @@ export default function ServicesItClient() {
         </div>
       </section>
 
-      <section className="border-b border-slate-100 bg-white dark:border-white/10 dark:bg-ink">
+      <section className="bg-stone-50 dark:bg-slate-950/95">
         <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
           <div className="mb-10">
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">Cosa facciamo</p>

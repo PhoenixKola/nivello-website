@@ -14,8 +14,8 @@ const principles = [
 
 export default function AboutPage() {
   return (
-    <main className="bg-white dark:bg-ink">
-      <section className="border-b border-slate-100 bg-stone-50 dark:border-white/10 dark:bg-ink">
+    <main className="bg-stone-50 dark:bg-slate-950/95">
+      <section className="bg-stone-50 dark:bg-slate-950/95">
         <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
           <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">About</p>
           <h1 className="max-w-3xl font-display text-[2.7rem] font-bold leading-[1.05] tracking-tight text-slate-900 sm:text-5xl dark:text-white">
@@ -27,7 +27,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="border-b border-slate-100 bg-white dark:border-white/10 dark:bg-ink">
+      <section className="bg-stone-50 dark:bg-slate-950/95">
         <div className="mx-auto grid max-w-6xl gap-5 px-4 py-20 md:grid-cols-2 lg:grid-cols-4 md:py-28">
           {principles.map(item => (
             <article key={item.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
@@ -41,7 +41,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="bg-stone-50 dark:bg-ink-soft">
+      <section className="bg-stone-50 dark:bg-slate-950/95">
         <div className="mx-auto max-w-6xl px-4 py-16">
           <Link href="/process" className="inline-flex items-center gap-2 text-sm font-medium text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
             See how we work

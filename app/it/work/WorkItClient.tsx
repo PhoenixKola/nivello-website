@@ -15,8 +15,8 @@ const projects = [
 
 export default function WorkItClient() {
   return (
-    <main className="bg-white dark:bg-ink">
-      <section className="border-b border-slate-100 bg-stone-50 dark:border-white/10 dark:bg-ink">
+    <main className="bg-stone-50 dark:bg-slate-950/95">
+      <section className="bg-stone-50 dark:bg-slate-950/95">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 md:py-28 lg:px-8">
           <motion.div initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: 'easeOut' }} className="mb-10 max-w-3xl">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 shadow-sm dark:border-slate-700/60 dark:bg-slate-900/70">
@@ -43,7 +43,7 @@ export default function WorkItClient() {
         </div>
       </section>
 
-      <section className="border-b border-slate-100 bg-white dark:border-white/10 dark:bg-ink">
+      <section className="bg-stone-50 dark:bg-slate-950/95">
         <div className="mx-auto grid max-w-6xl gap-6 px-4 py-20 md:grid-cols-2 lg:grid-cols-3 md:py-28">
           {projects.map((p, i) => (
             <motion.div key={p.title} id={p.title.toLowerCase().replaceAll(' ', '-')} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.06 }}>

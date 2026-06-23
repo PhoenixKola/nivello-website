@@ -106,8 +106,8 @@ export default function HomeClient() {
   }
 
   return (
-    <main className="bg-white dark:bg-ink">
-      <section className="relative overflow-hidden border-b border-slate-100 bg-stone-50 dark:border-white/10 dark:bg-ink">
+    <main className="bg-stone-50 dark:bg-slate-950/95">
+      <section className="relative overflow-hidden bg-stone-50 dark:bg-slate-950/95">
         <div className="relative z-10 mx-auto grid min-h-[88vh] max-w-7xl items-center gap-12 px-6 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:px-10 lg:py-20">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -124,7 +124,7 @@ export default function HomeClient() {
 
             <h1 className="text-[2.7rem] font-bold leading-[1.03] tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem] xl:text-[4rem] dark:text-white">
               Premium websites for{' '}
-              <span className="italic text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">ambitious Italian brands.</span>
+              <span className="italic text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">ambitious brands.</span>
             </h1>
 
             <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-slate-500 sm:text-lg lg:mx-0 dark:text-slate-300/75">
@@ -163,7 +163,7 @@ export default function HomeClient() {
       </section>
 
       <motion.section
-        className="border-b border-slate-100 bg-white dark:border-white/10 dark:bg-ink"
+        className="bg-stone-50 dark:bg-slate-950/95"
         variants={fadeInUp}
         initial="hidden"
         whileInView="visible"
@@ -204,7 +204,7 @@ export default function HomeClient() {
       </motion.section>
 
       <motion.section
-        className="border-b border-slate-100 bg-slate-50 dark:border-white/10 dark:bg-ink-soft"
+        className="bg-stone-50 dark:bg-slate-950/95"
         variants={fadeInUp}
         initial="hidden"
         whileInView="visible"
@@ -247,7 +247,7 @@ export default function HomeClient() {
                       className="object-cover object-top transition-transform duration-700 group-hover/image:scale-[1.025]"
                     />
                   </Link>
-                  <div className="flex flex-col justify-center border-t border-slate-100 p-6 md:border-l md:border-t-0 dark:border-white/10">
+                  <div className="flex flex-col justify-center p-6">
                     <div className="mb-4 h-1 w-12 rounded-full" style={{ backgroundColor: project.color }} />
                     <p className="text-xs uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">{project.category}</p>
                     <h3 className="mt-2 font-display text-2xl font-semibold text-slate-900 dark:text-slate-50">{project.title}</h3>

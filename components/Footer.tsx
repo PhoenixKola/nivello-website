@@ -30,10 +30,10 @@ export default function Footer() {
     : 'Based in Italy. Working with clients across Europe'
 
   return (
-    <footer className="border-t border-slate-200 bg-white dark:border-slate-800/60 dark:bg-slate-950">
+    <footer className="bg-stone-50 dark:bg-slate-950/95">
       <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-7 text-xs text-slate-500 md:flex-row md:items-center md:justify-between dark:text-slate-400">
         <div className="flex items-center gap-3">
-          <Link href={isItalian ? '/it' : '/'} aria-label="Nivello home" className="shrink-0">
+          <Link href={isItalian ? '/it/' : '/'} aria-label="Nivello home" className="shrink-0">
             <Image
               src="/nivello-logo-text-light.svg"
               alt="Nivello"

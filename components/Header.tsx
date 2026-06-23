@@ -24,27 +24,38 @@ const baseItems: NavItemBase[] = [
   { key: 'contact', basePath: '/contact', labelEn: 'Contact', labelIt: 'Contatti' }
 ]
 
+function normalizePath(path: string) {
+  const cleanPath = path.split(/[?#]/)[0]?.replace(/\/+$/, '') || '/'
+  return cleanPath === '' ? '/' : cleanPath
+}
+
+function withTrailingSlash(path: string) {
+  if (path === '/') return path
+  return `${normalizePath(path)}/`
+}
+
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
   const pathname = usePathname() || '/'
-  const isItalian = pathname.startsWith('/it')
+  const currentPath = normalizePath(pathname)
+  const isItalian = currentPath === '/it' || currentPath.startsWith('/it/')
   const basePrefix = isItalian ? '/it' : ''
 
   const navItems = baseItems.map(item => {
-    const href = item.key === 'home' ? (isItalian ? '/it' : '/') : `${basePrefix}${item.basePath}`
+    const href = item.key === 'home' ? (isItalian ? '/it/' : '/') : withTrailingSlash(`${basePrefix}${item.basePath}`)
     return { key: item.key, href, label: isItalian ? item.labelIt : item.labelEn }
   })
 
   const ctaLabel = isItalian ? 'Prenota una call' : 'Book a call'
-  const ctaHref = isItalian ? '/it/contact' : '/contact'
-  const englishPath = isItalian ? pathname.replace(/^\/it/, '') || '/' : pathname || '/'
-  const italianPath = isItalian ? pathname || '/it' : pathname === '/' ? '/it' : `/it${pathname}`
-  const isActive = (href: string) => pathname === href
+  const ctaHref = isItalian ? '/it/contact/' : '/contact/'
+  const englishPath = isItalian ? withTrailingSlash(currentPath.replace(/^\/it/, '') || '/') : withTrailingSlash(currentPath)
+  const italianPath = isItalian ? withTrailingSlash(currentPath) : currentPath === '/' ? '/it/' : withTrailingSlash(`/it${currentPath}`)
+  const isActive = (href: string) => normalizePath(href) === currentPath
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/95 backdrop-blur-md dark:border-slate-800/70 dark:bg-slate-950/95">
+    <header className="sticky top-0 z-40 bg-stone-50/95 backdrop-blur-md dark:bg-slate-950/95">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:py-3.5">
-        <Link href={isItalian ? '/it' : '/'} className="flex shrink-0 items-center gap-2" aria-label="Nivello home">
+        <Link href={isItalian ? '/it/' : '/'} className="flex shrink-0 items-center gap-2" aria-label="Nivello home">
           <Image
             src="/nivello-logo-text-light.svg"
             alt="Nivello"
@@ -134,7 +145,7 @@ export default function Header() {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.22, ease: 'easeInOut' }}
-            className="overflow-hidden border-t border-slate-100 bg-white/98 md:hidden dark:border-slate-800/60 dark:bg-slate-950/98"
+            className="overflow-hidden bg-stone-50/98 md:hidden dark:bg-slate-950/95"
           >
             <div className="mx-auto max-w-6xl px-4 py-4">
               <nav className="mb-4 flex flex-col gap-0.5">
@@ -154,9 +165,7 @@ export default function Header() {
                 ))}
               </nav>
 
-              <div className="mb-4 border-t border-slate-100 dark:border-slate-800" />
-
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center justify-between gap-3 pt-3">
                 <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100/80 text-xs dark:border-slate-700 dark:bg-slate-800/80">
                   <Link
                     href={englishPath}
