@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { CheckCircle2, Code2, Compass, FileText, Rocket, Sparkles } from 'lucide-react'
-import FaqSectionIt from '@/components/FaqSectionIt'
+import FaqSection from '@/components/FaqSection'
 
 const steps = [
   { title: 'Call introduttiva e fit check', description: 'Chiarifichiamo obiettivi, vincoli, tempi e cosa significa un buon risultato.', clientView: 'Una prima direzione di scope e la sensazione chiara che siamo il partner giusto o no.', duration: '30-45 minuti', icon: Compass, color: 'var(--brand-gold)' },
@@ -83,7 +83,7 @@ export default function ProcessItClient() {
         </div>
       </section>
 
-      <FaqSectionIt />
+      <FaqSection locale="it" />
     </main>
   )
 }

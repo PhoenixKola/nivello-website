@@ -4,28 +4,71 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Plus } from 'lucide-react'
+import { getRoutePath, type Locale } from '@/lib/site'
 
-const faqs = [
-  {
-    question: 'How long does a typical website project take?',
-    answer: 'Most projects take between two and six weeks depending on scope, content readiness, and feedback speed.'
+const copy = {
+  en: {
+    title: 'Questions we hear a lot.',
+    intro: 'If something is not covered here, send us a short message and we will answer directly.',
+    outroStart: 'Still unsure?',
+    link: 'Send us a quick message',
+    outroEnd: 'and we will let you know if we are the right fit or not.',
+    faqs: [
+      {
+        question: 'How long does a typical website project take?',
+        answer: 'Most projects take between two and six weeks depending on scope, content readiness, and feedback speed.'
+      },
+      {
+        question: 'Do you only work with Italian companies?',
+        answer: 'We are based in Italy but work comfortably with clients across Europe. Communication can be in Italian or English.'
+      },
+      {
+        question: 'Can you help with content and copy, not just design?',
+        answer: 'Yes. We often refine structure, messaging, and microcopy to make sure the design supports a clear narrative.'
+      },
+      {
+        question: 'What does collaboration look like week to week?',
+        answer: 'You get a clear plan, async updates, and specific checkpoints for feedback. No endless status calls unless you want them.'
+      }
+    ]
   },
-  {
-    question: 'Do you only work with Italian companies?',
-    answer: 'We are based in Italy but work comfortably with clients across Europe. Communication can be in Italian or English.'
-  },
-  {
-    question: 'Can you help with content and copy, not just design?',
-    answer: 'Yes. We often refine structure, messaging, and microcopy to make sure the design supports a clear narrative.'
-  },
-  {
-    question: 'What does collaboration look like week to week?',
-    answer: 'You get a clear plan, async updates, and specific checkpoints for feedback. No endless status calls unless you want them.'
+  it: {
+    title: 'Le domande che ci fanno piu spesso.',
+    intro: 'Se non trovi qui la risposta che cerchi, scrivici un messaggio breve e ti risponderemo direttamente.',
+    outroStart: 'Hai ancora dubbi?',
+    link: 'Inviaci un messaggio veloce',
+    outroEnd: 'e ti diremo se siamo il partner giusto per il tuo progetto.',
+    faqs: [
+      {
+        question: 'Quanto dura in media un progetto di sito web?',
+        answer: 'La maggior parte dei progetti dura tra le due e le sei settimane, in base a contenuti, complessita e velocita di feedback.'
+      },
+      {
+        question: 'Lavorate solo con aziende italiane?',
+        answer: 'Siamo basati in Italia ma lavoriamo con clienti in tutta Europa. Possiamo comunicare in italiano o in inglese.'
+      },
+      {
+        question: 'Potete aiutarci anche con i testi, non solo con il design?',
+        answer: 'Si. Spesso lavoriamo su struttura, messaggi e microcopy per allineare i contenuti al design e agli obiettivi.'
+      },
+      {
+        question: 'Come funziona la collaborazione nel concreto, settimana per settimana?',
+        answer: 'Definiamo prima un piano, con milestone e momenti di revisione. Ricevi aggiornamenti async chiari, senza call infinite.'
+      }
+    ]
   }
-]
+} satisfies Record<Locale, {
+  title: string
+  intro: string
+  outroStart: string
+  link: string
+  outroEnd: string
+  faqs: { question: string; answer: string }[]
+}>
 
-export default function FaqSection() {
+export default function FaqSection({ locale = 'en' }: { locale?: Locale }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(0)
+  const content = copy[locale]
 
   return (
     <section className="bg-stone-50 dark:bg-slate-950/95">
@@ -35,17 +78,17 @@ export default function FaqSection() {
             FAQ
           </p>
           <h2 className="font-display text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.75rem] dark:text-white">
-            Questions we hear a lot.
+            {content.title}
           </h2>
           <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-500 dark:text-slate-300/80">
-            If something is not covered here, send us a short message and we will answer directly.
+            {content.intro}
           </p>
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-[0_16px_50px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-white/[0.03] dark:shadow-[0_16px_50px_rgba(0,0,0,0.18)]">
-          {faqs.map((item, index) => {
+          {content.faqs.map((item, index) => {
             const isOpen = index === activeIndex
-            const isLast = index === faqs.length - 1
+            const isLast = index === content.faqs.length - 1
 
             return (
               <div key={item.question} className={!isLast ? 'border-b border-slate-100 dark:border-slate-800' : ''}>
@@ -95,11 +138,11 @@ export default function FaqSection() {
         </div>
 
         <p className="mt-4 text-xs text-slate-400 dark:text-slate-500">
-          Still unsure?{' '}
-          <Link href="/contact" className="text-[var(--brand-blue)] hover:text-blue-500 dark:text-[var(--brand-gold)] dark:hover:text-yellow-300">
-            Send us a quick message
+          {content.outroStart}{' '}
+          <Link href={getRoutePath('contact', locale)} className="text-[var(--brand-blue)] hover:text-blue-500 dark:text-[var(--brand-gold)] dark:hover:text-yellow-300">
+            {content.link}
           </Link>{' '}
-          and we will let you know if we are the right fit or not.
+          {content.outroEnd}
         </p>
       </div>
     </section>

@@ -4,56 +4,11 @@ import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ExternalLink } from 'lucide-react'
-
-const projects = [
-  {
-    href: 'https://rombonord.com/it/',
-    shot: '/work-rombonord.webp',
-    category: 'Hospitality',
-    title: 'Rombo Nord',
-    desc: 'Bilingual website for a historic seaside restaurant and cocktail bar in Pegli, with clear paths to menus, events, and reservations.',
-    details: ['Separate drink and restaurant menus', 'Booking flow linked to contact channel', 'Atmospheric visuals aligned with the brand'],
-    color: '#0a1f44'
-  },
-  {
-    href: 'https://le-camelie.com/',
-    shot: '/work-lecamelie.webp',
-    category: 'Guesthouse',
-    title: 'Le Camelie',
-    desc: 'Compact property site for a guesthouse in the centre of Genova, focused on clarity, comfort details, and booking-engine conversions.',
-    details: ['Room galleries and amenities overview', 'Trust-focused layout with review highlights', 'Clear booking engine call to action'],
-    color: '#385948'
-  },
-  {
-    href: 'https://gjergj-jozef-kola.com/',
-    shot: '/work-gjergj.webp',
-    category: 'Author portfolio',
-    title: 'Gjergj Jozef Kola',
-    desc: 'Multilingual author website with a small shop, presenting books, biography, and contact in a calm, literary layout.',
-    details: ['Author intro and featured books', 'Book pages ready for e-commerce', 'Contact for readers and media'],
-    color: '#A36124'
-  },
-  {
-    href: 'https://consteam.eu/',
-    shot: '/work-consteam.webp',
-    category: 'Local services',
-    title: 'Consteam',
-    desc: 'Responsive multi-page site for a cleaning and maintenance company, emphasizing services, contact flows and trust signals.',
-    details: ['Service overview by offer', 'Contact form and request flow', 'Professional B2B and B2C layout'],
-    color: '#FFBF43'
-  },
-  {
-    href: 'https://yourassistinitaly.com/',
-    shot: '/work-yourassist.webp',
-    category: 'Expat services',
-    title: 'Your Assist in Italy',
-    desc: 'Bilingual site for an immigration consultancy based in Florence, helping expats navigate permits and work authorizations.',
-    details: ['English and Italian service pages', 'Clear consultation paths', 'Trust-building FAQs and testimonials'],
-    color: '#DC2626'
-  }
-]
+import { getProjectId, getProjectPath, getProjects } from '@/lib/projects'
 
 export default function WorkClient() {
+  const projects = getProjects('en')
+
   return (
     <main className="bg-stone-50 dark:bg-slate-950/95">
       <section className="bg-stone-50 dark:bg-slate-950/95">
@@ -75,7 +30,7 @@ export default function WorkClient() {
             {projects.map((p, i) => (
               <motion.a
                 key={p.title}
-                href={`#${p.title.toLowerCase().replaceAll(' ', '-')}`}
+                href={`#${getProjectId(p.title)}`}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.45, delay: 0.2 + i * 0.06 }}
@@ -94,11 +49,9 @@ export default function WorkClient() {
       <section className="bg-stone-50 dark:bg-slate-950/95">
         <div className="mx-auto grid max-w-6xl gap-6 px-4 py-20 md:grid-cols-2 lg:grid-cols-3 md:py-28">
           {projects.map((p, i) => (
-            <motion.div key={p.title} id={p.title.toLowerCase().replaceAll(' ', '-')} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.06 }}>
+            <motion.div key={p.title} id={getProjectId(p.title)} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.06 }}>
               <Link
-                href={p.href}
-                target="_blank"
-                rel="noopener noreferrer"
+                href={getProjectPath(p.slug, 'en')}
                 className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-[var(--project-color)] hover:shadow-[0_16px_50px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-white/[0.03] dark:hover:shadow-[0_16px_50px_rgba(0,0,0,0.22)]"
                 style={{ ['--project-color' as string]: p.color }}
               >
@@ -118,7 +71,7 @@ export default function WorkClient() {
                     ))}
                   </ul>
                   <span className="mt-auto inline-flex items-center gap-1.5 pt-4 text-xs font-medium text-slate-600 dark:text-slate-300">
-                    Visit site
+                    View case study
                     <ExternalLink className="h-3.5 w-3.5" />
                   </span>
                 </div>

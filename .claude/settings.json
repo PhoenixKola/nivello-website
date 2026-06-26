@@ -22,7 +22,11 @@
       "Read(//tmp/**)",
       "Bash(echo \"tsc:$?\")",
       "Bash(grep -vE \"npm warn|baseline-browser-mapping|^$\")",
-      "Read(//e/Programming/Projects/ai-avatar/frontend/**)"
+      "Read(//e/Programming/Projects/ai-avatar/frontend/**)",
+      "Bash(grep -oE '\\(#[0-9a-fA-F]{3,6}|url\\\\\\([^\\)]*\\\\\\)\\)' public/nivello-logo-text.svg)",
+      "Bash(grep -oE '\\(#[0-9a-fA-F]{3,6}|url\\\\\\([^\\)]*\\\\\\)\\)' public/nivello-logo-text-light.svg)",
+      "Bash(grep -oE '\\(#[0-9a-fA-F]{3,6}|stop-color:[^;\"]*|fill:[^;\"}]*\\)')",
+      "Bash(grep -nE 'brand|--font|#[0-9a-fA-F]{3,6}' app/globals.css)"
     ],
     "additionalDirectories": [
       "e:\\Programming\\Projects\\ai-avatar\\frontend\\app\\create"

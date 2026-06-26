@@ -19,6 +19,8 @@ import {
 import TestimonialsSection from '@/components/TestimonialsSection'
 import BottomCta from '@/components/BottomCta'
 import AnimatedHeroGraphic from '@/components/AnimatedHeroGraphic'
+import { getProjectPath, getProjects } from '@/lib/projects'
+import { getRoutePath } from '@/lib/site'
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 24 },
@@ -52,50 +54,8 @@ const processSteps = [
   }
 ]
 
-const projects = [
-  {
-    href: 'https://rombonord.com/it/',
-    shot: '/work-rombonord.webp',
-    category: 'Hospitality',
-    title: 'Rombo Nord',
-    body: 'Bilingual site for a seaside restaurant and cocktail bar in Genova Pegli.',
-    color: '#0a1f44'
-  },
-  {
-    href: 'https://le-camelie.com/',
-    shot: '/work-lecamelie.webp',
-    category: 'Guesthouse',
-    title: 'Le Camelie',
-    body: 'Conversion-focused property site for a guesthouse in central Genova.',
-    color: '#385948'
-  },
-  {
-    href: 'https://gjergj-jozef-kola.com/',
-    shot: '/work-gjergj.webp',
-    category: 'Author portfolio',
-    title: 'Gjergj Jozef Kola',
-    body: 'Multilingual author website with biography, books, and contact paths.',
-    color: '#A36124'
-  },
-  {
-    href: 'https://consteam.eu/',
-    shot: '/work-consteam.webp',
-    category: 'Local services',
-    title: 'Consteam',
-    body: 'Multi-page website for cleaning and maintenance services.',
-    color: '#FFBF43'
-  },
-  {
-    href: 'https://yourassistinitaly.com/',
-    shot: '/work-yourassist.webp',
-    category: 'Expat services',
-    title: 'Your Assist in Italy',
-    body: 'Bilingual consulting site for immigration and relocation support.',
-    color: '#DC2626'
-  }
-]
-
 export default function HomeClient() {
+  const projects = getProjects('en')
   const [projectIndex, setProjectIndex] = useState(0)
 
   const scrollProjects = (direction: 'prev' | 'next') => {
@@ -132,11 +92,11 @@ export default function HomeClient() {
             </p>
 
             <div className="mt-9 flex flex-wrap items-center justify-center gap-4 lg:justify-start">
-              <Link href="/work" className="inline-flex items-center gap-2 rounded-full border border-slate-900 bg-slate-900 px-8 py-3.5 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(15,23,42,0.08)] transition-all hover:-translate-y-0.5 hover:border-slate-700 hover:bg-slate-800 dark:border-white/20 dark:bg-transparent dark:text-white dark:shadow-none dark:hover:border-[var(--brand-gold)]/55 dark:hover:bg-white/[0.06]">
+              <Link href={getRoutePath('work', 'en')} className="inline-flex items-center gap-2 rounded-full border border-slate-900 bg-slate-900 px-8 py-3.5 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(15,23,42,0.08)] transition-all hover:-translate-y-0.5 hover:border-slate-700 hover:bg-slate-800 dark:border-white/20 dark:bg-transparent dark:text-white dark:shadow-none dark:hover:border-[var(--brand-gold)]/55 dark:hover:bg-white/[0.06]">
                 View our work
                 <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link href="/contact" className="rounded-full border border-slate-300 bg-white/85 px-8 py-3.5 text-sm font-medium text-slate-700 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-[var(--brand-gold)] dark:border-white/15 dark:bg-white/5 dark:text-slate-200 dark:hover:border-[var(--brand-gold)]/60">
+              <Link href={getRoutePath('contact', 'en')} className="rounded-full border border-slate-300 bg-white/85 px-8 py-3.5 text-sm font-medium text-slate-700 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-[var(--brand-gold)] dark:border-white/15 dark:bg-white/5 dark:text-slate-200 dark:hover:border-[var(--brand-gold)]/60">
                 Book a call
               </Link>
             </div>
@@ -234,9 +194,7 @@ export default function HomeClient() {
                   style={{ ['--project-color' as string]: project.color }}
                 >
                   <Link
-                    href={project.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={getProjectPath(project.slug, 'en')}
                     className="group/image relative aspect-[16/10] cursor-pointer overflow-hidden bg-slate-100 md:aspect-[16/9] dark:bg-slate-900"
                   >
                     <Image
@@ -252,7 +210,7 @@ export default function HomeClient() {
                     <p className="text-xs uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">{project.category}</p>
                     <h3 className="mt-2 font-display text-2xl font-semibold text-slate-900 dark:text-slate-50">{project.title}</h3>
                     <p className="mt-3 text-sm leading-relaxed text-slate-500 dark:text-slate-300/80">{project.body}</p>
-                    <Link href={project.href} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex w-fit cursor-pointer items-center gap-2 text-sm font-medium text-slate-700 transition-colors hover:text-[var(--brand-blue)] dark:text-slate-200 dark:hover:text-[var(--brand-gold)]">
+                    <Link href={getProjectPath(project.slug, 'en')} className="mt-5 inline-flex w-fit cursor-pointer items-center gap-2 text-sm font-medium text-slate-700 transition-colors hover:text-[var(--brand-blue)] dark:text-slate-200 dark:hover:text-[var(--brand-gold)]">
                       View project
                       <ArrowRight className="h-4 w-4" />
                     </Link>
@@ -268,7 +226,7 @@ export default function HomeClient() {
             </button>
           </div>
 
-          <Link href="/work" className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[var(--brand-blue)] hover:text-blue-500 dark:text-[var(--brand-gold)] dark:hover:text-yellow-300">
+          <Link href={getRoutePath('work', 'en')} className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[var(--brand-blue)] hover:text-blue-500 dark:text-[var(--brand-gold)] dark:hover:text-yellow-300">
             See more projects
             <ArrowRight className="h-4 w-4" />
           </Link>

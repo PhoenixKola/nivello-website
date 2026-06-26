@@ -4,52 +4,50 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
-import ReactCountryFlag from 'react-country-flag'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
 import ThemeToggle from '@/components/ThemeToggle'
+import { getLocalizedPath, getPathLocale, getRoutePath, navRoutes, normalizePath, type Locale } from '@/lib/site'
 
-type NavItemBase = {
-  key: string
-  basePath: string
-  labelEn: string
-  labelIt: string
-}
-
-const baseItems: NavItemBase[] = [
-  { key: 'home', basePath: '', labelEn: 'Home', labelIt: 'Home' },
-  { key: 'services', basePath: '/services', labelEn: 'Services', labelIt: 'Servizi' },
-  { key: 'work', basePath: '/work', labelEn: 'Our Work', labelIt: 'Lavori' },
-  { key: 'process', basePath: '/process', labelEn: 'How we work', labelIt: 'Metodo' },
-  { key: 'contact', basePath: '/contact', labelEn: 'Contact', labelIt: 'Contatti' }
-]
-
-function normalizePath(path: string) {
-  const cleanPath = path.split(/[?#]/)[0]?.replace(/\/+$/, '') || '/'
-  return cleanPath === '' ? '/' : cleanPath
-}
-
-function withTrailingSlash(path: string) {
-  if (path === '/') return path
-  return `${normalizePath(path)}/`
+function LocaleMark({ label }: { label: 'EN' | 'IT' }) {
+  return (
+    <span className="block h-3 w-[18px] overflow-hidden rounded-[2px] shadow-[0_0_0_1px_rgba(0,0,0,0.08)]">
+      {label === 'IT' ? (
+        <svg viewBox="0 0 3 2" className="h-full w-full" aria-hidden="true">
+          <rect width="1" height="2" x="0" fill="#009246" />
+          <rect width="1" height="2" x="1" fill="#fff" />
+          <rect width="1" height="2" x="2" fill="#ce2b37" />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 60 30" className="h-full w-full" aria-hidden="true">
+          <rect width="60" height="30" fill="#012169" />
+          <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6" />
+          <path d="M0,0 L60,30 M60,0 L0,30" stroke="#c8102e" strokeWidth="4" />
+          <path d="M30,0 V30 M0,15 H60" stroke="#fff" strokeWidth="10" />
+          <path d="M30,0 V30 M0,15 H60" stroke="#c8102e" strokeWidth="6" />
+        </svg>
+      )}
+    </span>
+  )
 }
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
   const pathname = usePathname() || '/'
   const currentPath = normalizePath(pathname)
-  const isItalian = currentPath === '/it' || currentPath.startsWith('/it/')
-  const basePrefix = isItalian ? '/it' : ''
+  const locale: Locale = getPathLocale(currentPath)
+  const isItalian = locale === 'it'
 
-  const navItems = baseItems.map(item => {
-    const href = item.key === 'home' ? (isItalian ? '/it/' : '/') : withTrailingSlash(`${basePrefix}${item.basePath}`)
-    return { key: item.key, href, label: isItalian ? item.labelIt : item.labelEn }
-  })
+  const navItems = navRoutes.map(item => ({
+    key: item.key,
+    href: item.paths[locale],
+    label: item.labels[locale]
+  }))
 
   const ctaLabel = isItalian ? 'Prenota una call' : 'Book a call'
-  const ctaHref = isItalian ? '/it/contact/' : '/contact/'
-  const englishPath = isItalian ? withTrailingSlash(currentPath.replace(/^\/it/, '') || '/') : withTrailingSlash(currentPath)
-  const italianPath = isItalian ? withTrailingSlash(currentPath) : currentPath === '/' ? '/it/' : withTrailingSlash(`/it${currentPath}`)
+  const ctaHref = getRoutePath('contact', locale)
+  const englishPath = getLocalizedPath(currentPath, 'en')
+  const italianPath = getLocalizedPath(currentPath, 'it')
   const isActive = (href: string) => normalizePath(href) === currentPath
 
   return (
@@ -100,7 +98,7 @@ export default function Header() {
                   : 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
               }`}
             >
-              <ReactCountryFlag countryCode="GB" svg style={{ width: '1em', height: '1em' }} />
+              <LocaleMark label="EN" />
               EN
             </Link>
             <Link
@@ -111,7 +109,7 @@ export default function Header() {
                   : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
               }`}
             >
-              <ReactCountryFlag countryCode="IT" svg style={{ width: '1em', height: '1em' }} />
+              <LocaleMark label="IT" />
               IT
             </Link>
           </div>
@@ -176,7 +174,7 @@ export default function Header() {
                         : 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
                     }`}
                   >
-                    <ReactCountryFlag countryCode="GB" svg style={{ width: '0.9em', height: '0.9em' }} />
+                    <LocaleMark label="EN" />
                     EN
                   </Link>
                   <Link
@@ -188,7 +186,7 @@ export default function Header() {
                         : 'text-slate-500 dark:text-slate-400'
                     }`}
                   >
-                    <ReactCountryFlag countryCode="IT" svg style={{ width: '0.9em', height: '0.9em' }} />
+                    <LocaleMark label="IT" />
                     IT
                   </Link>
                 </div>

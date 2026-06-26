@@ -17,8 +17,10 @@ import {
   Palette
 } from 'lucide-react'
 import TestimonialsSectionIt from '@/components/TestimonialsSectionIt'
-import BottomCtaIt from '@/components/BottomCtaIt'
+import BottomCta from '@/components/BottomCta'
 import AnimatedHeroGraphic from '@/components/AnimatedHeroGraphic'
+import { getProjectPath, getProjects } from '@/lib/projects'
+import { getRoutePath } from '@/lib/site'
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 24 },
@@ -52,15 +54,8 @@ const processSteps = [
   }
 ]
 
-const projects = [
-  { href: 'https://rombonord.com/it/', shot: '/work-rombonord.webp', category: 'Hospitality', title: 'Rombo Nord', body: 'Sito bilingue per ristorante e cocktail bar sul mare a Genova Pegli.', color: '#0a1f44' },
-  { href: 'https://le-camelie.com/', shot: '/work-lecamelie.webp', category: 'Guesthouse', title: 'Le Camelie', body: 'Sito orientato alle prenotazioni per una guesthouse nel centro di Genova.', color: '#385948' },
-  { href: 'https://gjergj-jozef-kola.com/', shot: '/work-gjergj.webp', category: 'Portfolio autore', title: 'Gjergj Jozef Kola', body: 'Sito autore multilingua con biografia, libri e percorsi di contatto.', color: '#A36124' },
-  { href: 'https://consteam.eu/', shot: '/work-consteam.webp', category: 'Servizi locali', title: 'Consteam', body: 'Sito multi-pagina per servizi di pulizia e manutenzione.', color: '#FFBF43' },
-  { href: 'https://yourassistinitaly.com/', shot: '/work-yourassist.webp', category: 'Servizi expat', title: 'Your Assist in Italy', body: 'Sito bilingue per consulenza immigrazione e trasferimenti in Italia.', color: '#DC2626' }
-]
-
 export default function HomeItClient() {
+  const projects = getProjects('it')
   const [projectIndex, setProjectIndex] = useState(0)
 
   const scrollProjects = (direction: 'prev' | 'next') => {
@@ -92,11 +87,11 @@ export default function HomeItClient() {
             </p>
 
             <div className="mt-9 flex flex-wrap items-center justify-center gap-4 lg:justify-start">
-              <Link href="/it/work" className="inline-flex items-center gap-2 rounded-full border border-slate-900 bg-slate-900 px-8 py-3.5 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(15,23,42,0.08)] transition-all hover:-translate-y-0.5 hover:border-slate-700 hover:bg-slate-800 dark:border-white/20 dark:bg-transparent dark:text-white dark:shadow-none dark:hover:border-[var(--brand-gold)]/55 dark:hover:bg-white/[0.06]">
+              <Link href={getRoutePath('work', 'it')} className="inline-flex items-center gap-2 rounded-full border border-slate-900 bg-slate-900 px-8 py-3.5 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(15,23,42,0.08)] transition-all hover:-translate-y-0.5 hover:border-slate-700 hover:bg-slate-800 dark:border-white/20 dark:bg-transparent dark:text-white dark:shadow-none dark:hover:border-[var(--brand-gold)]/55 dark:hover:bg-white/[0.06]">
                 Guarda i lavori
                 <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link href="/it/contact" className="rounded-full border border-slate-300 bg-white/85 px-8 py-3.5 text-sm font-medium text-slate-700 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-[var(--brand-gold)] dark:border-white/15 dark:bg-white/5 dark:text-slate-200 dark:hover:border-[var(--brand-gold)]/60">
+              <Link href={getRoutePath('contact', 'it')} className="rounded-full border border-slate-300 bg-white/85 px-8 py-3.5 text-sm font-medium text-slate-700 backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-[var(--brand-gold)] dark:border-white/15 dark:bg-white/5 dark:text-slate-200 dark:hover:border-[var(--brand-gold)]/60">
                 Prenota una call
               </Link>
             </div>
@@ -158,7 +153,7 @@ export default function HomeItClient() {
             <div className="flex transition-transform duration-500 ease-out" style={{ transform: `translateX(-${projectIndex * 100}%)` }}>
               {projects.map(project => (
                 <div key={project.title} className="grid min-w-full cursor-default md:grid-cols-[1.35fr_0.65fr]" style={{ ['--project-color' as string]: project.color }}>
-                  <Link href={project.href} target="_blank" rel="noopener noreferrer" className="group/image relative aspect-[16/10] cursor-pointer overflow-hidden bg-slate-100 md:aspect-[16/9] dark:bg-slate-900">
+                  <Link href={getProjectPath(project.slug, 'it')} className="group/image relative aspect-[16/10] cursor-pointer overflow-hidden bg-slate-100 md:aspect-[16/9] dark:bg-slate-900">
                     <Image src={project.shot} alt={`Sito ${project.title}`} fill sizes="(max-width: 768px) 100vw, 780px" className="object-cover object-top transition-transform duration-700 group-hover/image:scale-[1.025]" />
                   </Link>
                   <div className="flex flex-col justify-center p-6">
@@ -166,7 +161,7 @@ export default function HomeItClient() {
                     <p className="text-xs uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">{project.category}</p>
                     <h3 className="mt-2 font-display text-2xl font-semibold text-slate-900 dark:text-slate-50">{project.title}</h3>
                     <p className="mt-3 text-sm leading-relaxed text-slate-500 dark:text-slate-300/80">{project.body}</p>
-                    <Link href={project.href} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex w-fit cursor-pointer items-center gap-2 text-sm font-medium text-slate-700 transition-colors hover:text-[var(--brand-blue)] dark:text-slate-200 dark:hover:text-[var(--brand-gold)]">
+                    <Link href={getProjectPath(project.slug, 'it')} className="mt-5 inline-flex w-fit cursor-pointer items-center gap-2 text-sm font-medium text-slate-700 transition-colors hover:text-[var(--brand-blue)] dark:text-slate-200 dark:hover:text-[var(--brand-gold)]">
                       Guarda progetto
                       <ArrowRight className="h-4 w-4" />
                     </Link>
@@ -178,7 +173,7 @@ export default function HomeItClient() {
             <button type="button" aria-label="Progetti successivi" onClick={() => scrollProjects('next')} className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-sm transition hover:translate-x-0.5 hover:border-[var(--brand-gold)] hover:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-gold)]/35 dark:border-white/10 dark:bg-slate-950/90 dark:text-slate-100 dark:hover:bg-slate-900"><ChevronRight className="h-4 w-4" /></button>
           </div>
 
-          <Link href="/it/work" className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[var(--brand-blue)] hover:text-blue-500 dark:text-[var(--brand-gold)] dark:hover:text-yellow-300">
+          <Link href={getRoutePath('work', 'it')} className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[var(--brand-blue)] hover:text-blue-500 dark:text-[var(--brand-gold)] dark:hover:text-yellow-300">
             Vedi tutti i progetti
             <ArrowRight className="h-4 w-4" />
           </Link>
@@ -186,7 +181,7 @@ export default function HomeItClient() {
       </motion.section>
 
       <TestimonialsSectionIt />
-      <BottomCtaIt />
+      <BottomCta locale="it" />
     </main>
   )
 }

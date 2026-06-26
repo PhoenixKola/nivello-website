@@ -1,48 +1,21 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 import { Check, Code2, Compass, Megaphone, Palette } from 'lucide-react'
+import PricingSection from '@/components/PricingSection'
+import { getServicePath, getServices } from '@/lib/services'
 
-const serviceCards = [
-  {
-    label: 'Strategia',
-    title: 'Strategia',
-    desc: 'Posizionamento, struttura dell\'offerta e piano pratico prima del design.',
-    items: ['Chiarezza su pubblico e offerta', 'Struttura e priorita del sito', 'Mappatura del percorso di conversione', 'Piano di lancio e prossimi passi'],
-    ideal: 'Ideale quando il business ha bisogno di una direzione piu chiara.',
-    icon: Compass,
-    color: 'var(--brand-gold)'
-  },
-  {
-    label: 'Marketing',
-    title: 'Marketing',
-    desc: 'Messaggi e logica di campagna per trasformare attenzione in contatti qualificati.',
-    items: ['Landing page e sales page', 'Messaggi e microcopy', 'Idee per lead magnet ed email flow', 'Setup base di analytics e tracking'],
-    ideal: 'Ideale per lanci, lead generation e offerte piu leggibili.',
-    icon: Megaphone,
-    color: 'var(--brand-blue)'
-  },
-  {
-    label: 'Design',
-    title: 'Brand e product design',
-    desc: 'Visual puliti e contemporanei, adatti al mercato italiano ed europeo.',
-    items: ['Look and feel del brand', 'UI design per siti e app', 'Design system e componenti', 'Asset visual per marketing'],
-    ideal: 'Ideale per SaaS, agenzie e aziende di servizi.',
-    icon: Palette,
-    color: 'var(--brand-purple)'
-  },
-  {
-    label: 'Sviluppo',
-    title: 'Sviluppo e implementazione',
-    desc: 'Siti veloci e SEO-friendly, costruiti con attenzione alla manutenzione.',
-    items: ['Siti corporate e landing page', 'Frontend custom React e Next.js', 'Integrazione headless CMS su richiesta', 'Controlli performance e accessibilita'],
-    ideal: 'Ideale quando vuoi un partner tecnico nel tempo.',
-    icon: Code2,
-    color: 'var(--brand-blue)'
-  }
-]
+const icons = {
+  compass: Compass,
+  megaphone: Megaphone,
+  palette: Palette,
+  code: Code2
+}
 
 export default function ServicesItClient() {
+  const serviceCards = getServices('it')
+
   return (
     <main className="bg-stone-50 dark:bg-slate-950/95">
       <section className="relative overflow-hidden bg-stone-50 dark:bg-slate-950/95">
@@ -64,7 +37,10 @@ export default function ServicesItClient() {
             <div className="mt-5 space-y-3">
               {serviceCards.map(service => (
                 <div key={service.label} className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 px-3 py-3 dark:border-white/10 dark:bg-slate-950/50">
-                  <service.icon className="h-4 w-4" style={{ color: service.color }} />
+                  {(() => {
+                    const Icon = icons[service.icon]
+                    return <Icon className="h-4 w-4" style={{ color: service.color }} />
+                  })()}
                   <span className="text-sm font-medium text-slate-800 dark:text-slate-100">{service.label}</span>
                 </div>
               ))}
@@ -84,11 +60,16 @@ export default function ServicesItClient() {
           <div className="grid gap-5 md:grid-cols-2">
             {serviceCards.map((s, i) => (
               <motion.article key={s.title} className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none dark:hover:border-white/20" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.08 }}>
-                <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-slate-900">
-                  <s.icon className="h-5 w-5" style={{ color: s.color }} />
-                </div>
+                {(() => {
+                  const Icon = icons[s.icon]
+                  return (
+                    <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-slate-900">
+                      <Icon className="h-5 w-5" style={{ color: s.color }} />
+                    </div>
+                  )
+                })()}
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{s.label}</p>
-                <h3 className="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-50">{s.title}</h3>
+                <h3 className="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-50">{s.shortTitle}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-300">{s.desc}</p>
                 <ul className="mt-4 grid gap-2 sm:grid-cols-2">
                   {s.items.map(item => (
@@ -98,12 +79,18 @@ export default function ServicesItClient() {
                     </li>
                   ))}
                 </ul>
-                <p className="mt-auto pt-5 text-xs font-medium text-slate-500 dark:text-slate-400">{s.ideal}</p>
+                <div className="mt-auto pt-5">
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{s.ideal}</p>
+                  <Link href={getServicePath(s.slug, 'it')} className="mt-3 inline-flex text-xs font-semibold text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
+                    Scopri il servizio
+                  </Link>
+                </div>
               </motion.article>
             ))}
           </div>
         </div>
       </section>
+      <PricingSection locale="it" />
     </main>
   )
 }

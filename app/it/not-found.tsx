@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { getRoutePath } from '@/lib/site'
 
 export default function NotFoundIt() {
   return (
@@ -17,13 +18,13 @@ export default function NotFoundIt() {
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Link
-            href="/it"
+            href={getRoutePath('home', 'it')}
             className="rounded-full bg-slate-50 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-sm hover:bg-slate-200"
           >
             Torna alla homepage
           </Link>
           <Link
-            href="/it/contact"
+            href={getRoutePath('contact', 'it')}
             className="rounded-full border border-slate-700 bg-slate-900/40 px-5 py-2.5 text-sm font-medium text-slate-100 hover:border-[var(--brand-gold)]/70 hover:bg-slate-900/70"
           >
             Contatti

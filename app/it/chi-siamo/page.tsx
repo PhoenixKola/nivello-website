@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, Code2, Compass, Megaphone, Palette } from 'lucide-react'
 import { pageSeo } from '../../seo'
+import { getRoutePath } from '@/lib/site'
 
 export const metadata: Metadata = pageSeo.aboutIt
 
@@ -43,7 +44,7 @@ export default function AboutItPage() {
 
       <section className="bg-stone-50 dark:bg-slate-950/95">
         <div className="mx-auto max-w-6xl px-4 py-16">
-          <Link href="/it/process" className="inline-flex items-center gap-2 text-sm font-medium text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
+          <Link href={getRoutePath('process', 'it')} className="inline-flex items-center gap-2 text-sm font-medium text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
             Scopri come lavoriamo
             <ArrowRight className="h-4 w-4" />
           </Link>

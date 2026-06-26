@@ -1,10 +1,12 @@
 import './globals.css'
 import type { Metadata } from 'next'
+import type { Viewport } from 'next'
 import { Inter, Fraunces } from 'next/font/google'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import StructuredData from '@/components/StructuredData'
+import { getRoutePath } from '@/lib/site'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const fraunces = Fraunces({
@@ -23,9 +25,13 @@ export const metadata: Metadata = {
   description:
     'Italy-based digital studio helping brands with strategy, marketing, design, and custom software development.',
   icons: {
-    icon: '/favicon.ico'
-    // TODO: Add /apple-touch-icon.png when a production touch icon is available.
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/icon.svg', type: 'image/svg+xml' }
+    ],
+    apple: '/apple-touch-icon.svg'
   },
+  manifest: '/site.webmanifest',
   openGraph: {
     title: 'Nivello',
     description:
@@ -44,12 +50,16 @@ export const metadata: Metadata = {
     images: ['/og/home']
   },
   alternates: {
-    canonical: '/',
+    canonical: getRoutePath('home', 'en'),
     languages: {
-      en: '/',
-      it: '/it'
+      en: getRoutePath('home', 'en'),
+      it: getRoutePath('home', 'it')
     }
   }
+}
+
+export const viewport: Viewport = {
+  themeColor: '#020618'
 }
 
 export default function RootLayout({

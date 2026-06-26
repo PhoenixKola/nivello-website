@@ -3,27 +3,18 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
+import { footerRoutes, getPathLocale, getRoutePath } from '@/lib/site'
 
 export default function Footer() {
   const pathname = usePathname() || '/'
-  const isItalian = pathname.startsWith('/it')
+  const locale = getPathLocale(pathname)
+  const isItalian = locale === 'it'
   const year = new Date().getFullYear()
 
-  const links = isItalian
-    ? [
-        { href: '/it/chi-siamo', label: 'Chi siamo' },
-        { href: '/it/impronta', label: 'Impronta' },
-        { href: '/it/privacy', label: 'Privacy' },
-        { href: '/it/disclaimer', label: 'Disclaimer' },
-        { href: '/it/contact', label: 'Contatti' }
-      ]
-    : [
-        { href: '/about', label: 'About' },
-        { href: '/imprint', label: 'Imprint' },
-        { href: '/privacy', label: 'Privacy' },
-        { href: '/disclaimer', label: 'Disclaimer' },
-        { href: '/contact', label: 'Contact' }
-      ]
+  const links = footerRoutes.map(route => ({
+    href: route.paths[locale],
+    label: route.labels[locale]
+  }))
 
   const tagline = isItalian
     ? 'Basato in Italia. Collaboriamo con clienti in tutta Europa'
@@ -33,7 +24,7 @@ export default function Footer() {
     <footer className="bg-stone-50 dark:bg-slate-950/95">
       <div className="mx-auto flex max-w-6xl flex-col gap-5 px-4 py-7 text-xs text-slate-500 md:flex-row md:items-center md:justify-between dark:text-slate-400">
         <div className="flex items-center gap-3">
-          <Link href={isItalian ? '/it/' : '/'} aria-label="Nivello home" className="shrink-0">
+          <Link href={getRoutePath('home', locale)} aria-label="Nivello home" className="shrink-0">
             <Image
               src="/nivello-logo-text-light.svg"
               alt="Nivello"
