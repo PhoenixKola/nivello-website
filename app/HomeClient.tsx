@@ -86,7 +86,7 @@ const projects = [
     color: '#FFBF43'
   },
   {
-    href: 'https://yourassistinitaly.it/',
+    href: 'https://yourassistinitaly.com/',
     shot: '/work-yourassist.webp',
     category: 'Expat services',
     title: 'Your Assist in Italy',

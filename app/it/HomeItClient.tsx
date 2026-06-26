@@ -57,7 +57,7 @@ const projects = [
   { href: 'https://le-camelie.com/', shot: '/work-lecamelie.webp', category: 'Guesthouse', title: 'Le Camelie', body: 'Sito orientato alle prenotazioni per una guesthouse nel centro di Genova.', color: '#385948' },
   { href: 'https://gjergj-jozef-kola.com/', shot: '/work-gjergj.webp', category: 'Portfolio autore', title: 'Gjergj Jozef Kola', body: 'Sito autore multilingua con biografia, libri e percorsi di contatto.', color: '#A36124' },
   { href: 'https://consteam.eu/', shot: '/work-consteam.webp', category: 'Servizi locali', title: 'Consteam', body: 'Sito multi-pagina per servizi di pulizia e manutenzione.', color: '#FFBF43' },
-  { href: 'https://yourassistinitaly.it/', shot: '/work-yourassist.webp', category: 'Servizi expat', title: 'Your Assist in Italy', body: 'Sito bilingue per consulenza immigrazione e trasferimenti in Italia.', color: '#DC2626' }
+  { href: 'https://yourassistinitaly.com/', shot: '/work-yourassist.webp', category: 'Servizi expat', title: 'Your Assist in Italy', body: 'Sito bilingue per consulenza immigrazione e trasferimenti in Italia.', color: '#DC2626' }
 ]
 
 export default function HomeItClient() {

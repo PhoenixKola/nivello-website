@@ -7,49 +7,50 @@ const ease = 'easeInOut' as const
 
 const layers = [
   {
-    src: '/hero-layer-08-mesh-glow.png',
+    src: '/hero-layer-08-mesh-glow.webp',
     className: 'left-[50%] top-[32%] w-[34%] opacity-45',
     animate: { x: [-4, 0, -4], y: [6, 0, 6], scale: [1, 0.94, 1], opacity: [0.55, 0.34, 0.55] },
     transition: { duration: 12, repeat: Infinity, ease }
   },
   {
-    src: '/hero-layer-06-grid-cube-platform.png',
+    src: '/hero-layer-06-grid-cube-platform.webp',
     className: 'left-[3%] top-[24%] w-[90%] opacity-78',
     animate: { rotate: [0, 180, 360], scale: [1, 0.92, 1] },
     transition: { duration: 26, repeat: Infinity, ease: 'linear' as const }
   },
   {
-    src: '/hero-layer-07-orbit-rings.png',
+    src: '/hero-layer-07-orbit-rings.webp',
     className: 'left-[15%] top-[54%] w-[68%]',
     animate: { x: [0, 2, 0], y: [0, -6, 0], scale: [1, 0.94, 1] },
     transition: { duration: 8.8, repeat: Infinity, ease }
   },
   {
-    src: '/hero-layer-02-analytics-card.png',
+    src: '/hero-layer-02-analytics-card.webp',
     className: 'left-[21%] top-[2%] w-[52%]',
     animate: { x: [0, 12, 0], y: [0, 34, 0], rotate: [0.8, -1.4, 0.8], scale: [1, 0.82, 1] },
     transition: { duration: 8.2, repeat: Infinity, ease }
   },
   {
-    src: '/hero-layer-03-back-glass-panel.png',
+    src: '/hero-layer-03-back-glass-panel.webp',
     className: 'left-[39%] top-[13%] w-[46%]',
     animate: { x: [0, -15, 0], y: [-2, 25, -2], rotate: [-1, 1.2, -1], scale: [1, 0.88, 1] },
     transition: { duration: 8.2, repeat: Infinity, ease }
   },
   {
-    src: '/hero-layer-01-n-logo.png',
+    src: '/hero-layer-01-n-logo.webp',
     className: 'left-[19%] top-[25%] w-[64%] z-10',
     animate: { x: [0, 1, 0], y: [-1, 2, -1], rotate: [0.2, 0, 0.2], scale: [1.02, 0.99, 1.02] },
-    transition: { duration: 8.2, repeat: Infinity, ease }
+    transition: { duration: 8.2, repeat: Infinity, ease },
+    priority: true
   },
   {
-    src: '/hero-layer-04-wave-panel.png',
+    src: '/hero-layer-04-wave-panel.webp',
     className: 'left-[7%] top-[36%] w-[39%] z-20',
     animate: { x: [-10, 28, 4, -10], y: [-16, 10, 14, -16], rotate: [-2.4, 2, -0.4, -2.4], scale: [1, 0.78, 0.9, 1] },
     transition: { duration: 6.8, repeat: Infinity, ease }
   },
   {
-    src: '/hero-layer-05-code-card-cursor.png',
+    src: '/hero-layer-05-code-card-cursor.webp',
     className: 'left-[57%] top-[37%] w-[38%] z-20',
     animate: { x: [11, -28, -4, 11], y: [-18, 11, 15, -18], rotate: [2.6, -2, 0.7, 2.6], scale: [1, 0.78, 0.9, 1] },
     transition: { duration: 6.6, repeat: Infinity, ease }
@@ -113,7 +114,7 @@ export default function AnimatedHeroGraphic() {
             alt=""
             width={1254}
             height={1254}
-            priority
+            priority={Boolean(layer.priority)}
             sizes="(max-width: 640px) 350px, (max-width: 1024px) 400px, 500px"
             className="h-auto w-full select-none object-contain drop-shadow-[0_22px_60px_rgba(15,23,42,0.14)] dark:drop-shadow-[0_22px_70px_rgba(0,0,0,0.35)]"
             draggable={false}

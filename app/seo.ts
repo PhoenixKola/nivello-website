@@ -65,14 +65,14 @@ export const pageSeo = {
     locale: 'it_IT'
   }),
   services: makeMetadata({
-    title: 'Services | Nivello',
+    title: 'Services',
     description: 'Strategy, marketing, design, and development services for modern websites, product pages, and lead-focused digital experiences.',
     path: '/services',
     itPath: '/it/services',
     ogSlug: 'services'
   }),
   servicesIt: makeMetadata({
-    title: 'Servizi | Nivello',
+    title: 'Servizi',
     description: 'Strategia, marketing, design e sviluppo per siti moderni, pagine prodotto ed esperienze digitali orientate ai contatti.',
     path: '/it/services',
     itPath: '/it/services',
@@ -80,14 +80,14 @@ export const pageSeo = {
     locale: 'it_IT'
   }),
   work: makeMetadata({
-    title: 'Work | Nivello',
+    title: 'Work',
     description: 'Selected Nivello website projects for hospitality, publishing, local services, consulting, and expat support brands.',
     path: '/work',
     itPath: '/it/work',
     ogSlug: 'work'
   }),
   workIt: makeMetadata({
-    title: 'Lavori | Nivello',
+    title: 'Lavori',
     description: 'Progetti web selezionati per hospitality, editoria, servizi locali, consulenza e supporto expat.',
     path: '/it/work',
     itPath: '/it/work',
@@ -95,14 +95,14 @@ export const pageSeo = {
     locale: 'it_IT'
   }),
   process: makeMetadata({
-    title: 'How We Work | Nivello',
+    title: 'How We Work',
     description: 'A clear five-step process from discovery and scope to design, build, launch, and refinement.',
     path: '/process',
     itPath: '/it/process',
     ogSlug: 'process'
   }),
   processIt: makeMetadata({
-    title: 'Metodo | Nivello',
+    title: 'Metodo',
     description: 'Un processo chiaro in cinque fasi: analisi, proposta, design, sviluppo, lancio e miglioramento.',
     path: '/it/process',
     itPath: '/it/process',
@@ -110,14 +110,14 @@ export const pageSeo = {
     locale: 'it_IT'
   }),
   contact: makeMetadata({
-    title: 'Contact | Nivello',
+    title: 'Contact',
     description: 'Tell Nivello about your website, marketing, design, or software project. We usually reply within one business day.',
     path: '/contact',
     itPath: '/it/contact',
     ogSlug: 'contact'
   }),
   contactIt: makeMetadata({
-    title: 'Contatti | Nivello',
+    title: 'Contatti',
     description: 'Raccontaci il tuo progetto web, marketing, design o software. Di solito rispondiamo entro un giorno lavorativo.',
     path: '/it/contact',
     itPath: '/it/contact',
@@ -125,14 +125,14 @@ export const pageSeo = {
     locale: 'it_IT'
   }),
   about: makeMetadata({
-    title: 'About | Nivello',
+    title: 'About',
     description: 'Nivello is an Italy-based digital studio for strategy, marketing, design, and modern web development.',
     path: '/about',
     itPath: '/it/chi-siamo',
     ogSlug: 'about'
   }),
   aboutIt: makeMetadata({
-    title: 'Chi siamo | Nivello',
+    title: 'Chi siamo',
     description: 'Nivello e uno studio digitale basato in Italia per strategia, marketing, design e sviluppo web moderno.',
     path: '/it/chi-siamo',
     itPath: '/it/chi-siamo',
@@ -140,14 +140,14 @@ export const pageSeo = {
     locale: 'it_IT'
   }),
   imprint: makeMetadata({
-    title: 'Imprint | Nivello',
+    title: 'Imprint',
     description: 'Legal information and company contact details for Nivello.',
     path: '/imprint',
     itPath: '/it/impronta',
     ogSlug: 'imprint'
   }),
   imprintIt: makeMetadata({
-    title: 'Impronta | Nivello',
+    title: 'Impronta',
     description: 'Informazioni legali e dettagli di contatto di Nivello.',
     path: '/it/impronta',
     itPath: '/it/impronta',
@@ -155,14 +155,14 @@ export const pageSeo = {
     locale: 'it_IT'
   }),
   privacy: makeMetadata({
-    title: 'Privacy Policy | Nivello',
+    title: 'Privacy Policy',
     description: 'How Nivello handles personal data, contact requests, and website analytics.',
     path: '/privacy',
     itPath: '/it/privacy',
     ogSlug: 'privacy'
   }),
   privacyIt: makeMetadata({
-    title: 'Privacy | Nivello',
+    title: 'Privacy',
     description: 'Come Nivello gestisce dati personali, richieste di contatto e analytics del sito.',
     path: '/it/privacy',
     itPath: '/it/privacy',
@@ -170,14 +170,14 @@ export const pageSeo = {
     locale: 'it_IT'
   }),
   disclaimer: makeMetadata({
-    title: 'Disclaimer | Nivello',
+    title: 'Disclaimer',
     description: 'General website disclaimer for Nivello content, links, and services.',
     path: '/disclaimer',
     itPath: '/it/disclaimer',
     ogSlug: 'disclaimer'
   }),
   disclaimerIt: makeMetadata({
-    title: 'Disclaimer | Nivello',
+    title: 'Disclaimer',
     description: 'Disclaimer generale per contenuti, link e servizi del sito Nivello.',
     path: '/it/disclaimer',
     itPath: '/it/disclaimer',
