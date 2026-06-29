@@ -43,27 +43,26 @@ export default function CaseStudyPage({ slug, locale = 'en' }: { slug: string; l
       </section>
 
       <section className="bg-stone-50 dark:bg-slate-950/95">
-        <div className="mx-auto grid max-w-6xl gap-5 px-4 py-20 md:grid-cols-3 md:py-28">
-          {[
-            { title: isItalian ? 'Sfida' : 'Challenge', body: project.challenge },
-            { title: isItalian ? 'Soluzione' : 'Solution', body: project.solution },
-            { title: isItalian ? 'Risultato' : 'Result', body: project.result }
-          ].map(item => (
-            <article key={item.title} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
-              <div className="mb-4 h-1 w-10 rounded-full" style={{ backgroundColor: project.color }} />
-              <h2 className="font-display text-xl font-semibold text-slate-900 dark:text-white">{item.title}</h2>
-              <p className="mt-3 text-sm leading-relaxed text-slate-500 dark:text-slate-300">{item.body}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="bg-stone-50 dark:bg-slate-950/95">
-        <div className="mx-auto max-w-6xl px-4 py-16">
-          <Link href={getRoutePath('contact', locale)} className="inline-flex items-center gap-2 text-sm font-medium text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
-            {isItalian ? 'Vuoi un risultato simile?' : 'Want a similar result?'}
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+        <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
+          <div className="grid gap-5 md:grid-cols-3">
+            {[
+              { title: isItalian ? 'Sfida' : 'Challenge', body: project.challenge },
+              { title: isItalian ? 'Soluzione' : 'Solution', body: project.solution },
+              { title: isItalian ? 'Risultato' : 'Result', body: project.result }
+            ].map(item => (
+              <article key={item.title} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
+                <div className="mb-4 h-1 w-10 rounded-full" style={{ backgroundColor: project.color }} />
+                <h2 className="font-display text-xl font-semibold text-slate-900 dark:text-white">{item.title}</h2>
+                <p className="mt-3 text-sm leading-relaxed text-slate-500 dark:text-slate-300">{item.body}</p>
+              </article>
+            ))}
+          </div>
+          <div className="mt-10 flex justify-center">
+            <Link href={getRoutePath('contact', locale)} className="group inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-medium text-[var(--brand-blue)] shadow-sm transition hover:border-[var(--brand-blue)]/40 hover:shadow dark:border-white/10 dark:bg-white/[0.03] dark:text-[var(--brand-gold)] dark:hover:border-[var(--brand-gold)]/40">
+              {isItalian ? 'Vuoi un risultato simile?' : 'Want a similar result?'}
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          </div>
         </div>
       </section>
 

@@ -119,7 +119,7 @@ export const services: Service[] = [
   {
     slug: 'development',
     icon: 'code',
-    color: 'var(--brand-blue)',
+    color: 'var(--brand-pink)',
     locales: {
       en: {
         label: 'Development',

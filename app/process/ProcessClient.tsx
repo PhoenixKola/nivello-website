@@ -35,7 +35,7 @@ const steps = [
     clientView: 'A staging preview you can test across desktop and mobile.',
     duration: '1-2 weeks',
     icon: Code2,
-    color: 'var(--brand-blue)'
+    color: 'var(--brand-pink)'
   },
   {
     title: 'Launch and refinement',

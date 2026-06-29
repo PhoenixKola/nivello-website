@@ -50,7 +50,7 @@ const processSteps = [
     title: 'Sviluppo e lancio',
     body: 'Sviluppiamo il sito in Next.js, testiamo i flussi importanti e prepariamo un lancio stabile. Dopo il lancio, migliorare resta semplice.',
     icon: Code2,
-    color: 'var(--brand-blue)'
+    color: 'var(--brand-pink)'
   }
 ]
 

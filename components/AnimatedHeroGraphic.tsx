@@ -16,7 +16,8 @@ const layers = [
     src: '/hero-layer-06-grid-cube-platform.webp',
     className: 'left-[3%] top-[24%] w-[90%] opacity-78',
     animate: { rotate: [0, 180, 360], scale: [1, 0.92, 1] },
-    transition: { duration: 26, repeat: Infinity, ease: 'linear' as const }
+    transition: { duration: 26, repeat: Infinity, ease: 'linear' as const },
+    priority: true
   },
   {
     src: '/hero-layer-07-orbit-rings.webp',
