@@ -37,10 +37,17 @@ const testimonials = [
     avatar: 'bg-[#DC2626] text-white',
     quote: 'Nivello made our services immediately clear. International clients now understand what we offer before even booking a call.',
     detail: 'The site structure and copy changed how expats perceive us — professional, approachable, and trustworthy.'
+  },
+  {
+    name: 'Klajdi',
+    role: 'Owner, ProGreen',
+    avatar: 'bg-[#90C898] text-slate-950',
+    quote: 'We asked for a landing page and a tool to run our sites, and both arrived working the way we actually work on site.',
+    detail: 'Enquiries now come in as proper site-visit requests, and our jobs are finally tracked in one place instead of across phones.'
   }
 ]
 
-const clients = ['Rombo Nord', 'Le Camelie', 'Your Assist in Italy', 'Consteam', 'Gjergj Jozef Kola']
+const clients = ['Rombo Nord', 'Le Camelie', 'Your Assist in Italy', 'Consteam', 'Gjergj Jozef Kola', 'ProGreen']
 
 function Stars() {
   return (

@@ -22,11 +22,11 @@ export default function WorkClient() {
               Selected work built to <span className="text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">look sharp</span> and perform clearly.
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-500 dark:text-slate-300/80">
-              Real projects across hospitality, publishing, local business, and expat services. Every site designed and built by Nivello, from strategy to launch.
+              Real projects across hospitality, publishing, construction, local business, and expat services. Every site designed and built by Nivello, from strategy to launch.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
             {projects.map((p, i) => (
               <motion.a
                 key={p.title}

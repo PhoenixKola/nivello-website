@@ -145,7 +145,7 @@ export default function HomeItClient() {
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">Lavori selezionati</p>
               <h2 className="font-display text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.75rem] dark:text-white">Una panoramica di cio che costruiamo.</h2>
-              <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-500 dark:text-slate-300/80">Progetti reali in hospitality, attivita locali, editoria e servizi professionali.</p>
+              <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-500 dark:text-slate-300/80">Progetti reali in hospitality, edilizia, attivita locali, editoria e servizi professionali.</p>
             </div>
           </div>
 

@@ -180,7 +180,7 @@ export default function HomeClient() {
                 A snapshot of what we build.
               </h2>
               <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-500 dark:text-slate-300/80">
-                Real projects across hospitality, local business, publishing, and professional services.
+                Real projects across hospitality, construction, local business, publishing, and professional services.
               </p>
             </div>
           </div>

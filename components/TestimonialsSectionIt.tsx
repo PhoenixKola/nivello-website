@@ -37,10 +37,17 @@ const testimonials = [
     avatar: 'bg-[#DC2626] text-white',
     quote: 'Nivello ha reso chiari i nostri servizi in modo immediato. I clienti internazionali ora capiscono cosa facciamo prima ancora di prenotare una consulenza.',
     detail: 'La struttura del sito e i testi hanno cambiato la percezione che gli expat hanno di noi: professionali, accessibili e affidabili.'
+  },
+  {
+    name: 'Klajdi',
+    role: 'Titolare, ProGreen',
+    avatar: 'bg-[#90C898] text-slate-950',
+    quote: 'Avevamo chiesto una landing page e uno strumento per seguire i cantieri: sono arrivati entrambi, e funzionano come lavoriamo davvero.',
+    detail: 'Le richieste arrivano già come sopralluoghi da fissare e i lavori sono finalmente tracciati in un unico posto.'
   }
 ]
 
-const clients = ['Rombo Nord', 'Le Camelie', 'Your Assist in Italy', 'Consteam', 'Gjergj Jozef Kola']
+const clients = ['Rombo Nord', 'Le Camelie', 'Your Assist in Italy', 'Consteam', 'Gjergj Jozef Kola', 'ProGreen']
 
 function Stars() {
   return (

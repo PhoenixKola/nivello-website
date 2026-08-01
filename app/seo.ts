@@ -76,13 +76,13 @@ export const pageSeo = {
   }),
   work: makeMetadata({
     title: 'Work',
-    description: 'Selected Nivello website projects for hospitality, publishing, local services, consulting, and expat support brands.',
+    description: 'Selected Nivello website projects for hospitality, publishing, construction, local services, consulting, and expat support brands.',
     route: 'work',
     ogSlug: 'work'
   }),
   workIt: makeMetadata({
     title: 'Lavori',
-    description: 'Progetti web selezionati per hospitality, editoria, servizi locali, consulenza e supporto expat.',
+    description: 'Progetti web selezionati per hospitality, editoria, edilizia, servizi locali, consulenza e supporto expat.',
     route: 'work',
     ogSlug: 'work-it',
     locale: 'it'

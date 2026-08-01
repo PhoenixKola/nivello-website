@@ -22,11 +22,11 @@ export default function WorkItClient() {
               Progetti selezionati, costruiti per <span className="text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">apparire solidi</span> e funzionare con chiarezza.
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-500 dark:text-slate-300/80">
-              Progetti reali in hospitality, editoria, servizi locali e supporto expat. Ogni sito e progettato e sviluppato da Nivello, dalla strategia al lancio.
+              Progetti reali in hospitality, editoria, edilizia, servizi locali e supporto expat. Ogni sito e progettato e sviluppato da Nivello, dalla strategia al lancio.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
             {projects.map((p, i) => (
               <motion.a key={p.title} href={`#${getProjectId(p.title)}`} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.2 + i * 0.06 }} className="rounded-lg border border-slate-200 bg-white px-2.5 py-2 shadow-sm transition-all hover:border-[var(--project-color)] hover:shadow-[0_8px_22px_rgba(15,23,42,0.05)] dark:border-white/10 dark:bg-white/[0.03]" style={{ ['--project-color' as string]: p.color }}>
                 <div className="mb-1.5 h-0.5 w-7 rounded-full" style={{ backgroundColor: p.color }} />

@@ -30,6 +30,7 @@ export default function Footer() {
               alt="Nivello"
               width={160}
               height={46}
+              loading="eager"
               className="block h-auto w-[116px] dark:hidden"
             />
             <Image
@@ -37,6 +38,7 @@ export default function Footer() {
               alt="Nivello"
               width={160}
               height={46}
+              loading="eager"
               className="hidden h-auto w-[116px] dark:block"
             />
           </Link>

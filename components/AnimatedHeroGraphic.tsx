@@ -116,6 +116,7 @@ export default function AnimatedHeroGraphic() {
             width={1254}
             height={1254}
             priority={Boolean(layer.priority)}
+            loading="eager"
             sizes="(max-width: 640px) 350px, (max-width: 1024px) 400px, 500px"
             className="h-auto w-full select-none object-contain drop-shadow-[0_22px_60px_rgba(15,23,42,0.14)] dark:drop-shadow-[0_22px_70px_rgba(0,0,0,0.35)]"
             draggable={false}

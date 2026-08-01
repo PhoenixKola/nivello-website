@@ -172,6 +172,35 @@ const projects = [
         services: ['Strategia', 'Messaggio', 'Design', 'Sviluppo bilingue']
       }
     } satisfies Record<Locale, LocalizedProject>
+  },
+  {
+    slug: 'progreen',
+    href: 'https://progreenitaly.com/',
+    shot: '/work-progreen.webp',
+    title: 'ProGreen',
+    color: '#90C898',
+    locales: {
+      en: {
+        category: 'Construction',
+        body: 'Landing page for a Genova construction firm, plus a private site-management app.',
+        desc: 'Landing page for a construction, renovation, and energy-efficiency company in Genova, built to turn interest into site-visit requests, alongside a private app for managing their sites.',
+        details: ['Services split into construction, renovation, and efficiency', 'Site visit as the primary call to action', 'Private portal for site and job management'],
+        challenge: 'ProGreen covers construction, renovation, and energy efficiency in Genova, but had no public presence explaining the offer and no single place to keep track of active sites.',
+        solution: 'We built a focused landing page around the three service lines and their four-step process, with the site visit as the main call to action, plus a private web app for managing sites and jobs.',
+        result: 'A credible public face for the company and an internal tool that keeps every site and job in one place.',
+        services: ['Strategy', 'Design', 'Development', 'Web app']
+      },
+      it: {
+        category: 'Edilizia',
+        body: 'Landing page per un’impresa edile di Genova, piu un gestionale privato per i cantieri.',
+        desc: 'Landing page per un’impresa di costruzioni, ristrutturazioni ed efficientamento energetico a Genova, pensata per trasformare l’interesse in richieste di sopralluogo, affiancata da un gestionale privato per i cantieri.',
+        details: ['Servizi divisi tra costruzioni, ristrutturazioni ed efficientamento', 'Sopralluogo come call to action principale', 'Portale privato per la gestione di cantieri e lavori'],
+        challenge: 'ProGreen segue costruzioni, ristrutturazioni ed efficientamento energetico a Genova, ma non aveva una presenza pubblica che spiegasse l’offerta ne un unico posto per seguire i cantieri attivi.',
+        solution: 'Abbiamo costruito una landing page centrata sulle tre linee di servizio e sul percorso in quattro fasi, con il sopralluogo come call to action principale, piu un’app web privata per gestire cantieri e lavori.',
+        result: 'Un volto pubblico credibile per l’impresa e uno strumento interno che tiene ogni cantiere e ogni lavoro in un unico posto.',
+        services: ['Strategia', 'Design', 'Sviluppo', 'Web app']
+      }
+    } satisfies Record<Locale, LocalizedProject>
   }
 ]
 
