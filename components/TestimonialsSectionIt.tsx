@@ -22,7 +22,7 @@ const testimonials = [
     role: 'Autore, sito portfolio',
     avatar: 'bg-[var(--brand-purple)] text-white',
     quote: 'Comunicazione chiara, rispetto delle scadenze e scelte di design sempre motivate.',
-    detail: 'Sembrava di lavorare con un piccolo team interno più che con un fornitore esterno.'
+    detail: 'Sembrava di lavorare con un team interno più che con un fornitore esterno.'
   },
   {
     name: 'Consteam',

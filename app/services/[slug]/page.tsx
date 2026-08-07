@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!service) return {}
 
   return {
-    title: service.title,
+    title: { absolute: 'Nivello' },
     description: service.intro,
     alternates: {
       canonical: getServicePath(service.slug, 'en'),

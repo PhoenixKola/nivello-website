@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!project) return {}
 
   return {
-    title: `${project.title} case study`,
+    title: { absolute: 'Nivello' },
     description: project.desc,
     alternates: {
       canonical: getProjectPath(project.slug, 'en'),

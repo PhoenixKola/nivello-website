@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { CheckCircle2, Code2, Compass, FileText, Rocket, Sparkles } from 'lucide-react'
 import FaqSection from '@/components/FaqSection'
+import ProcessHeroGraphic from '@/components/ProcessHeroGraphic'
 
 const steps = [
   {
@@ -51,40 +52,21 @@ export default function ProcessClient() {
   return (
     <main className="bg-stone-50 dark:bg-slate-950/95">
       <section className="bg-stone-50 dark:bg-slate-950/95">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-20 sm:px-6 md:py-28 lg:grid-cols-[1fr_0.48fr] lg:items-center lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-20 sm:px-6 md:py-28 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:px-8">
           <motion.div initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: 'easeOut' }} className="max-w-3xl">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 shadow-sm dark:border-slate-700/60 dark:bg-slate-900/70">
               <div className="h-1.5 w-1.5 rounded-full bg-[var(--brand-gold)]" />
               <span className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400">How we work</span>
             </div>
-            <h1 className="font-display text-[2.7rem] font-bold leading-[1.05] tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem] dark:text-white">
+            <h1 className="font-display text-[2.35rem] font-bold leading-[1.06] tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem] dark:text-white">
               A clear process from <span className="text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">first idea</span> to final launch.
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-relaxed text-slate-500 dark:text-slate-300/80">
               The details of every project change, but the way we collaborate stays predictable. Clear steps, focused checkpoints, and no messy handovers.
             </p>
           </motion.div>
-          <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1, ease: 'easeOut' }} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">Project rhythm</p>
-                <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">First checkpoints</p>
-              </div>
-              <span className="rounded-full border border-slate-200 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500 dark:border-white/10 dark:text-slate-400">Preview</span>
-            </div>
-            <div className="mt-5 space-y-2.5">
-              {steps.slice(0, 3).map((step, index) => (
-                <div key={step.title} className="rounded-xl border border-slate-100 bg-slate-50 p-3 dark:border-white/10 dark:bg-slate-950/45">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-[11px] font-semibold text-slate-500 dark:border-white/10 dark:bg-slate-900 dark:text-slate-300">0{index + 1}</span>
-                      <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">{step.title}</p>
-                    </div>
-                    <p className="shrink-0 text-[11px] font-medium text-slate-500 dark:text-slate-400">{step.duration}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <motion.div initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.75, delay: 0.1, ease: 'easeOut' }}>
+            <ProcessHeroGraphic locale="en" />
           </motion.div>
         </div>
       </section>

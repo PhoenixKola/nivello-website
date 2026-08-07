@@ -20,7 +20,7 @@ export function makeMetadata({
   const localeCode = locale === 'it' ? 'it_IT' : 'en_US'
 
   return {
-    title,
+    title: { absolute: 'Nivello' },
     description,
     alternates: {
       canonical,
@@ -76,13 +76,13 @@ export const pageSeo = {
   }),
   work: makeMetadata({
     title: 'Work',
-    description: 'Selected Nivello website projects for hospitality, publishing, construction, local services, consulting, and expat support brands.',
+    description: 'Selected Nivello websites, landing pages, and custom web apps for hospitality, construction, local services, publishing, and consulting brands.',
     route: 'work',
     ogSlug: 'work'
   }),
   workIt: makeMetadata({
     title: 'Lavori',
-    description: 'Progetti web selezionati per hospitality, editoria, edilizia, servizi locali, consulenza e supporto expat.',
+    description: 'Siti, landing page e app web custom realizzati da Nivello per hospitality, edilizia, servizi locali, editoria e consulenza.',
     route: 'work',
     ogSlug: 'work-it',
     locale: 'it'

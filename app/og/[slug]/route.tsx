@@ -27,13 +27,13 @@ const pages: Record<string, { title: string; eyebrow: string; description: strin
   },
   work: {
     eyebrow: 'Work',
-    title: 'Selected website projects',
-    description: 'Hospitality, publishing, services, and consulting.'
+    title: 'Websites, landing pages, and apps',
+    description: 'Public-facing experiences and behind-the-scenes products.'
   },
   'work-it': {
     eyebrow: 'Lavori',
-    title: 'Progetti web selezionati',
-    description: 'Hospitality, editoria, servizi e consulenza.'
+    title: 'Siti, landing page e app',
+    description: 'Esperienze pubbliche e prodotti digitali dietro le quinte.'
   },
   process: {
     eyebrow: 'How we work',
@@ -55,8 +55,8 @@ const pages: Record<string, { title: string; eyebrow: string; description: strin
     title: 'Raccontaci cosa vuoi costruire',
     description: 'Di solito rispondiamo entro un giorno lavorativo.'
   },
-  about: { eyebrow: 'About', title: 'Italy-based digital studio', description: 'Small team, clear thinking, premium execution.' },
-  'about-it': { eyebrow: 'Chi siamo', title: 'Studio digitale basato in Italia', description: 'Team piccolo, pensiero chiaro, esecuzione premium.' },
+  about: { eyebrow: 'About', title: 'Italy-based digital studio', description: 'Clear thinking, premium execution.' },
+  'about-it': { eyebrow: 'Chi siamo', title: 'Studio digitale basato in Italia', description: 'Pensiero chiaro, esecuzione premium.' },
   imprint: { eyebrow: 'Legal', title: 'Imprint', description: 'Legal and contact information for Nivello.' },
   'imprint-it': { eyebrow: 'Legale', title: 'Impronta', description: 'Informazioni legali e contatti di Nivello.' },
   privacy: { eyebrow: 'Legal', title: 'Privacy Policy', description: 'How Nivello handles personal data.' },

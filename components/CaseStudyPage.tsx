@@ -3,8 +3,9 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion, useReducedMotion } from 'framer-motion'
-import { ArrowLeft, ArrowRight, ArrowUpRight, Check, ExternalLink, Lightbulb, Target, TrendingUp } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ArrowUpRight, Check, ExternalLink, Globe2, LayoutDashboard, Lightbulb, Target, TrendingUp } from 'lucide-react'
 import BottomCta from '@/components/BottomCta'
+import ProjectTypeBadges from '@/components/ProjectTypeBadges'
 import type { Locale } from '@/lib/site'
 import { getRoutePath } from '@/lib/site'
 import { getProject, getProjectPath, getProjects } from '@/lib/projects'
@@ -15,6 +16,12 @@ const copy = {
     liveSite: 'Visit live site',
     allWork: 'All projects',
     shipped: 'What we shipped',
+    productsEyebrow: 'One business, two connected products',
+    productsTitle: 'The public experience and the private workspace.',
+    productsIntro: 'ProGreen needed more than a new front door. We designed the customer journey and the operational tool as two parts of the same system.',
+    websiteLabel: 'Website / landing page',
+    websiteTitle: 'A clear public face',
+    appLabel: 'Private web app',
     storyEyebrow: 'Behind the build',
     storyTitle: 'How the project came together',
     challenge: 'Challenge',
@@ -29,6 +36,12 @@ const copy = {
     liveSite: 'Visita il sito live',
     allWork: 'Tutti i progetti',
     shipped: 'Cosa abbiamo realizzato',
+    productsEyebrow: 'Un business, due prodotti connessi',
+    productsTitle: 'L’esperienza pubblica e lo spazio di lavoro privato.',
+    productsIntro: 'ProGreen aveva bisogno di piu di una nuova vetrina. Abbiamo progettato il percorso cliente e lo strumento operativo come due parti dello stesso sistema.',
+    websiteLabel: 'Sito / landing page',
+    websiteTitle: 'Un volto pubblico chiaro',
+    appLabel: 'App web privata',
     storyEyebrow: 'Dietro al progetto',
     storyTitle: 'Come è nato il progetto',
     challenge: 'Sfida',
@@ -39,6 +52,13 @@ const copy = {
     nextCta: 'Vedi il case study'
   }
 } satisfies Record<Locale, Record<string, string>>
+
+const productPanelClass = 'group flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none'
+const productMediaClass = 'relative aspect-video w-full shrink-0 overflow-hidden'
+const productWebsiteMediaClass = `${productMediaClass} bg-[#063c2b]`
+const productAppMediaClass = `${productMediaClass} bg-white`
+const productImageClass = 'object-contain object-top transition-transform duration-700 group-hover:scale-[1.015]'
+const productBodyClass = 'flex flex-1 flex-col p-6 sm:p-7'
 
 function getDomain(href: string) {
   try {
@@ -82,24 +102,7 @@ export default function CaseStudyPage({ slug, locale = 'en' }: { slug: string; l
     <main className="bg-stone-50 dark:bg-slate-950/95" style={{ ['--pc' as string]: color }}>
       {/* ── Hero ─────────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
-        <div aria-hidden className="pointer-events-none absolute inset-0">
-          <div
-            className="absolute left-[62%] top-[-34%] h-[640px] w-[860px] -translate-x-1/2 rounded-full opacity-[0.22] blur-[130px] dark:opacity-[0.28]"
-            style={{ background: `radial-gradient(circle, ${color} 0%, transparent 68%)` }}
-          />
-          <div
-            className="absolute inset-0 opacity-40 dark:opacity-25"
-            style={{
-              backgroundImage:
-                'linear-gradient(to right, rgba(100,116,139,0.14) 1px, transparent 1px), linear-gradient(to bottom, rgba(100,116,139,0.14) 1px, transparent 1px)',
-              backgroundSize: '58px 58px',
-              maskImage: 'radial-gradient(ellipse 75% 65% at 50% 0%, #000 35%, transparent 100%)',
-              WebkitMaskImage: 'radial-gradient(ellipse 75% 65% at 50% 0%, #000 35%, transparent 100%)'
-            }}
-          />
-        </div>
-
-        <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 pb-16 pt-10 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:gap-14 lg:px-8 lg:pb-24 lg:pt-14">
+        <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 pb-16 pt-10 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:gap-14 lg:px-8 lg:pb-24 lg:pt-14">
           <motion.div
             initial={{ opacity: 0, y: 26 }}
             animate={{ opacity: 1, y: 0 }}
@@ -124,6 +127,8 @@ export default function CaseStudyPage({ slug, locale = 'en' }: { slug: string; l
             <div className="mt-5 h-1 w-14 rounded-full" style={{ backgroundColor: color }} />
 
             <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg dark:text-slate-300/85">{project.desc}</p>
+
+            <ProjectTypeBadges kinds={project.kinds} locale={locale} className="mt-6" />
 
             <div className="mt-7 flex flex-wrap gap-2">
               {project.services.map(service => (
@@ -162,11 +167,6 @@ export default function CaseStudyPage({ slug, locale = 'en' }: { slug: string; l
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={reducedMotion ? { duration: 0 } : { duration: 0.75, ease: 'easeOut', delay: 0.12 }}
           >
-            <div
-              aria-hidden
-              className="absolute -inset-8 rounded-[2.5rem] opacity-45 blur-3xl dark:opacity-40"
-              style={{ background: `radial-gradient(58% 58% at 50% 42%, ${color} 0%, transparent 72%)` }}
-            />
             <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_34px_90px_-28px_rgba(15,23,42,0.45)] dark:border-white/10 dark:bg-slate-900 dark:shadow-[0_34px_90px_-24px_rgba(0,0,0,0.7)]">
               <div className="flex items-center gap-2 border-b border-slate-200/80 bg-slate-50/90 px-4 py-2.5 dark:border-white/10 dark:bg-white/[0.045]">
                 <span className="h-2.5 w-2.5 rounded-full bg-slate-300 dark:bg-slate-600" />
@@ -219,8 +219,50 @@ export default function CaseStudyPage({ slug, locale = 'en' }: { slug: string; l
         </div>
       </section>
 
+      {project.app && (
+        <section id="connected-products">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+            <motion.div {...rise()} className="mb-10 max-w-3xl">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">{t.productsEyebrow}</p>
+              <h2 className="font-display text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl dark:text-white">{t.productsTitle}</h2>
+              <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-500 dark:text-slate-300/80">{t.productsIntro}</p>
+            </motion.div>
+
+            <div className="grid gap-6 lg:grid-cols-2">
+              <motion.article {...rise(0.05)} className={productPanelClass}>
+                <div className={productWebsiteMediaClass}>
+                  <Image src={project.shot} alt={`${project.title} website`} fill sizes="(max-width: 1024px) 100vw, 50vw" className={productImageClass} />
+                </div>
+                <div className={productBodyClass}>
+                  <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
+                    <Globe2 className="h-3.5 w-3.5" />
+                    {t.websiteLabel}
+                  </div>
+                  <h3 className="mt-3 font-display text-2xl font-semibold text-slate-900 dark:text-white">{t.websiteTitle}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-slate-500 dark:text-slate-300/80">{project.websiteSummary || project.body}</p>
+                </div>
+              </motion.article>
+
+              <motion.article {...rise(0.12)} className={productPanelClass}>
+                <div className={productAppMediaClass}>
+                  <Image src={project.appShot || '/work-progreen-app-redacted.png'} alt={`${project.title} private operations app, with client data anonymized`} fill sizes="(max-width: 1024px) 100vw, 50vw" className={productImageClass} />
+                </div>
+                <div className={productBodyClass}>
+                  <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
+                    <LayoutDashboard className="h-3.5 w-3.5" />
+                    {t.appLabel}
+                  </div>
+                  <h3 className="mt-3 font-display text-2xl font-semibold text-slate-900 dark:text-white">{project.app.title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-slate-500 dark:text-slate-300/80">{project.app.description}</p>
+                </div>
+              </motion.article>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ── Story ────────────────────────────────────────────── */}
-      <section className="relative border-t border-slate-200/70 dark:border-white/[0.06]">
+      <section>
         <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
           <motion.div {...rise()} className="mb-10 max-w-2xl">
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
@@ -268,7 +310,7 @@ export default function CaseStudyPage({ slug, locale = 'en' }: { slug: string; l
 
       {/* ── Next project ─────────────────────────────────────── */}
       {nextProject && nextProject.slug !== project.slug && (
-        <section className="relative border-t border-slate-200/70 dark:border-white/[0.06]">
+        <section>
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
             <motion.div {...rise()}>
               <Link

@@ -18,18 +18,16 @@ const fraunces = Fraunces({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.nivello.it'),
-  title: {
-    default: 'Nivello',
-    template: '%s | Nivello'
-  },
+  title: 'Nivello',
   description:
     'Italy-based digital studio helping brands with strategy, marketing, design, and custom software development.',
   icons: {
     icon: [
-      { url: '/favicon.ico' },
-      { url: '/icon.svg', type: 'image/svg+xml' }
+      { url: '/nivello-icon.png', type: 'image/png', sizes: '256x256' },
+      { url: '/favicon.ico', sizes: '64x64' }
     ],
-    apple: '/apple-touch-icon.svg'
+    shortcut: '/favicon.ico',
+    apple: '/nivello-icon.png'
   },
   manifest: '/site.webmanifest',
   openGraph: {

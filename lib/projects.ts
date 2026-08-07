@@ -1,9 +1,19 @@
 import type { Locale } from './site'
 
+export type ProjectKind = 'website' | 'app'
+
+export type AppHighlight = {
+  title: string
+  description: string
+  details: string[]
+}
+
 type LocalizedProject = {
   category: string
   body: string
   desc: string
+  websiteSummary?: string
+  app?: AppHighlight
   details: string[]
   challenge: string
   solution: string
@@ -15,11 +25,15 @@ export type Project = {
   slug: string
   href: string
   shot: string
+  appShot?: string
   title: string
   color: string
+  kinds: ProjectKind[]
   category: string
   body: string
   desc: string
+  websiteSummary?: string
+  app?: AppHighlight
   details: string[]
   challenge: string
   solution: string
@@ -34,6 +48,7 @@ const projects = [
     shot: '/work-rombonord.webp',
     title: 'Rombo Nord',
     color: '#0a1f44',
+    kinds: ['website'] satisfies ProjectKind[],
     locales: {
       en: {
         category: 'Hospitality',
@@ -63,6 +78,7 @@ const projects = [
     shot: '/work-lecamelie.webp',
     title: 'Le Camelie',
     color: '#385948',
+    kinds: ['website'] satisfies ProjectKind[],
     locales: {
       en: {
         category: 'Guesthouse',
@@ -92,6 +108,7 @@ const projects = [
     shot: '/work-gjergj.webp',
     title: 'Gjergj Jozef Kola',
     color: '#A36124',
+    kinds: ['website'] satisfies ProjectKind[],
     locales: {
       en: {
         category: 'Author portfolio',
@@ -121,6 +138,7 @@ const projects = [
     shot: '/work-consteam.webp',
     title: 'Consteam',
     color: '#FFBF43',
+    kinds: ['website'] satisfies ProjectKind[],
     locales: {
       en: {
         category: 'Local services',
@@ -150,6 +168,7 @@ const projects = [
     shot: '/work-yourassist.webp',
     title: 'Your Assist in Italy',
     color: '#DC2626',
+    kinds: ['website'] satisfies ProjectKind[],
     locales: {
       en: {
         category: 'Expat services',
@@ -176,14 +195,22 @@ const projects = [
   {
     slug: 'progreen',
     href: 'https://progreenitaly.com/',
-    shot: '/work-progreen.webp',
+    shot: '/work-progreen-live.png',
+    appShot: '/work-progreen-app-redacted.png',
     title: 'ProGreen',
     color: '#90C898',
+    kinds: ['website', 'app'] satisfies ProjectKind[],
     locales: {
       en: {
         category: 'Construction',
         body: 'Landing page for a Genova construction firm, plus a private site-management app.',
         desc: 'Landing page for a construction, renovation, and energy-efficiency company in Genova, built to turn interest into site-visit requests, alongside a private app for managing their sites.',
+        websiteSummary: 'A focused landing page that turns construction, renovation, and energy-efficiency enquiries into site-visit requests.',
+        app: {
+          title: 'Site operations, organised in one place.',
+          description: 'A private web app that gives the ProGreen team one clear workspace for active sites, jobs, progress, and next actions.',
+          details: ['Active-site overview', 'Job and progress tracking', 'One shared operational workspace']
+        },
         details: ['Services split into construction, renovation, and efficiency', 'Site visit as the primary call to action', 'Private portal for site and job management'],
         challenge: 'ProGreen covers construction, renovation, and energy efficiency in Genova, but had no public presence explaining the offer and no single place to keep track of active sites.',
         solution: 'We built a focused landing page around the three service lines and their four-step process, with the site visit as the main call to action, plus a private web app for managing sites and jobs.',
@@ -194,6 +221,12 @@ const projects = [
         category: 'Edilizia',
         body: 'Landing page per un’impresa edile di Genova, piu un gestionale privato per i cantieri.',
         desc: 'Landing page per un’impresa di costruzioni, ristrutturazioni ed efficientamento energetico a Genova, pensata per trasformare l’interesse in richieste di sopralluogo, affiancata da un gestionale privato per i cantieri.',
+        websiteSummary: 'Una landing page focalizzata che trasforma richieste su costruzioni, ristrutturazioni ed efficientamento in sopralluoghi.',
+        app: {
+          title: 'La gestione dei cantieri, in un unico spazio.',
+          description: 'Un’app web privata che offre al team ProGreen uno spazio chiaro per cantieri attivi, lavori, avanzamento e prossime azioni.',
+          details: ['Panoramica cantieri attivi', 'Tracciamento lavori e avanzamento', 'Un solo spazio operativo condiviso']
+        },
         details: ['Servizi divisi tra costruzioni, ristrutturazioni ed efficientamento', 'Sopralluogo come call to action principale', 'Portale privato per la gestione di cantieri e lavori'],
         challenge: 'ProGreen segue costruzioni, ristrutturazioni ed efficientamento energetico a Genova, ma non aveva una presenza pubblica che spiegasse l’offerta ne un unico posto per seguire i cantieri attivi.',
         solution: 'Abbiamo costruito una landing page centrata sulle tre linee di servizio e sul percorso in quattro fasi, con il sopralluogo come call to action principale, piu un’app web privata per gestire cantieri e lavori.',
@@ -209,8 +242,10 @@ export function getProjects(locale: Locale): Project[] {
     href: project.href,
     slug: project.slug,
     shot: project.shot,
+    appShot: 'appShot' in project ? project.appShot : undefined,
     title: project.title,
     color: project.color,
+    kinds: project.kinds,
     ...project.locales[locale]
   }))
 }
@@ -227,8 +262,10 @@ export function getProject(slug: string, locale: Locale) {
     href: project.href,
     slug: project.slug,
     shot: project.shot,
+    appShot: 'appShot' in project ? project.appShot : undefined,
     title: project.title,
     color: project.color,
+    kinds: project.kinds,
     ...project.locales[locale]
   }
 }

@@ -19,6 +19,7 @@ import {
 import TestimonialsSection from '@/components/TestimonialsSection'
 import BottomCta from '@/components/BottomCta'
 import AnimatedHeroGraphic from '@/components/AnimatedHeroGraphic'
+import ProjectTypeBadges from '@/components/ProjectTypeBadges'
 import { getProjectPath, getProjects } from '@/lib/projects'
 import { getRoutePath } from '@/lib/site'
 
@@ -149,7 +150,8 @@ export default function HomeClient() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.08 }}
-                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-[0_16px_50px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none dark:hover:border-white/20"
+                className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:border-[var(--step-color)] hover:shadow-[0_16px_50px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none dark:hover:border-[var(--step-color)]"
+                style={{ ['--step-color' as string]: step.color }}
               >
                 <span className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-slate-900">
                   <step.icon className="h-5 w-5" style={{ color: step.color }} />
@@ -210,6 +212,7 @@ export default function HomeClient() {
                     <p className="text-xs uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">{project.category}</p>
                     <h3 className="mt-2 font-display text-2xl font-semibold text-slate-900 dark:text-slate-50">{project.title}</h3>
                     <p className="mt-3 text-sm leading-relaxed text-slate-500 dark:text-slate-300/80">{project.body}</p>
+                    <ProjectTypeBadges kinds={project.kinds} locale="en" className="mt-4" />
                     <Link href={getProjectPath(project.slug, 'en')} className="mt-5 inline-flex w-fit cursor-pointer items-center gap-2 text-sm font-medium text-slate-700 transition-colors hover:text-[var(--brand-blue)] dark:text-slate-200 dark:hover:text-[var(--brand-gold)]">
                       View project
                       <ArrowRight className="h-4 w-4" />

@@ -60,6 +60,7 @@ export default function Header() {
             width={160}
             height={46}
             priority
+            loading="eager"
             className="block h-auto w-[120px] dark:hidden md:w-[130px]"
           />
           <Image
@@ -68,6 +69,7 @@ export default function Header() {
             width={160}
             height={46}
             priority
+            loading="eager"
             className="hidden h-auto w-[120px] dark:block md:w-[130px]"
           />
         </Link>
