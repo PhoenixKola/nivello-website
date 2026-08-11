@@ -84,7 +84,7 @@ export default function HomeClient() {
             </div>
 
             <h1 className="text-[2.7rem] font-bold leading-[1.03] tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem] xl:text-[4rem] dark:text-white">
-              Premium websites for{' '}
+              Premium digital solutions for{' '}
               <span className="italic text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">ambitious brands.</span>
             </h1>
 
