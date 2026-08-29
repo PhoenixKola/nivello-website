@@ -6,12 +6,12 @@ export const dynamic = 'force-static'
 const pages: Record<string, { title: string; eyebrow: string; description: string }> = {
   home: {
     eyebrow: 'Nivello',
-    title: 'Premium websites for Italian brands',
+    title: 'Premium digital solutions for ambitious brands',
     description: 'Strategy, marketing, design, and Next.js development.'
   },
   'home-it': {
     eyebrow: 'Nivello',
-    title: 'Siti web premium per brand italiani',
+    title: 'Soluzioni digitali premium per brand ambiziosi',
     description: 'Strategia, marketing, design e sviluppo Next.js.'
   },
   services: {
@@ -54,8 +54,8 @@ const pages: Record<string, { title: string; eyebrow: string; description: strin
     title: 'Raccontaci cosa vuoi costruire',
     description: 'Di solito rispondiamo entro un giorno lavorativo.'
   },
-  about: { eyebrow: 'About', title: 'Italy-based digital studio', description: 'Clear thinking, premium execution.' },
-  'about-it': { eyebrow: 'Chi siamo', title: 'Studio digitale basato in Italia', description: 'Pensiero chiaro, esecuzione premium.' },
+  about: { eyebrow: 'About', title: 'A digital studio built on clarity', description: 'Clear thinking, premium execution.' },
+  'about-it': { eyebrow: 'Chi siamo', title: 'Uno studio digitale fondato sulla chiarezza', description: 'Pensiero chiaro, esecuzione premium.' },
   imprint: { eyebrow: 'Legal', title: 'Imprint', description: 'Legal and contact information for Nivello.' },
   'imprint-it': { eyebrow: 'Legale', title: 'Impronta', description: 'Informazioni legali e contatti di Nivello.' },
   privacy: { eyebrow: 'Legal', title: 'Privacy Policy', description: 'How Nivello handles personal data.' },

@@ -7,7 +7,7 @@ export default function StructuredData() {
         '@id': 'https://www.nivello.it/#organization',
         name: 'Nivello',
         url: 'https://www.nivello.it',
-        logo: 'https://www.nivello.it/icon.svg',
+        logo: 'https://www.nivello.it/nivello-icon.png',
         email: 'office@nivello.it',
         areaServed: [
           { '@type': 'Country', name: 'Italy' },

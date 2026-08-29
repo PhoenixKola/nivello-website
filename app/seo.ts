@@ -50,13 +50,13 @@ export function makeMetadata({
 export const pageSeo = {
   home: makeMetadata({
     title: 'Nivello',
-    description: 'Strategy, marketing, design, and Next.js development for Italian and European brands that need a sharper digital presence.',
+    description: 'Strategy, marketing, design, and Next.js development for brands that want to look sharper, communicate clearly, and convert better.',
     route: 'home',
     ogSlug: 'home'
   }),
   homeIt: makeMetadata({
     title: 'Nivello',
-    description: 'Strategia, marketing, design e sviluppo Next.js per brand italiani ed europei che vogliono una presenza digitale piu chiara.',
+    description: 'Strategia, marketing, design e sviluppo Next.js per brand che vogliono comunicare meglio, apparire piu credibili e convertire di piu.',
     route: 'home',
     ogSlug: 'home-it',
     locale: 'it'
@@ -115,13 +115,13 @@ export const pageSeo = {
   }),
   about: makeMetadata({
     title: 'About',
-    description: 'Nivello is an Italy-based digital studio for strategy, marketing, design, and modern web development.',
+    description: 'Nivello is a digital studio for strategy, marketing, design, and modern web development.',
     route: 'about',
     ogSlug: 'about'
   }),
   aboutIt: makeMetadata({
     title: 'Chi siamo',
-    description: 'Nivello e uno studio digitale basato in Italia per strategia, marketing, design e sviluppo web moderno.',
+    description: 'Nivello e uno studio digitale per strategia, marketing, design e sviluppo web moderno.',
     route: 'about',
     ogSlug: 'about-it',
     locale: 'it'

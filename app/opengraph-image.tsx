@@ -13,7 +13,7 @@ export default async function OpengraphImage() {
     (
       <OgCard
         eyebrow="Nivello"
-        title="Premium websites for Italian brands"
+        title="Premium digital solutions for ambitious brands"
         description="Strategy, marketing, design, and Next.js development."
       />
     ),

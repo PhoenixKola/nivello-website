@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import type { ReactElement } from 'react'
 
 export const ogSize = { width: 1200, height: 630 }
@@ -86,14 +88,20 @@ function GridLines() {
   )
 }
 
-function LogoMark() {
-  return (
-    <svg width="62" height="62" viewBox="0 0 512 512">
-      <rect width="512" height="512" rx="118" fill="#0d1424" />
-      <path d="M126 316 256 186l130 130" fill="none" stroke={BLUE} strokeWidth="52" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M126 196 256 326l130-130" fill="none" stroke={GOLD} strokeWidth="52" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
+let logoDataUri: string | null = null
+
+/** The real brand mark, inlined as a data URI (Satori cannot fetch files). */
+function getLogoDataUri() {
+  if (logoDataUri === null) {
+    try {
+      const file = readFileSync(join(process.cwd(), 'public', 'nivello-icon.png'))
+      logoDataUri = `data:image/png;base64,${file.toString('base64')}`
+    } catch {
+      logoDataUri = ''
+    }
+  }
+
+  return logoDataUri
 }
 
 /**
@@ -109,6 +117,8 @@ export function OgCard({
   title: string
   description: string
 }): ReactElement {
+  const logo = getLogoDataUri()
+
   return (
     <div
       style={{
@@ -145,8 +155,8 @@ export function OgCard({
         {/* header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-            <LogoMark />
-            <div style={{ display: 'flex', fontSize: 36, fontWeight: 600, letterSpacing: -0.6 }}>Nivello</div>
+            {logo ? <img src={logo} width={68} height={68} alt="" /> : null}
+            <div style={{ display: 'flex', fontSize: 38, fontWeight: 600, letterSpacing: -0.6 }}>Nivello</div>
           </div>
           <div
             style={{

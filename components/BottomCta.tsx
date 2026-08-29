@@ -5,7 +5,7 @@ import { getRoutePath, type Locale } from '@/lib/site'
 const copy = {
   en: {
     eyebrow: "Let's collaborate",
-    title: 'Ready to launch something new for the Italian market?',
+    title: 'Ready to launch something new?',
     body: 'Tell us what you are building, where you are now, and what needs to happen next. We will come back with a practical direction, not a generic pitch.',
     button: 'Book a call',
     cardTitle: 'Typical engagement',
@@ -14,7 +14,7 @@ const copy = {
   },
   it: {
     eyebrow: 'Collaboriamo',
-    title: 'Pronto a lanciare qualcosa di nuovo per il mercato italiano?',
+    title: 'Pronto a lanciare qualcosa di nuovo?',
     body: 'Raccontaci cosa stai costruendo, dove sei ora e cosa deve succedere dopo. Risponderemo con una direzione pratica, non con una proposta generica.',
     button: 'Prenota una call',
     cardTitle: 'Collaborazione tipica',
