@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { Check, Clock3, Globe2, Mail, MapPin, MessageSquare, Plus, Send } from 'lucide-react'
+import { Check, Clock3, Globe2, Mail, MessageSquare, Plus, Send } from 'lucide-react'
 import ContactForm from '@/components/ContactForm'
 import MessageSendAnimation from '@/components/MessageSendAnimation'
 import type { Locale } from '@/lib/site'
@@ -17,7 +17,7 @@ const copy = {
     titleAccent: 'building.',
     intro: 'We will help shape the next step. Share a bit about your brand, your goals, and your timing. We usually reply within one business day.',
     replyBadge: 'Usually replies within one business day',
-    meta: ['Based in Italy', 'Working across Europe', 'office@nivello.it'],
+    meta: ['Working across Europe', 'office@nivello.it'],
     emailCta: 'Email us directly',
     nextTitle: 'What happens next',
     steps: [
@@ -61,7 +61,7 @@ const copy = {
     titleAccent: 'costruire.',
     intro: 'Ti aiutiamo a definire il prossimo passo. Raccontaci il brand, gli obiettivi e le tempistiche. Di solito rispondiamo entro un giorno lavorativo.',
     replyBadge: 'Di solito rispondiamo entro un giorno lavorativo',
-    meta: ['Basati in Italia', 'Attivi in Europa', 'office@nivello.it'],
+    meta: ['Attivi in Europa', 'office@nivello.it'],
     emailCta: 'Scrivici direttamente',
     nextTitle: 'Cosa succede dopo',
     steps: [
@@ -101,7 +101,7 @@ const copy = {
   }
 } satisfies Record<Locale, unknown>
 
-const metaIcons = [MapPin, Globe2, Mail]
+const metaIcons = [Globe2, Mail]
 
 export default function ContactPage({ locale = 'en' }: { locale?: Locale }) {
   const content = copy[locale]

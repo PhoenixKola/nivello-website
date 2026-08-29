@@ -79,7 +79,7 @@ export default function HomeClient() {
             <div className="mb-7 inline-flex items-center gap-2.5 rounded-full border border-slate-200/80 bg-white/85 px-4 py-2 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-white/5">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--brand-gold)]" />
               <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-300/90">
-                Based in Italy. Working across Europe
+                Working across Europe
               </span>
             </div>
 
