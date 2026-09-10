@@ -50,26 +50,26 @@ export function makeMetadata({
 export const pageSeo = {
   home: makeMetadata({
     title: 'Nivello',
-    description: 'Strategy, marketing, design, and Next.js development for brands that want to look sharper, communicate clearly, and convert better.',
+    description: 'Modern Next.js development for fast, maintainable websites and web apps, supported by strategy, design, and marketing.',
     route: 'home',
     ogSlug: 'home'
   }),
   homeIt: makeMetadata({
     title: 'Nivello',
-    description: 'Strategia, marketing, design e sviluppo Next.js per brand che vogliono comunicare meglio, apparire piu credibili e convertire di piu.',
+    description: 'Sviluppo Next.js per siti e app web veloci e mantenibili, supportato da strategia, design e marketing.',
     route: 'home',
     ogSlug: 'home-it',
     locale: 'it'
   }),
   services: makeMetadata({
     title: 'Services',
-    description: 'Strategy, marketing, design, and development services for modern websites, product pages, and lead-focused digital experiences.',
+    description: 'Web development for modern websites and digital products, with strategy, marketing, and design available as supporting services.',
     route: 'services',
     ogSlug: 'services'
   }),
   servicesIt: makeMetadata({
     title: 'Servizi',
-    description: 'Strategia, marketing, design e sviluppo per siti moderni, pagine prodotto ed esperienze digitali orientate ai contatti.',
+    description: 'Sviluppo web per siti e prodotti digitali moderni, con strategia, marketing e design come servizi di supporto.',
     route: 'services',
     ogSlug: 'services-it',
     locale: 'it'
@@ -102,26 +102,26 @@ export const pageSeo = {
   }),
   contact: makeMetadata({
     title: 'Contact',
-    description: 'Tell Nivello about your website, marketing, design, or software project. We usually reply within one business day.',
+    description: 'Tell Nivello about the website, web app, or software you need developed. We usually reply within one business day.',
     route: 'contact',
     ogSlug: 'contact'
   }),
   contactIt: makeMetadata({
     title: 'Contatti',
-    description: 'Raccontaci il tuo progetto web, marketing, design o software. Di solito rispondiamo entro un giorno lavorativo.',
+    description: 'Raccontaci il sito, la web app o il software che vuoi sviluppare. Di solito rispondiamo entro un giorno lavorativo.',
     route: 'contact',
     ogSlug: 'contact-it',
     locale: 'it'
   }),
   about: makeMetadata({
     title: 'About',
-    description: 'Nivello is a digital studio for strategy, marketing, design, and modern web development.',
+    description: 'Nivello is a development-led studio for modern websites and web apps, supported by strategy, marketing, and design.',
     route: 'about',
     ogSlug: 'about'
   }),
   aboutIt: makeMetadata({
     title: 'Chi siamo',
-    description: 'Nivello e uno studio digitale per strategia, marketing, design e sviluppo web moderno.',
+    description: 'Nivello e uno studio guidato dallo sviluppo di siti e app web moderni, supportato da strategia, marketing e design.',
     route: 'about',
     ogSlug: 'about-it',
     locale: 'it'

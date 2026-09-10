@@ -16,23 +16,23 @@ const flowStages = {
 const copy = {
   en: {
     eyebrow: 'Services',
-    title: 'One connected system, from first decision to final build.',
-    intro: 'Strategy, messaging, design, and development are coordinated from the start—so every decision supports the same business goal.',
+    title: 'Development at the core, every supporting discipline connected.',
+    intro: 'We lead with modern web development, bringing in strategy, messaging, and design to make the final product clearer, stronger, and easier to use.',
     flowLabel: 'How the work connects',
-    sectionEyebrow: 'Four disciplines, one direction',
-    sectionTitle: 'Each service solves a different part of the same problem.',
-    sectionBody: 'Start where the friction is highest, or bring the full system together for a complete launch.',
+    sectionEyebrow: 'One core service, three supporting disciplines',
+    sectionTitle: 'Development leads. Everything else makes the build work harder.',
+    sectionBody: 'Start with the build, then add the strategy, messaging, or design support the product actually needs.',
     view: 'Explore service',
     ideal: 'Best fit'
   },
   it: {
     eyebrow: 'Servizi',
-    title: 'Un unico sistema connesso, dalla prima scelta al build finale.',
-    intro: 'Strategia, messaggio, design e sviluppo sono coordinati fin dall’inizio, cosi ogni decisione sostiene lo stesso obiettivo di business.',
+    title: 'Lo sviluppo al centro, ogni disciplina di supporto connessa.',
+    intro: 'Partiamo dallo sviluppo web moderno e integriamo strategia, messaggio e design per rendere il prodotto finale piu chiaro, solido e facile da usare.',
     flowLabel: 'Come si collega il lavoro',
-    sectionEyebrow: 'Quattro discipline, una direzione',
-    sectionTitle: 'Ogni servizio risolve una parte diversa dello stesso problema.',
-    sectionBody: 'Parti dal punto con piu attrito oppure unisci l’intero sistema per un lancio completo.',
+    sectionEyebrow: 'Un servizio centrale, tre discipline di supporto',
+    sectionTitle: 'Lo sviluppo guida. Il resto rende il prodotto piu efficace.',
+    sectionBody: 'Parti dal build, poi aggiungi il supporto strategico, di messaggio o design che serve davvero al prodotto.',
     view: 'Scopri il servizio',
     ideal: 'Ideale per'
   }

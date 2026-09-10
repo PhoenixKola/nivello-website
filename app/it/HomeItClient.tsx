@@ -79,12 +79,12 @@ export default function HomeItClient() {
             </div>
 
             <h1 className="text-[2.7rem] font-bold leading-[1.03] tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem] xl:text-[4rem] dark:text-white">
-              Soluzioni digitali premium per brand{' '}
+              Sviluppo web moderno per brand{' '}
               <span className="italic text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">ambiziosi.</span>
             </h1>
 
             <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-slate-500 sm:text-lg lg:mx-0 dark:text-slate-300/75">
-              Strategia, marketing, design e sviluppo Next.js per brand che vogliono comunicare meglio, apparire piu credibili e convertire di piu.
+              Sviluppiamo siti e app web veloci e mantenibili in Next.js, con strategia, design e marketing a supporto del prodotto quando servono.
             </p>
 
             <div className="mt-9 flex flex-wrap items-center justify-center gap-4 lg:justify-start">
@@ -100,7 +100,7 @@ export default function HomeItClient() {
             <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 lg:justify-start">
               {[
                 { icon: Languages, label: 'Italiano e inglese' },
-                { icon: CheckCircle2, label: 'Dalla strategia al lancio' },
+                { icon: CheckCircle2, label: 'Dallo sviluppo al lancio' },
                 { icon: Code2, label: 'React / Next.js' },
                 { icon: Globe2, label: 'Mercato europeo' }
               ].map(item => (
@@ -123,7 +123,7 @@ export default function HomeItClient() {
           <div className="mb-12">
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">Metodo</p>
             <h2 className="font-display text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.75rem] dark:text-white">Un processo semplice in quattro passi.</h2>
-            <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-500 dark:text-slate-300/80">Nessuna call infinita, nessun passaggio caotico. Solo un percorso chiaro dall&apos;idea al lancio.</p>
+            <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-500 dark:text-slate-300/80">Strategia, messaggio e design supportano il lavoro centrale: sviluppare e lanciare un prodotto digitale veloce e mantenibile.</p>
           </div>
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
             {processSteps.map((step, i) => (

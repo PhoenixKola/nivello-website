@@ -84,12 +84,12 @@ export default function HomeClient() {
             </div>
 
             <h1 className="text-[2.7rem] font-bold leading-[1.03] tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem] xl:text-[4rem] dark:text-white">
-              Premium digital solutions for{' '}
+              Modern web development for{' '}
               <span className="italic text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">ambitious brands.</span>
             </h1>
 
             <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-slate-500 sm:text-lg lg:mx-0 dark:text-slate-300/75">
-              Strategy, marketing, design, and Next.js development for brands that want to look sharper, communicate clearly, and convert better.
+              We build fast, maintainable websites and web apps in Next.js, with strategy, design, and marketing support where the product needs it.
             </p>
 
             <div className="mt-9 flex flex-wrap items-center justify-center gap-4 lg:justify-start">
@@ -105,7 +105,7 @@ export default function HomeClient() {
             <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 lg:justify-start">
               {[
                 { icon: Languages, label: 'Italian & English' },
-                { icon: CheckCircle2, label: 'Strategy to launch' },
+                { icon: CheckCircle2, label: 'Development to launch' },
                 { icon: Code2, label: 'React / Next.js' },
                 { icon: Globe2, label: 'EU-friendly' }
               ].map(item => (
@@ -139,7 +139,7 @@ export default function HomeClient() {
               A simple four-step process.
             </h2>
             <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-500 dark:text-slate-300/80">
-              No endless calls, no messy handovers. Just a clear path from idea to launch.
+              Strategy, messaging, and design support the core work: developing and launching a fast, maintainable digital product.
             </p>
           </div>
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">

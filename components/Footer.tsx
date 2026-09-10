@@ -12,7 +12,7 @@ const copy = {
     title: 'Have something worth building?',
     body: 'Tell us where you are now. We will help make the next move clear.',
     cta: 'Start a conversation',
-    intro: 'Strategy, design, and development for digital experiences people understand and businesses can use.',
+    intro: 'Modern web development, supported by strategy and design, for digital products people understand and businesses can use.',
     explore: 'Explore',
     company: 'Studio',
     contact: 'Contact',
@@ -25,7 +25,7 @@ const copy = {
     title: 'Hai qualcosa che vale la pena costruire?',
     body: 'Raccontaci da dove parti. Ti aiutiamo a rendere chiaro il prossimo passo.',
     cta: 'Iniziamo a parlarne',
-    intro: 'Strategia, design e sviluppo per esperienze digitali comprensibili alle persone e utili alle aziende.',
+    intro: 'Sviluppo web moderno, supportato da strategia e design, per prodotti digitali comprensibili alle persone e utili alle aziende.',
     explore: 'Esplora',
     company: 'Studio',
     contact: 'Contatti',
@@ -130,7 +130,7 @@ export default function Footer() {
 
         <div className="flex flex-col gap-2 border-t border-slate-200 pt-6 text-[11px] text-slate-400 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:text-slate-500">
           <p>© {year} Nivello. {content.rights}</p>
-          <p>Strategy · Design · Development</p>
+          <p>Development · Design · Strategy</p>
         </div>
       </div>
     </footer>

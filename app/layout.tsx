@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://www.nivello.it'),
   title: 'Nivello',
   description:
-    'A digital studio helping brands with strategy, marketing, design, and custom software development.',
+    'A development-led digital studio building modern websites and custom web apps, supported by strategy and design.',
   icons: {
     icon: [
       { url: '/nivello-icon.png', type: 'image/png', sizes: '256x256' },
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Nivello',
     description:
-      'Nivello blends strategy, marketing, design, and technology for ambitious brands.',
+      'Nivello builds modern websites and web apps, with strategy, marketing, and design supporting the development.',
     url: '/',
     siteName: 'Nivello',
     type: 'website',
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Nivello',
     description:
-      'Strategy, marketing, design, and Next.js development for brands that want to look sharper and convert better.',
+      'Modern Next.js development for ambitious brands, supported by strategy, marketing, and design.',
     images: ['/og/home']
   },
   alternates: {

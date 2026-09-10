@@ -210,7 +210,7 @@ export function OgCard({
         >
           <div style={{ display: 'flex', fontSize: 24, fontWeight: 600, color: '#e2e8f0' }}>nivello.it</div>
           <div style={{ display: 'flex', fontSize: 21, color: '#7c8ba1', letterSpacing: 0.4 }}>
-            Strategy · Design · Development
+            Development · Design · Strategy
           </div>
         </div>
       </div>

@@ -7,10 +7,10 @@ import { getRoutePath } from '@/lib/site'
 export const metadata: Metadata = pageSeo.aboutIt
 
 const principles = [
-  { title: 'Prima la strategia', body: 'Definiamo il ruolo del sito prima di scegliere layout o linguaggio visivo.', icon: Compass, color: 'var(--brand-gold)' },
-  { title: 'Chiarezza marketing', body: 'Messaggio, offerta e call to action restano vicini all’obiettivo business.', icon: Megaphone, color: 'var(--brand-blue)' },
-  { title: 'Design curato', body: 'Manteniamo interfacce calme, premium e facili da leggere su ogni dispositivo.', icon: Palette, color: 'var(--brand-purple)' },
-  { title: 'Sviluppo moderno', body: 'Next.js, React e implementazione pulita rendono il sito veloce e mantenibile.', icon: Code2, color: 'var(--brand-blue)' }
+  { title: 'Direzione chiara', body: 'La strategia definisce cosa deve ottenere il build prima di iniziare lo sviluppo.', icon: Compass, color: 'var(--brand-gold)' },
+  { title: 'Messaggi utili', body: 'Il pensiero marketing assegna un compito chiaro a ogni pagina e interazione.', icon: Megaphone, color: 'var(--brand-blue)' },
+  { title: 'Design funzionale', body: 'Interfacce calme e responsive supportano il prodotto senza ostacolarlo.', icon: Palette, color: 'var(--brand-purple)' },
+  { title: 'Sviluppo al centro', body: 'Next.js, React e implementazione pulita rendono ogni prodotto veloce e mantenibile.', icon: Code2, color: 'var(--brand-blue)' }
 ]
 
 export default function AboutItPage() {
@@ -20,10 +20,10 @@ export default function AboutItPage() {
         <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
           <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">Chi siamo</p>
           <h1 className="max-w-3xl font-display text-[2.7rem] font-bold leading-[1.05] tracking-tight text-slate-900 sm:text-5xl dark:text-white">
-            Uno studio italiano per una presenza digitale piu chiara.
+            Uno studio digitale costruito intorno allo sviluppo.
           </h1>
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-slate-500 dark:text-slate-300/80">
-            Nivello unisce strategia, marketing, design e sviluppo per brand che vogliono un sito premium e facile da capire. Manteniamo il team snello, il processo strutturato e l’esecuzione concentrata.
+            Nivello e uno studio digitale guidato dallo sviluppo, specializzato in siti e app web moderni. Strategia, marketing e design supportano il build, mentre un team snello e un processo strutturato mantengono l&apos;implementazione focalizzata.
           </p>
         </div>
       </section>

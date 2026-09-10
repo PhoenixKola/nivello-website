@@ -6,23 +6,23 @@ export const dynamic = 'force-static'
 const pages: Record<string, { title: string; eyebrow: string; description: string }> = {
   home: {
     eyebrow: 'Nivello',
-    title: 'Premium digital solutions for ambitious brands',
-    description: 'Strategy, marketing, design, and Next.js development.'
+    title: 'Modern web development for ambitious brands',
+    description: 'Fast, maintainable websites and web apps built with Next.js.'
   },
   'home-it': {
     eyebrow: 'Nivello',
-    title: 'Soluzioni digitali premium per brand ambiziosi',
-    description: 'Strategia, marketing, design e sviluppo Next.js.'
+    title: 'Sviluppo web moderno per brand ambiziosi',
+    description: 'Siti e app web veloci e mantenibili, sviluppati in Next.js.'
   },
   services: {
     eyebrow: 'Services',
-    title: 'Strategy, marketing, design, development',
-    description: 'A focused digital studio for clear growth work.'
+    title: 'Web development, with the right support',
+    description: 'Strategy, marketing, and design strengthen the core build.'
   },
   'services-it': {
     eyebrow: 'Servizi',
-    title: 'Strategia, marketing, design, sviluppo',
-    description: 'Uno studio digitale per crescere con chiarezza.'
+    title: 'Sviluppo web, con il supporto giusto',
+    description: 'Strategia, marketing e design rafforzano il build centrale.'
   },
   work: {
     eyebrow: 'Work',

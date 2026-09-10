@@ -13,7 +13,7 @@ export default function StructuredData() {
           { '@type': 'Country', name: 'Italy' },
           { '@type': 'Place', name: 'Europe' }
         ],
-        serviceType: ['website design', 'marketing strategy', 'software development']
+        serviceType: ['web development', 'software development', 'website design', 'marketing strategy']
       },
       {
         '@type': 'WebSite',
@@ -28,10 +28,10 @@ export default function StructuredData() {
         '@id': 'https://www.nivello.it/#services',
         name: 'Nivello services',
         itemListElement: [
-          { '@type': 'Service', position: 1, name: 'Website strategy', provider: { '@id': 'https://www.nivello.it/#organization' } },
-          { '@type': 'Service', position: 2, name: 'Marketing pages and messaging', provider: { '@id': 'https://www.nivello.it/#organization' } },
-          { '@type': 'Service', position: 3, name: 'Brand and product design', provider: { '@id': 'https://www.nivello.it/#organization' } },
-          { '@type': 'Service', position: 4, name: 'Next.js development', provider: { '@id': 'https://www.nivello.it/#organization' } }
+          { '@type': 'Service', position: 1, name: 'Next.js web development', provider: { '@id': 'https://www.nivello.it/#organization' } },
+          { '@type': 'Service', position: 2, name: 'Website strategy', provider: { '@id': 'https://www.nivello.it/#organization' } },
+          { '@type': 'Service', position: 3, name: 'Marketing pages and messaging', provider: { '@id': 'https://www.nivello.it/#organization' } },
+          { '@type': 'Service', position: 4, name: 'Brand and product design', provider: { '@id': 'https://www.nivello.it/#organization' } }
         ]
       }
     ]

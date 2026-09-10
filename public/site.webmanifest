@@ -1,7 +1,7 @@
 {
   "name": "Nivello",
   "short_name": "Nivello",
-  "description": "Strategy, marketing, design, and Next.js development for ambitious brands.",
+  "description": "Modern Next.js development for fast, maintainable websites and web apps.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#020618",

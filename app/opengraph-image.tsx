@@ -13,8 +13,8 @@ export default async function OpengraphImage() {
     (
       <OgCard
         eyebrow="Nivello"
-        title="Premium digital solutions for ambitious brands"
-        description="Strategy, marketing, design, and Next.js development."
+        title="Modern web development for ambitious brands"
+        description="Fast, maintainable websites and web apps built with Next.js."
       />
     ),
     { ...size, fonts: fonts.length ? fonts : undefined }
