@@ -1,79 +1,46 @@
 import type { Metadata } from 'next'
+import LegalPage from '@/components/LegalPage'
 import { pageSeo } from '../seo'
 
 export const metadata: Metadata = pageSeo.imprint
 
 export default function ImprintPage() {
   return (
-    <main className="bg-stone-50 dark:bg-slate-950/95">
-      <section className="bg-stone-50 dark:bg-slate-950/95">
-        <div className="mx-auto max-w-3xl px-4 pb-12 pt-10 md:pb-16 md:pt-14">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
-            Imprint
-          </p>
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-50 md:text-4xl">
-            Legal information
-          </h1>
-          <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
-            This page provides the main legal details for Nivello. Please
-            replace the placeholders below with your official registered company
-            data before going live.
-          </p>
-        </div>
+    <LegalPage
+      locale="en"
+      kind="imprint"
+      label="Imprint"
+      title="Legal information."
+      intro="The main business, contact, and dispute-resolution information published by Nivello."
+    >
+      <p>
+        This page provides the main legal details for Nivello. Please replace the placeholders below with your official registered company data before going live.
+      </p>
+
+      <section>
+        <h2>Nivello</h2>
+        <p>Studio name: Nivello</p>
+        {/* <p>Registered office: [Your full address, city, country]</p>
+        <p>Owner / legal representative: [Name or company]</p>
+        <p>Business register: [City + register number]</p>
+        <p>VAT number: [Your VAT number]</p> */}
       </section>
 
       <section>
-        <div className="mx-auto max-w-3xl px-4 py-10 text-sm text-slate-600 dark:text-slate-300 md:py-14">
-          <div className="space-y-1">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-              Nivello
-            </h2>
-            <p>Studio name: Nivello</p>
-            {/* <p>Registered office: [Your full address, city, country]</p>
-            <p>Owner / legal representative: [Name or company]</p>
-            <p>Business register: [City + register number]</p>
-            <p>VAT number: [Your VAT number]</p> */}
-          </div>
-
-          <div className="mt-8 space-y-2">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-              Online dispute resolution
-            </h2>
-            <p>
-              The European Commission provides an online dispute resolution
-              platform, available at:{' '}
-              <a
-                href="https://ec.europa.eu/odr"
-                target="_blank"
-                rel="noreferrer"
-                className="text-[var(--brand-blue)] dark:text-[var(--brand-gold)] hover:text-blue-500 dark:hover:text-yellow-300"
-              >
-                https://ec.europa.eu/odr
-              </a>
-              .
-            </p>
-            <p>
-              We are not obliged to participate in dispute resolution
-              proceedings before a consumer arbitration board, but we are
-              generally willing to do so where an amicable solution cannot be
-              reached otherwise.
-            </p>
-          </div>
-
-          <div className="mt-8 space-y-2">
-            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Contact</h2>
-            <p>
-              Email:{' '}
-              <a
-                href="mailto:office@nivello.it"
-                className="text-[var(--brand-blue)] dark:text-[var(--brand-gold)] hover:text-blue-500 dark:hover:text-yellow-300"
-              >
-                office@nivello.it
-              </a>
-            </p>
-          </div>
-        </div>
+        <h2>Alternative dispute resolution</h2>
+        <p>
+          The European ODR platform was discontinued on 20 July 2025. The European Commission provides current consumer information about alternative dispute resolution at:{' '}
+          <a href="https://commission.europa.eu/topics/consumers/consumer-rights-and-complaints/resolve-your-consumer-complaint/alternative-dispute-resolution-consumers_en" target="_blank" rel="noreferrer">European Commission consumer ADR portal</a>.
+        </p>
+        <p>
+          We are not obliged to participate in dispute resolution proceedings before a consumer arbitration board, but we are generally willing to do so where an amicable solution cannot be reached otherwise.
+        </p>
       </section>
-    </main>
+
+      <section>
+        <h2>Contact</h2>
+        <p>Email: <a href="mailto:office@nivello.it">office@nivello.it</a></p>
+      </section>
+    </LegalPage>
   )
 }

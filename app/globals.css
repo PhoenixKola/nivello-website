@@ -65,3 +65,90 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: rgb(100 116 139 / 0.55);
 }
+
+/* Legal documents share a quieter editorial rhythm than marketing pages. */
+.legal-copy > p:first-child {
+  margin-bottom: 2rem;
+  font-size: 1rem;
+  line-height: 1.75;
+  color: rgb(71 85 105);
+}
+
+.dark .legal-copy > p:first-child {
+  color: rgb(203 213 225);
+}
+
+.legal-copy > section {
+  border-top: 1px solid rgb(226 232 240);
+  padding-block: 1.75rem;
+}
+
+.legal-copy > section:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.legal-copy > section:last-child {
+  padding-bottom: 0;
+}
+
+.dark .legal-copy > section {
+  border-color: rgb(255 255 255 / 0.08);
+}
+
+.legal-copy h2 {
+  font-family: var(--font-fraunces), serif;
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: rgb(15 23 42);
+}
+
+.dark .legal-copy h2 {
+  color: white;
+}
+
+.legal-copy section > p,
+.legal-copy section > ul {
+  margin-top: 0.75rem;
+}
+
+.legal-copy ul {
+  display: grid;
+  gap: 0.6rem;
+  padding-left: 0;
+  list-style: none;
+}
+
+.legal-copy li {
+  position: relative;
+  padding-left: 1.25rem;
+}
+
+.legal-copy li::before {
+  position: absolute;
+  left: 0;
+  top: 0.65rem;
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 9999px;
+  background: var(--brand-blue);
+  content: '';
+}
+
+.dark .legal-copy li::before {
+  background: var(--brand-gold);
+}
+
+.legal-copy a {
+  font-weight: 600;
+  color: var(--brand-blue);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--brand-blue), transparent 70%);
+  text-underline-offset: 3px;
+}
+
+.dark .legal-copy a {
+  color: var(--brand-gold);
+  text-decoration-color: color-mix(in srgb, var(--brand-gold), transparent 70%);
+}
