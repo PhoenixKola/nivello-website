@@ -68,21 +68,7 @@ export default function LegalPage({
 
   return (
     <main className="relative overflow-hidden bg-stone-50 dark:bg-slate-950/95">
-      <section className="relative border-b border-slate-200/70 dark:border-white/[0.06]">
-        <div aria-hidden className="pointer-events-none absolute inset-0">
-          <div
-            className="absolute inset-0 opacity-45 dark:opacity-25"
-            style={{
-              backgroundImage:
-                'linear-gradient(to right, rgba(100,116,139,0.14) 1px, transparent 1px), linear-gradient(to bottom, rgba(100,116,139,0.14) 1px, transparent 1px)',
-              backgroundSize: '58px 58px',
-              maskImage: 'radial-gradient(ellipse 78% 90% at 50% 0%, #000 25%, transparent 100%)',
-              WebkitMaskImage: 'radial-gradient(ellipse 78% 90% at 50% 0%, #000 25%, transparent 100%)'
-            }}
-          />
-          <div className="absolute right-[12%] top-8 h-52 w-52 rounded-full bg-[var(--brand-blue)]/10 blur-[90px] dark:bg-[var(--brand-blue)]/15" />
-        </div>
-
+      <section className="relative">
         <div className="relative mx-auto max-w-6xl px-5 py-16 sm:px-6 sm:py-20 lg:px-8">
           <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3.5 py-1.5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.05]">
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--brand-blue)]/10 dark:bg-[var(--brand-gold)]/10">
@@ -128,7 +114,7 @@ export default function LegalPage({
               })}
             </nav>
 
-            <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-5 shadow-sm dark:border-white/10 dark:from-white/[0.05] dark:to-transparent dark:shadow-none">
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.035] dark:shadow-none">
               <Mail className="h-4 w-4 text-[var(--brand-blue)] dark:text-[var(--brand-gold)]" />
               <p className="mt-3 font-display text-lg font-semibold text-slate-900 dark:text-white">{content.contactTitle}</p>
               <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">{content.contactBody}</p>
@@ -139,7 +125,7 @@ export default function LegalPage({
             </div>
           </aside>
 
-          <article className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-[0_28px_80px_-46px_rgba(15,23,42,0.35)] dark:border-white/10 dark:bg-white/[0.035] dark:shadow-none">
+          <article className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/[0.035] dark:shadow-none">
             <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 px-6 py-5 dark:border-white/10 sm:px-8">
               <div className="flex items-center gap-3">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-950 text-white dark:bg-white dark:text-slate-950">

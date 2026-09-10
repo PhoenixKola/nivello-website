@@ -155,20 +155,18 @@ function StudioSystemGraphic({ locale, reducedMotion }: { locale: Locale; reduce
         animate={reducedMotion ? undefined : { rotate: 360 }}
         transition={reducedMotion ? undefined : { duration: 32, repeat: Infinity, ease: 'linear' }}
       >
-        <span className="absolute left-[12%] top-[5%] h-2.5 w-2.5 rounded-full bg-[var(--brand-gold)] shadow-[0_0_24px_var(--brand-gold)]" />
-        <span className="absolute bottom-[10%] right-[8%] h-2.5 w-2.5 rounded-full bg-[var(--brand-purple)] shadow-[0_0_24px_var(--brand-purple)]" />
+        <span className="absolute left-[12%] top-[5%] h-2.5 w-2.5 rounded-full bg-[var(--brand-gold)]" />
+        <span className="absolute bottom-[10%] right-[8%] h-2.5 w-2.5 rounded-full bg-[var(--brand-purple)]" />
       </motion.div>
-
-      <div className="absolute inset-[13%] rotate-[-8deg] rounded-[2rem] bg-[var(--brand-blue)]/10 blur-2xl dark:bg-[var(--brand-blue)]/15" />
 
       <motion.div
         animate={reducedMotion ? undefined : { y: [-5, 7, -5], rotate: [-1, 1, -1] }}
         transition={reducedMotion ? undefined : { duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute inset-x-[8%] top-[11%] overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white/90 p-4 shadow-[0_35px_90px_-38px_rgba(15,23,42,0.55)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/90 dark:shadow-[0_35px_100px_-35px_rgba(0,0,0,0.8)] sm:p-5"
+        className="absolute inset-x-[8%] top-[11%] overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-slate-900 dark:shadow-none sm:p-5"
       >
         <div className="flex items-center justify-between border-b border-slate-200 pb-4 dark:border-white/10">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-950 text-white dark:bg-white dark:text-slate-950">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-[var(--brand-blue)] dark:border-white/10 dark:bg-white/[0.05] dark:text-[var(--brand-gold)]">
               <Sparkles className="h-4 w-4" />
             </span>
             <div>
@@ -183,17 +181,16 @@ function StudioSystemGraphic({ locale, reducedMotion }: { locale: Locale; reduce
         </div>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-[1.15fr_0.85fr]">
-          <div className="relative overflow-hidden rounded-2xl bg-slate-950 p-5 text-white">
-            <div className="absolute right-0 top-0 h-28 w-28 rounded-full bg-[var(--brand-blue)]/25 blur-3xl" />
-            <p className="relative text-[9px] font-bold uppercase tracking-[0.2em] text-sky-300">{content.core}</p>
+          <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-5 text-slate-900 dark:border-white/10 dark:bg-slate-950 dark:text-white">
+            <p className="relative text-[9px] font-bold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-sky-300">{content.core}</p>
             <p className="relative mt-2 font-display text-2xl font-semibold">{content.title}</p>
-            <p className="relative mt-2 max-w-[16rem] text-xs leading-relaxed text-slate-400">{content.description}</p>
+            <p className="relative mt-2 max-w-[16rem] text-xs leading-relaxed text-slate-500 dark:text-slate-400">{content.description}</p>
 
-            <div className="relative mt-6 space-y-2.5 rounded-xl border border-white/10 bg-white/[0.04] p-3">
+            <div className="relative mt-6 space-y-2.5 rounded-xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-white/[0.04]">
               {codeLines.map((width, index) => (
                 <motion.span
                   key={width}
-                  className={`block h-1.5 rounded-full bg-gradient-to-r from-sky-400 via-[var(--brand-blue)] to-[var(--brand-purple)] ${width}`}
+                  className={`block h-1.5 rounded-full bg-[var(--brand-blue)] ${width}`}
                   animate={reducedMotion ? undefined : { opacity: [0.35, 1, 0.35], scaleX: [0.92, 1, 0.92] }}
                   transition={reducedMotion ? undefined : { duration: 2.8, repeat: Infinity, delay: index * 0.25, ease: 'easeInOut' }}
                   style={{ transformOrigin: 'left' }}
@@ -251,21 +248,6 @@ export default function AboutPage({ locale = 'en' }: { locale?: Locale }) {
   return (
     <main className="overflow-hidden bg-stone-50 dark:bg-slate-950/95">
       <section className="relative">
-        <div aria-hidden className="pointer-events-none absolute inset-0">
-          <div
-            className="absolute inset-0 opacity-45 dark:opacity-25"
-            style={{
-              backgroundImage:
-                'linear-gradient(to right, rgba(100,116,139,0.14) 1px, transparent 1px), linear-gradient(to bottom, rgba(100,116,139,0.14) 1px, transparent 1px)',
-              backgroundSize: '58px 58px',
-              maskImage: 'radial-gradient(ellipse 80% 72% at 50% 8%, #000 28%, transparent 100%)',
-              WebkitMaskImage: 'radial-gradient(ellipse 80% 72% at 50% 8%, #000 28%, transparent 100%)'
-            }}
-          />
-          <div className="absolute -left-28 top-20 h-72 w-72 rounded-full bg-[var(--brand-blue)]/10 blur-[100px] dark:bg-[var(--brand-blue)]/15" />
-          <div className="absolute right-0 top-12 h-80 w-80 rounded-full bg-[var(--brand-purple)]/10 blur-[110px] dark:bg-[var(--brand-purple)]/15" />
-        </div>
-
         <div className="relative mx-auto grid min-h-[78vh] max-w-7xl items-center gap-8 px-5 py-12 sm:px-6 lg:grid-cols-[1.02fr_0.98fr] lg:gap-8 lg:px-10 lg:py-16">
           <motion.div
             initial={{ opacity: 0, y: 28 }}
@@ -288,7 +270,7 @@ export default function AboutPage({ locale = 'en' }: { locale?: Locale }) {
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href={getRoutePath('work', locale)}
-                className="group inline-flex items-center gap-2 rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white shadow-[0_14px_35px_-18px_rgba(15,23,42,0.7)] transition-all hover:-translate-y-0.5 hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
+                className="group inline-flex items-center gap-2 rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
               >
                 {content.workCta}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -318,7 +300,7 @@ export default function AboutPage({ locale = 'en' }: { locale?: Locale }) {
         </div>
       </section>
 
-      <section id="principles" className="relative scroll-mt-20 border-t border-slate-200/70 dark:border-white/[0.06]">
+      <section id="principles" className="relative scroll-mt-20">
         <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 lg:px-8 lg:py-28">
           <motion.div {...rise()} className="mb-12 grid gap-6 lg:grid-cols-[1fr_0.72fr] lg:items-end">
             <div>
@@ -340,30 +322,24 @@ export default function AboutPage({ locale = 'en' }: { locale?: Locale }) {
                   {...rise(index * 0.06)}
                   className={`group relative overflow-hidden rounded-[1.75rem] border p-6 transition-all duration-300 hover:-translate-y-1 sm:p-7 ${layout} ${
                     core
-                      ? 'min-h-[420px] border-slate-800 bg-slate-950 text-white shadow-[0_35px_90px_-45px_rgba(15,23,42,0.8)] dark:border-white/10'
-                      : 'border-slate-200 bg-white text-slate-900 shadow-sm hover:shadow-[0_24px_65px_-38px_rgba(15,23,42,0.38)] dark:border-white/10 dark:bg-white/[0.035] dark:text-white dark:shadow-none'
+                      ? 'min-h-[420px] border-slate-200 bg-white text-slate-900 shadow-sm dark:border-white/10 dark:bg-white/[0.035] dark:text-white dark:shadow-none'
+                      : 'border-slate-200 bg-white text-slate-900 shadow-sm dark:border-white/10 dark:bg-white/[0.035] dark:text-white dark:shadow-none'
                   }`}
                 >
-                  <div
-                    aria-hidden
-                    className="absolute -right-16 -top-16 h-48 w-48 rounded-full opacity-20 blur-3xl transition-opacity duration-300 group-hover:opacity-35"
-                    style={{ backgroundColor: principle.color }}
-                  />
-
                   <div className={core ? 'relative flex h-full flex-col' : `relative ${index === 3 ? 'md:grid md:grid-cols-[auto_0.72fr_1fr] md:items-center md:gap-6' : ''}`}>
                     <div className="flex items-start justify-between gap-5">
-                      <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border ${core ? 'border-white/10 bg-white/[0.07]' : 'border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-slate-900'}`}>
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-slate-900">
                         <Icon className="h-5 w-5" style={{ color: principle.color }} />
                       </span>
-                      <span className={`font-mono text-xs font-semibold ${core ? 'text-slate-600' : 'text-slate-300 dark:text-slate-600'}`}>0{index + 1}</span>
+                      <span className="font-mono text-xs font-semibold text-slate-300 dark:text-slate-600">0{index + 1}</span>
                     </div>
 
                     <div className={core ? 'mt-auto pt-20' : index === 3 ? 'mt-5 md:mt-0' : 'mt-8'}>
-                      <p className={`text-[10px] font-bold uppercase tracking-[0.18em] ${core ? 'text-sky-300' : 'text-slate-400 dark:text-slate-500'}`}>{principle.label}</p>
+                      <p className={`text-[10px] font-bold uppercase tracking-[0.18em] ${core ? 'text-[var(--brand-blue)] dark:text-sky-300' : 'text-slate-400 dark:text-slate-500'}`}>{principle.label}</p>
                       <h3 className={`${core ? 'mt-3 max-w-md text-3xl sm:text-4xl' : 'mt-2 text-xl'} font-display font-semibold tracking-tight`}>{principle.title}</h3>
                     </div>
 
-                    <p className={`${core ? 'mt-4 max-w-xl text-slate-400' : index === 3 ? 'mt-4 md:mt-0' : 'mt-3 text-slate-500 dark:text-slate-300/80'} text-sm leading-relaxed`}>{principle.body}</p>
+                    <p className={`${core ? 'mt-4 max-w-xl text-slate-500 dark:text-slate-400' : index === 3 ? 'mt-4 text-slate-500 dark:text-slate-300/80 md:mt-0' : 'mt-3 text-slate-500 dark:text-slate-300/80'} text-sm leading-relaxed`}>{principle.body}</p>
 
                     {core && (
                       <div className="mt-7 grid grid-cols-3 gap-2">
@@ -372,7 +348,7 @@ export default function AboutPage({ locale = 'en' }: { locale?: Locale }) {
                             key={technology}
                             animate={reducedMotion ? undefined : { opacity: [0.55, 1, 0.55] }}
                             transition={reducedMotion ? undefined : { duration: 3, repeat: Infinity, delay: technologyIndex * 0.4 }}
-                            className="rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2.5 text-center font-mono text-[10px] font-semibold text-slate-300"
+                            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-center font-mono text-[10px] font-semibold text-slate-600 dark:border-white/10 dark:bg-white/[0.05] dark:text-slate-300"
                           >
                             {technology}
                           </motion.span>
@@ -390,17 +366,16 @@ export default function AboutPage({ locale = 'en' }: { locale?: Locale }) {
       <section id="process" className="scroll-mt-20 px-5 pb-20 sm:px-6 lg:pb-28">
         <motion.div
           {...rise()}
-          className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-slate-950 px-6 py-8 text-white shadow-[0_35px_90px_-48px_rgba(15,23,42,0.8)] sm:px-8 sm:py-10 lg:px-10"
+          className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] border border-slate-200 bg-white px-6 py-8 text-slate-900 shadow-sm dark:border-white/10 dark:bg-white/[0.035] dark:text-white dark:shadow-none sm:px-8 sm:py-10 lg:px-10"
         >
-          <div aria-hidden className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 85% 20%, rgba(43,157,255,0.55), transparent 32%), radial-gradient(circle at 70% 100%, rgba(139,92,246,0.35), transparent 38%)' }} />
           <div className="relative grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-300">{content.processEyebrow}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">{content.processEyebrow}</p>
               <h2 className="mt-3 max-w-xl font-display text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{content.processTitle}</h2>
-              <p className="mt-4 max-w-xl text-sm leading-relaxed text-slate-400">{content.processBody}</p>
+              <p className="mt-4 max-w-xl text-sm leading-relaxed text-slate-500 dark:text-slate-400">{content.processBody}</p>
               <Link
                 href={getRoutePath('process', locale)}
-                className="group mt-7 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-950 transition-all hover:-translate-y-0.5 hover:bg-slate-100"
+                className="group mt-7 inline-flex items-center gap-2 rounded-full bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
               >
                 {content.processCta}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -409,16 +384,16 @@ export default function AboutPage({ locale = 'en' }: { locale?: Locale }) {
 
             <ol className="grid gap-2 sm:grid-cols-5">
               {content.stages.map((stage, index) => (
-                <li key={stage} className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.055] p-3 backdrop-blur">
+                <li key={stage} className="group relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/[0.055]">
                   <motion.span
-                    className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-gradient-to-r from-[var(--brand-blue)] to-[var(--brand-purple)]"
+                    className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-[var(--brand-blue)] dark:bg-[var(--brand-gold)]"
                     initial={{ scaleX: 0 }}
                     whileInView={{ scaleX: 1 }}
                     viewport={{ once: true }}
                     transition={reducedMotion ? { duration: 0 } : { duration: 0.55, delay: 0.12 + index * 0.12, ease: 'easeOut' }}
                   />
-                  <span className="font-mono text-[9px] font-semibold text-slate-500">0{index + 1}</span>
-                  <span className="mt-5 block text-xs font-semibold text-slate-200">{stage}</span>
+                  <span className="font-mono text-[9px] font-semibold text-slate-400 dark:text-slate-500">0{index + 1}</span>
+                  <span className="mt-5 block text-xs font-semibold text-slate-700 dark:text-slate-200">{stage}</span>
                 </li>
               ))}
             </ol>
