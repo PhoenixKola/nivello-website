@@ -1,14 +1,10 @@
 'use client'
 
-import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import Image from 'next/image'
 import {
   ArrowRight,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   Code2,
   Compass,
   Globe2,
@@ -19,8 +15,7 @@ import {
 import TestimonialsSection from '@/components/TestimonialsSection'
 import BottomCta from '@/components/BottomCta'
 import AnimatedHeroGraphic from '@/components/AnimatedHeroGraphic'
-import ProjectTypeBadges from '@/components/ProjectTypeBadges'
-import { getProjectPath, getProjects } from '@/lib/projects'
+import HomeWorkSnapshot from '@/components/HomeWorkSnapshot'
 import { getRoutePath } from '@/lib/site'
 
 const fadeInUp = {
@@ -56,16 +51,6 @@ const processSteps = [
 ]
 
 export default function HomeClient() {
-  const projects = getProjects('en')
-  const [projectIndex, setProjectIndex] = useState(0)
-
-  const scrollProjects = (direction: 'prev' | 'next') => {
-    setProjectIndex(current => {
-      const offset = direction === 'next' ? 1 : -1
-      return (current + offset + projects.length) % projects.length
-    })
-  }
-
   return (
     <main className="bg-stone-50 dark:bg-slate-950/95">
       <section className="relative overflow-hidden bg-stone-50 dark:bg-slate-950/95">
@@ -165,76 +150,7 @@ export default function HomeClient() {
         </div>
       </motion.section>
 
-      <motion.section
-        className="bg-stone-50 dark:bg-slate-950/95"
-        variants={fadeInUp}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.25 }}
-      >
-        <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
-          <div className="mb-10 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
-                Featured work
-              </p>
-              <h2 className="font-display text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.75rem] dark:text-white">
-                A snapshot of what we build.
-              </h2>
-              <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-500 dark:text-slate-300/80">
-                Real projects across hospitality, construction, local business, publishing, and professional services.
-              </p>
-            </div>
-          </div>
-
-          <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
-            <div className="flex transition-transform duration-500 ease-out" style={{ transform: `translateX(-${projectIndex * 100}%)` }}>
-              {projects.map(project => (
-                <div
-                  key={project.title}
-                  className="grid min-w-full cursor-default md:grid-cols-[1.35fr_0.65fr]"
-                  style={{ ['--project-color' as string]: project.color }}
-                >
-                  <Link
-                    href={getProjectPath(project.slug, 'en')}
-                    className="group/image relative aspect-[16/10] cursor-pointer overflow-hidden bg-slate-100 md:aspect-[16/9] dark:bg-slate-900"
-                  >
-                    <Image
-                      src={project.shot}
-                      alt={`${project.title} website`}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 780px"
-                      className="object-cover object-top transition-transform duration-700 group-hover/image:scale-[1.025]"
-                    />
-                  </Link>
-                  <div className="flex flex-col justify-center p-6">
-                    <div className="mb-4 h-1 w-12 rounded-full" style={{ backgroundColor: project.color }} />
-                    <p className="text-xs uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">{project.category}</p>
-                    <h3 className="mt-2 font-display text-2xl font-semibold text-slate-900 dark:text-slate-50">{project.title}</h3>
-                    <p className="mt-3 text-sm leading-relaxed text-slate-500 dark:text-slate-300/80">{project.body}</p>
-                    <ProjectTypeBadges kinds={project.kinds} locale="en" className="mt-4" />
-                    <Link href={getProjectPath(project.slug, 'en')} className="mt-5 inline-flex w-fit cursor-pointer items-center gap-2 text-sm font-medium text-slate-700 transition-colors hover:text-[var(--brand-blue)] dark:text-slate-200 dark:hover:text-[var(--brand-gold)]">
-                      View project
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <button type="button" aria-label="Previous projects" onClick={() => scrollProjects('prev')} className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-sm transition hover:-translate-x-0.5 hover:border-[var(--brand-gold)] hover:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-gold)]/35 dark:border-white/10 dark:bg-slate-950/90 dark:text-slate-100 dark:hover:bg-slate-900">
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button type="button" aria-label="Next projects" onClick={() => scrollProjects('next')} className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white/95 text-slate-700 shadow-sm transition hover:translate-x-0.5 hover:border-[var(--brand-gold)] hover:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-gold)]/35 dark:border-white/10 dark:bg-slate-950/90 dark:text-slate-100 dark:hover:bg-slate-900">
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-
-          <Link href={getRoutePath('work', 'en')} className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[var(--brand-blue)] hover:text-blue-500 dark:text-[var(--brand-gold)] dark:hover:text-yellow-300">
-            See more projects
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </motion.section>
+      <HomeWorkSnapshot locale="en" />
 
       <TestimonialsSection />
       <BottomCta />

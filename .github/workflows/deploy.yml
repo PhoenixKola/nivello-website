@@ -36,9 +36,10 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y lftp
 
       - name: Upload static files to Hetzner
+        # Both paths belong to separate subdomains and must survive the mirror cleanup.
         run: |
           lftp -u "${{ secrets.HETZNER_USER }}","${{ secrets.HETZNER_PASSWORD }}" -p "${{ secrets.HETZNER_PORT }}" sftp://"${{ secrets.HETZNER_HOST }}" <<EOF
           set sftp:auto-confirm yes
-          mirror -R --delete --verbose ./out /public_html
+          mirror -R --delete --verbose --exclude='^(casco-bene|demo)(/|$)' ./out /public_html
           bye
           EOF
