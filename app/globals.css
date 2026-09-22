@@ -52,6 +52,11 @@ body {
   animation: client-logos-scroll 32s linear infinite;
 }
 
+.client-logo-marquee {
+  -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+}
+
 .client-logo-marquee:has(a:hover) .client-logo-track,
 .client-logo-marquee:focus-within .client-logo-track {
   animation-play-state: paused;
