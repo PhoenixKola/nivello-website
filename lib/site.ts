@@ -8,6 +8,7 @@ export type RouteKey =
   | 'contact'
   | 'about'
   | 'imprint'
+  | 'terms'
   | 'privacy'
   | 'disclaimer'
 
@@ -27,6 +28,7 @@ export const siteRoutes: SiteRoute[] = [
   { key: 'contact', paths: { en: '/contact/', it: '/it/contact/' }, labels: { en: 'Contact', it: 'Contatti' }, nav: true, footer: true },
   { key: 'about', paths: { en: '/about/', it: '/it/chi-siamo/' }, labels: { en: 'About', it: 'Chi siamo' }, footer: true },
   { key: 'imprint', paths: { en: '/imprint/', it: '/it/impronta/' }, labels: { en: 'Imprint', it: 'Impronta' }, footer: true },
+  { key: 'terms', paths: { en: '/terms/', it: '/it/termini/' }, labels: { en: 'Terms & Conditions', it: 'Termini e condizioni' }, footer: true },
   { key: 'privacy', paths: { en: '/privacy/', it: '/it/privacy/' }, labels: { en: 'Privacy', it: 'Privacy' }, footer: true },
   { key: 'disclaimer', paths: { en: '/disclaimer/', it: '/it/disclaimer/' }, labels: { en: 'Disclaimer', it: 'Disclaimer' }, footer: true }
 ]

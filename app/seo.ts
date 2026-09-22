@@ -139,6 +139,19 @@ export const pageSeo = {
     ogSlug: 'imprint-it',
     locale: 'it'
   }),
+  terms: makeMetadata({
+    title: 'Terms & Conditions',
+    description: 'General terms for Nivello website, web app, and digital project work.',
+    route: 'terms',
+    ogSlug: 'terms'
+  }),
+  termsIt: makeMetadata({
+    title: 'Termini e condizioni',
+    description: 'Condizioni generali per i siti, le app web e i progetti digitali realizzati da Nivello.',
+    route: 'terms',
+    ogSlug: 'terms-it',
+    locale: 'it'
+  }),
   privacy: makeMetadata({
     title: 'Privacy Policy',
     description: 'How Nivello handles personal data, contact requests, and website analytics.',

@@ -16,6 +16,7 @@ import TestimonialsSectionIt from '@/components/TestimonialsSectionIt'
 import BottomCta from '@/components/BottomCta'
 import AnimatedHeroGraphic from '@/components/AnimatedHeroGraphic'
 import HomeWorkSnapshot from '@/components/HomeWorkSnapshot'
+import ClientLogoMarquee from '@/components/ClientLogoMarquee'
 import { getRoutePath } from '@/lib/site'
 
 const fadeInUp = {
@@ -54,7 +55,7 @@ export default function HomeItClient() {
   return (
     <main className="bg-stone-50 dark:bg-slate-950/95">
       <section className="relative overflow-hidden bg-stone-50 dark:bg-slate-950/95">
-        <div className="relative z-10 mx-auto grid min-h-[88vh] max-w-7xl items-center gap-12 px-6 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:px-10 lg:py-20">
+        <div className="relative z-10 mx-auto grid min-h-[60vh] max-w-7xl items-center gap-10 px-6 py-8 sm:py-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:px-10 lg:py-12">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: 'easeOut' as const }} className="text-center lg:text-left">
             <div className="mb-7 inline-flex items-center gap-2.5 rounded-full border border-slate-200/80 bg-white/85 px-4 py-2 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-white/5">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--brand-gold)]" />
@@ -101,6 +102,7 @@ export default function HomeItClient() {
             <AnimatedHeroGraphic />
           </div>
         </div>
+        <ClientLogoMarquee locale="it" />
       </section>
 
       <motion.section className="bg-stone-50 dark:bg-slate-950/95" variants={fadeInUp} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.25 }}>

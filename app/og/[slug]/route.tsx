@@ -58,6 +58,8 @@ const pages: Record<string, { title: string; eyebrow: string; description: strin
   'about-it': { eyebrow: 'Chi siamo', title: 'Uno studio digitale fondato sulla chiarezza', description: 'Pensiero chiaro, esecuzione premium.' },
   imprint: { eyebrow: 'Legal', title: 'Imprint', description: 'Legal and contact information for Nivello.' },
   'imprint-it': { eyebrow: 'Legale', title: 'Impronta', description: 'Informazioni legali e contatti di Nivello.' },
+  terms: { eyebrow: 'Legal', title: 'Terms & Conditions', description: 'Clear terms for digital project work.' },
+  'terms-it': { eyebrow: 'Legale', title: 'Termini e condizioni', description: 'Condizioni chiare per i progetti digitali.' },
   privacy: { eyebrow: 'Legal', title: 'Privacy Policy', description: 'How Nivello handles personal data.' },
   'privacy-it': { eyebrow: 'Legale', title: 'Privacy', description: 'Come Nivello gestisce i dati personali.' },
   disclaimer: { eyebrow: 'Legal', title: 'Disclaimer', description: 'General website disclaimer for Nivello.' },

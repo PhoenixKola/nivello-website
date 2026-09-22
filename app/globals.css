@@ -44,6 +44,23 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+@keyframes client-logos-scroll {
+  to { transform: translateX(-50%); }
+}
+
+.client-logo-track {
+  animation: client-logos-scroll 32s linear infinite;
+}
+
+.client-logo-marquee:has(a:hover) .client-logo-track,
+.client-logo-marquee:focus-within .client-logo-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .client-logo-track { animation: none; }
+}
+
 /* ─── Selection highlight ─────────────────────────────────────────────────── */
 ::selection {
   background-color: rgb(255 191 67 / 0.35);

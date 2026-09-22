@@ -16,6 +16,7 @@ import TestimonialsSection from '@/components/TestimonialsSection'
 import BottomCta from '@/components/BottomCta'
 import AnimatedHeroGraphic from '@/components/AnimatedHeroGraphic'
 import HomeWorkSnapshot from '@/components/HomeWorkSnapshot'
+import ClientLogoMarquee from '@/components/ClientLogoMarquee'
 import { getRoutePath } from '@/lib/site'
 
 const fadeInUp = {
@@ -54,7 +55,7 @@ export default function HomeClient() {
   return (
     <main className="bg-stone-50 dark:bg-slate-950/95">
       <section className="relative overflow-hidden bg-stone-50 dark:bg-slate-950/95">
-        <div className="relative z-10 mx-auto grid min-h-[88vh] max-w-7xl items-center gap-12 px-6 py-16 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:px-10 lg:py-20">
+        <div className="relative z-10 mx-auto grid min-h-[60vh] max-w-7xl items-center gap-10 px-6 py-8 sm:py-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:px-10 lg:py-12">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -106,6 +107,7 @@ export default function HomeClient() {
             <AnimatedHeroGraphic />
           </div>
         </div>
+        <ClientLogoMarquee locale="en" />
       </section>
 
       <motion.section
