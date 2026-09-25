@@ -28,7 +28,7 @@ export default function StructuredData() {
         '@id': 'https://www.nivello.it/#services',
         name: 'Nivello services',
         itemListElement: [
-          { '@type': 'Service', position: 1, name: 'Next.js web development', provider: { '@id': 'https://www.nivello.it/#organization' } },
+          { '@type': 'Service', position: 1, name: 'React and Next.js web development', provider: { '@id': 'https://www.nivello.it/#organization' } },
           { '@type': 'Service', position: 2, name: 'Website strategy', provider: { '@id': 'https://www.nivello.it/#organization' } },
           { '@type': 'Service', position: 3, name: 'Marketing pages and messaging', provider: { '@id': 'https://www.nivello.it/#organization' } },
           { '@type': 'Service', position: 4, name: 'Brand and product design', provider: { '@id': 'https://www.nivello.it/#organization' } }

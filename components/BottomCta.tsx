@@ -9,7 +9,7 @@ const copy = {
     body: 'Tell us what you are building, where you are now, and what needs to happen next. We will come back with a practical direction, not a generic pitch.',
     button: 'Book a call',
     cardTitle: 'Typical engagement',
-    items: ['Next.js development and implementation', 'Strategy and scope alignment', 'Design and launch support'],
+    items: ['React and Next.js development and implementation', 'Strategy and scope alignment', 'Design and launch support'],
     note: 'Most website projects run in focused stages, with clear checkpoints and room for practical decisions.'
   },
   it: {
@@ -18,7 +18,7 @@ const copy = {
     body: 'Raccontaci cosa stai costruendo, dove sei ora e cosa deve succedere dopo. Risponderemo con una direzione pratica, non con una proposta generica.',
     button: 'Prenota una call',
     cardTitle: 'Collaborazione tipica',
-    items: ['Sviluppo e implementazione Next.js', 'Allineamento strategia e scope', 'Design e supporto al lancio'],
+    items: ['Sviluppo e implementazione React e Next.js', 'Allineamento di strategia e obiettivi', 'Design e supporto al lancio'],
     note: 'La maggior parte dei siti procede per fasi concentrate, con checkpoint chiari e decisioni pratiche.'
   }
 } satisfies Record<Locale, {

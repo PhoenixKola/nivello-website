@@ -45,7 +45,7 @@ const processSteps = [
   },
   {
     title: 'Build & launch',
-    body: 'We develop the site in Next.js, test the important flows, and prepare it for a stable launch. After launch, small improvements stay easy.',
+    body: 'We develop the site with React and Next.js, test the important flows, and prepare it for a stable launch. After launch, small improvements stay easy.',
     icon: Code2,
     color: 'var(--brand-pink)'
   }
@@ -75,7 +75,7 @@ export default function HomeClient() {
             </h1>
 
             <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-slate-500 sm:text-lg lg:mx-0 dark:text-slate-300/75">
-              We build fast, maintainable websites and web apps in Next.js, with strategy, design, and marketing support where the product needs it.
+              We build fast, maintainable websites and web apps with React and Next.js, with strategy, design, and marketing support where the product needs it.
             </p>
 
             <div className="mt-9 flex flex-wrap items-center justify-center gap-4 lg:justify-start">

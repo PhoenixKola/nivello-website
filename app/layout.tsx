@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Nivello',
     description:
-      'Modern Next.js development for ambitious brands, supported by strategy, marketing, and design.',
+      'Modern React and Next.js development for ambitious brands, supported by strategy, marketing, and design.',
     images: ['/og/home']
   },
   alternates: {

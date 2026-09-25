@@ -45,7 +45,7 @@ const processSteps = [
   },
   {
     title: 'Sviluppo e lancio',
-    body: 'Sviluppiamo il sito in Next.js, testiamo i flussi importanti e prepariamo un lancio stabile. Dopo il lancio, migliorare resta semplice.',
+    body: 'Sviluppiamo il sito con React e Next.js, testiamo i flussi importanti e prepariamo un lancio stabile. Dopo il lancio, migliorarlo resta semplice.',
     icon: Code2,
     color: 'var(--brand-pink)'
   }
@@ -70,7 +70,7 @@ export default function HomeItClient() {
             </h1>
 
             <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-slate-500 sm:text-lg lg:mx-0 dark:text-slate-300/75">
-              Sviluppiamo siti e app web veloci e mantenibili in Next.js, con strategia, design e marketing a supporto del prodotto quando servono.
+              Sviluppiamo siti e applicazioni web veloci e facili da mantenere con React e Next.js, con strategia, design e marketing a supporto del prodotto quando servono.
             </p>
 
             <div className="mt-9 flex flex-wrap items-center justify-center gap-4 lg:justify-start">

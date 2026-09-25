@@ -123,25 +123,25 @@ export const services: Service[] = [
     locales: {
       en: {
         label: 'Development',
-        title: 'Custom web development with Next.js',
+        title: 'Custom web development with React and Next.js',
         shortTitle: 'Development & implementation',
         desc: 'Our core service: fast, accessible websites and web apps built for long-term maintainability.',
         intro: 'Development sits at the centre of our work. We build performant, maintainable digital products that are ready to launch and easy to iterate.',
         items: ['Corporate sites and landing pages', 'Custom React and Next.js frontends', 'Headless CMS integration on request', 'Performance and accessibility checks'],
         ideal: 'Ideal when you want a long-term technical partner.',
-        deliverables: ['Next.js implementation', 'Responsive build', 'Static export setup', 'Launch support'],
+        deliverables: ['React and Next.js implementation', 'Responsive build', 'Static export setup', 'Launch support'],
         outcomes: ['Faster load times', 'Cleaner code ownership', 'Deployment-ready static output'],
         process: ['Technical setup', 'Page build', 'QA and performance', 'Launch handoff']
       },
       it: {
         label: 'Sviluppo',
-        title: 'Sviluppo web custom con Next.js',
+        title: 'Sviluppo web su misura con React e Next.js',
         shortTitle: 'Sviluppo e implementazione',
         desc: 'Il nostro servizio centrale: siti e app web veloci, accessibili e facili da mantenere.',
         intro: 'Lo sviluppo e al centro del nostro lavoro. Costruiamo prodotti digitali performanti e mantenibili, pronti al lancio e facili da migliorare.',
         items: ['Siti corporate e landing page', 'Frontend custom React e Next.js', 'Integrazione headless CMS su richiesta', 'Controlli performance e accessibilita'],
         ideal: 'Ideale quando vuoi un partner tecnico nel tempo.',
-        deliverables: ['Implementazione Next.js', 'Build responsive', 'Setup static export', 'Supporto lancio'],
+        deliverables: ['Implementazione React e Next.js', 'Sviluppo adattabile a ogni dispositivo', 'Configurazione dell’esportazione statica', 'Supporto al lancio'],
         outcomes: ['Caricamenti piu rapidi', 'Codice piu ordinato', 'Output statico pronto al deploy'],
         process: ['Setup tecnico', 'Sviluppo pagine', 'QA e performance', 'Handoff lancio']
       }

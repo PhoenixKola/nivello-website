@@ -50,13 +50,13 @@ export function makeMetadata({
 export const pageSeo = {
   home: makeMetadata({
     title: 'Nivello',
-    description: 'Modern Next.js development for fast, maintainable websites and web apps, supported by strategy, design, and marketing.',
+    description: 'Modern React and Next.js development for fast, maintainable websites and web apps, supported by strategy, design, and marketing.',
     route: 'home',
     ogSlug: 'home'
   }),
   homeIt: makeMetadata({
     title: 'Nivello',
-    description: 'Sviluppo Next.js per siti e app web veloci e mantenibili, supportato da strategia, design e marketing.',
+    description: 'Sviluppo React e Next.js per siti e applicazioni web veloci e facili da mantenere, supportato da strategia, design e marketing.',
     route: 'home',
     ogSlug: 'home-it',
     locale: 'it'

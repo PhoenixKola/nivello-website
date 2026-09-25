@@ -8,7 +8,7 @@ const accents = ['var(--brand-gold)', 'var(--brand-blue)', 'var(--brand-purple)'
 
 const copy = {
   en: { recommended: 'Most chosen', cta: 'Discuss this package' },
-  it: { recommended: 'Piu scelto', cta: 'Parliamo del pacchetto' }
+  it: { recommended: 'Più scelto', cta: 'Parliamo del progetto' }
 } satisfies Record<Locale, Record<string, string>>
 
 export default function PricingSection({ locale = 'en' }: { locale?: Locale }) {

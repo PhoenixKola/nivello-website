@@ -8,48 +8,48 @@ export const pricing = {
     note: 'Custom software, CMS work, and multilingual content can be scoped separately.',
     packages: [
       {
-        name: 'Launch',
-        range: 'from EUR 1,500',
-        desc: 'A focused one-page or compact site for a clear offer.',
-        items: ['Strategy mini-session', 'Landing page or small site', 'Responsive build', 'Static export launch']
+        name: 'One-page Website',
+        range: 'from EUR 800',
+        desc: 'A focused one-page website for a clear offer.',
+        items: ['Strategy mini-session', 'One-page website', 'Responsive development', 'Static export and launch']
       },
       {
         name: 'Premium Website',
-        range: 'from EUR 3,500',
+        range: 'from EUR 1,800',
         desc: 'A polished multi-page presence for growing brands.',
         items: ['Site structure and messaging', 'Custom visual direction', 'Core pages', 'Launch support']
       },
       {
-        name: 'Custom Build',
-        range: 'scoped proposal',
-        desc: 'For advanced workflows, integrations, dashboards, or product interfaces.',
-        items: ['Technical planning', 'React / Next.js implementation', 'Integrations', 'Iteration roadmap']
+        name: 'Custom Software',
+        range: 'tailored proposal',
+        desc: 'Management systems, client portals, dashboards, workflow tools, and other tailored software.',
+        items: ['Technical planning', 'React and Next.js development', 'Management systems and dashboards', 'Integrations and iteration roadmap']
       }
     ]
   },
   it: {
-    eyebrow: 'Range investimento',
-    title: 'Pacchetti chiari, definiti in base allo scope.',
-    body: 'Questi range rendono la prima conversazione piu pratica. Il prezzo finale dipende da contenuti, numero pagine, integrazioni e tempi.',
-    note: 'Software custom, CMS e contenuti multilingua possono essere quotati separatamente.',
+    eyebrow: 'Fasce di investimento',
+    title: 'Pacchetti chiari, definiti in base al progetto.',
+    body: 'Queste fasce rendono la prima conversazione più pratica. Il prezzo finale dipende da contenuti, numero di pagine, integrazioni e tempistiche.',
+    note: 'Software su misura, sistemi di gestione dei contenuti e contenuti multilingue possono essere quotati separatamente.',
     packages: [
       {
-        name: 'Launch',
-        range: 'da EUR 1.500',
-        desc: 'Una one-page o un sito compatto per un’offerta chiara.',
-        items: ['Mini-sessione strategia', 'Landing page o piccolo sito', 'Build responsive', 'Lancio static export']
+        name: 'Sito monopagina',
+        range: 'da EUR 800',
+        desc: 'Un sito monopagina focalizzato su un’offerta chiara.',
+        items: ['Sessione strategica iniziale', 'Sito monopagina', 'Sviluppo adattabile a ogni dispositivo', 'Esportazione statica e pubblicazione']
       },
       {
-        name: 'Premium Website',
-        range: 'da EUR 3.500',
-        desc: 'Una presenza multi-pagina curata per brand in crescita.',
-        items: ['Struttura e messaggi', 'Direzione visiva custom', 'Pagine principali', 'Supporto lancio']
+        name: 'Sito premium',
+        range: 'da EUR 1.800',
+        desc: 'Un sito multipagina curato per aziende e marchi in crescita.',
+        items: ['Architettura del sito e testi', 'Direzione visiva su misura', 'Pagine principali', 'Supporto alla pubblicazione']
       },
       {
-        name: 'Custom Build',
+        name: 'Software su misura',
         range: 'proposta su misura',
-        desc: 'Per workflow avanzati, integrazioni, dashboard o interfacce prodotto.',
-        items: ['Pianificazione tecnica', 'Implementazione React / Next.js', 'Integrazioni', 'Roadmap iterazioni']
+        desc: 'Gestionali, portali clienti, pannelli di controllo, strumenti per i flussi di lavoro e altri software su misura.',
+        items: ['Pianificazione tecnica', 'Sviluppo React e Next.js', 'Gestionali e pannelli di controllo', 'Integrazioni e piano evolutivo']
       }
     ]
   }

@@ -7,12 +7,12 @@ const pages: Record<string, { title: string; eyebrow: string; description: strin
   home: {
     eyebrow: 'Nivello',
     title: 'Modern web development for ambitious brands',
-    description: 'Fast, maintainable websites and web apps built with Next.js.'
+    description: 'Fast, maintainable websites and web apps built with React and Next.js.'
   },
   'home-it': {
     eyebrow: 'Nivello',
     title: 'Sviluppo web moderno per brand ambiziosi',
-    description: 'Siti e app web veloci e mantenibili, sviluppati in Next.js.'
+    description: 'Siti e applicazioni web veloci e facili da mantenere, sviluppati con React e Next.js.'
   },
   services: {
     eyebrow: 'Services',
