@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import ServiceDetailPage from '@/components/ServiceDetailPage'
 import { absoluteUrl } from '@/lib/site'
+import { localeAlternates } from '@/lib/seo'
 import { getService, getServicePath, services, type ServiceSlug } from '@/lib/services'
 
 export function generateStaticParams() {
@@ -14,23 +15,26 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!service) return {}
 
   return {
-    title: { absolute: 'Nivello' },
+    title: service.title,
     description: service.intro,
-    alternates: {
-      canonical: getServicePath(service.slug, 'it'),
-      languages: {
-        en: getServicePath(service.slug, 'en'),
-        it: getServicePath(service.slug, 'it')
-      }
-    },
+    alternates: localeAlternates(
+      { en: getServicePath(service.slug, 'en'), it: getServicePath(service.slug, 'it') },
+      'it'
+    ),
     openGraph: {
-      title: service.title,
+      title: `${service.title} | Nivello`,
       description: service.intro,
       url: absoluteUrl(getServicePath(service.slug, 'it')),
       siteName: 'Nivello',
       type: 'website',
       locale: 'it_IT',
       images: [{ url: '/og/services-it', width: 1200, height: 630, alt: service.title }]
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${service.title} | Nivello`,
+      description: service.intro,
+      images: ['/og/services-it']
     }
   }
 }

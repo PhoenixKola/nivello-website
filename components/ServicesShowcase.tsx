@@ -28,10 +28,10 @@ const copy = {
   it: {
     eyebrow: 'Servizi',
     title: 'Lo sviluppo al centro, ogni disciplina di supporto connessa.',
-    intro: 'Partiamo dallo sviluppo web moderno e integriamo strategia, messaggio e design per rendere il prodotto finale piu chiaro, solido e facile da usare.',
+    intro: 'Partiamo dallo sviluppo web moderno e integriamo strategia, messaggio e design per rendere il prodotto finale più chiaro, solido e facile da usare.',
     flowLabel: 'Come si collega il lavoro',
     sectionEyebrow: 'Un servizio centrale, tre discipline di supporto',
-    sectionTitle: 'Lo sviluppo guida. Il resto rende il prodotto piu efficace.',
+    sectionTitle: 'Lo sviluppo guida. Il resto rende il prodotto più efficace.',
     sectionBody: 'Parti dal build, poi aggiungi il supporto strategico, di messaggio o design che serve davvero al prodotto.',
     view: 'Scopri il servizio',
     ideal: 'Ideale per'
@@ -45,7 +45,7 @@ export default function ServicesShowcase({ locale }: { locale: Locale }) {
   const transition = reducedMotion ? { duration: 0 } : { duration: 0.55, ease: 'easeOut' as const }
 
   return (
-    <main className="bg-stone-50 dark:bg-slate-950/95">
+    <main id="main-content" tabIndex={-1} className="flex-1 outline-none bg-stone-50 dark:bg-slate-950/95">
       <section>
         <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-20 sm:px-6 md:py-28 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
           <motion.div initial={{ opacity: 0, y: 26 }} animate={{ opacity: 1, y: 0 }} transition={transition} className="max-w-3xl">

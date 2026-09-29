@@ -1,0 +1,48 @@
+name: Nivello site health
+
+# Checks the Site Health monitors configured in the Nivello admin and posts signed results back.
+# Needs the repository variable NIVELLO_ADMIN_BASE_URL (e.g. https://www.nivello.it) and the secret
+# NIVELLO_ADMIN_CALLBACK_SECRET (the same one the lead-discovery workflow uses). Without them the run
+# ends successfully without checking anything.
+
+on:
+  schedule:
+    # Every 6 hours, off the top of the hour to avoid the busiest scheduler minutes.
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nivello-site-health
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out runner script
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/site-health-runner.mjs
+          sparse-checkout-cone-mode: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run checks
+        env:
+          NIVELLO_ADMIN_BASE_URL: ${{ vars.NIVELLO_ADMIN_BASE_URL }}
+          NIVELLO_CALLBACK_SECRET: ${{ secrets.NIVELLO_ADMIN_CALLBACK_SECRET }}
+          NIVELLO_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          if [ -z "$NIVELLO_ADMIN_BASE_URL" ] || [ -z "$NIVELLO_CALLBACK_SECRET" ]; then
+            echo "::notice::Site Health is not configured yet (NIVELLO_ADMIN_BASE_URL variable / NIVELLO_ADMIN_CALLBACK_SECRET secret). Skipping."
+            exit 0
+          fi
+          export NIVELLO_HEALTH_ENDPOINT="${NIVELLO_ADMIN_BASE_URL%/}/admin-api/health-callback.php"
+          node scripts/site-health-runner.mjs

@@ -49,18 +49,19 @@ export default function Header() {
   const englishPath = getLocalizedPath(currentPath, 'en')
   const italianPath = getLocalizedPath(currentPath, 'it')
   const isActive = (href: string) => normalizePath(href) === currentPath
+  const navLabel = isItalian ? 'Navigazione principale' : 'Main navigation'
+  const languageLabel = isItalian ? 'Lingua' : 'Language'
 
   return (
     <header className="sticky top-0 z-40 bg-stone-50/95 backdrop-blur-md dark:bg-slate-950/95">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:py-3.5">
-        <Link href={isItalian ? '/it/' : '/'} className="flex shrink-0 items-center gap-2" aria-label="Nivello home">
+        <Link href={isItalian ? '/it/' : '/'} className="flex shrink-0 items-center gap-2" aria-label={isItalian ? 'Nivello, homepage' : 'Nivello home'}>
           <Image
             src="/nivello-logo-text-light.svg"
             alt="Nivello"
             width={160}
             height={46}
             priority
-            loading="eager"
             className="block h-auto w-[120px] dark:hidden md:w-[130px]"
           />
           <Image
@@ -69,16 +70,16 @@ export default function Header() {
             width={160}
             height={46}
             priority
-            loading="eager"
             className="hidden h-auto w-[120px] dark:block md:w-[130px]"
           />
         </Link>
 
-        <nav className="hidden items-center gap-0.5 rounded-full border border-slate-200 bg-slate-100/80 px-1 py-1 text-sm md:flex dark:border-slate-800 dark:bg-slate-900/70">
+        <nav aria-label={navLabel} className="hidden items-center gap-0.5 rounded-full border border-slate-200 bg-slate-100/80 px-1 py-1 text-sm md:flex dark:border-slate-800 dark:bg-slate-900/70">
           {navItems.map(item => (
             <Link
               key={item.key}
               href={item.href}
+              aria-current={isActive(item.href) ? 'page' : undefined}
               className={`rounded-full px-3 py-1.5 text-sm font-medium transition-all ${
                 isActive(item.href)
                   ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
@@ -91,9 +92,13 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <div className="hidden items-center rounded-full border border-slate-200 bg-slate-100/80 text-xs md:flex dark:border-slate-700 dark:bg-slate-900/80">
+          <div role="group" aria-label={languageLabel} className="hidden items-center rounded-full border border-slate-200 bg-slate-100/80 text-xs md:flex dark:border-slate-700 dark:bg-slate-900/80">
             <Link
               href={englishPath}
+              hrefLang="en"
+              lang="en"
+              aria-label="English"
+              aria-current={isItalian ? undefined : 'true'}
               className={`flex items-center gap-1.5 rounded-full px-2.5 py-1.5 transition-all ${
                 isItalian
                   ? 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
@@ -105,6 +110,10 @@ export default function Header() {
             </Link>
             <Link
               href={italianPath}
+              hrefLang="it"
+              lang="it"
+              aria-label="Italiano"
+              aria-current={isItalian ? 'true' : undefined}
               className={`flex items-center gap-1.5 rounded-full px-2.5 py-1.5 transition-all ${
                 isItalian
                   ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
@@ -116,10 +125,11 @@ export default function Header() {
             </Link>
           </div>
 
-          <ThemeToggle />
+          <ThemeToggle locale={locale} />
 
           <Link
             href={ctaHref}
+            data-track-cta="header_book_call"
             className="hidden rounded-full border border-[var(--brand-gold)]/70 bg-[var(--brand-gold)]/12 px-4 py-1.5 text-xs font-semibold text-slate-900 transition-all hover:bg-[var(--brand-gold)]/20 md:inline-flex dark:border-[var(--brand-gold)]/45 dark:bg-[var(--brand-gold)]/10 dark:text-[var(--brand-gold)] dark:hover:bg-[var(--brand-gold)]/15"
           >
             {ctaLabel}
@@ -128,7 +138,7 @@ export default function Header() {
           <button
             type="button"
             onClick={() => setMenuOpen(v => !v)}
-            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-label={menuOpen ? (isItalian ? 'Chiudi menu' : 'Close menu') : isItalian ? 'Apri menu' : 'Open menu'}
             aria-expanded={menuOpen}
             className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition-all hover:border-slate-300 hover:bg-slate-50 md:hidden dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
           >
@@ -148,11 +158,12 @@ export default function Header() {
             className="overflow-hidden bg-stone-50/98 md:hidden dark:bg-slate-950/95"
           >
             <div className="mx-auto max-w-6xl px-4 py-4">
-              <nav className="mb-4 flex flex-col gap-0.5">
+              <nav aria-label={navLabel} className="mb-4 flex flex-col gap-0.5">
                 {navItems.map(item => (
                   <Link
                     key={item.key}
                     href={item.href}
+                    aria-current={isActive(item.href) ? 'page' : undefined}
                     onClick={() => setMenuOpen(false)}
                     className={`rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
                       isActive(item.href)
@@ -166,9 +177,13 @@ export default function Header() {
               </nav>
 
               <div className="flex items-center justify-between gap-3 pt-3">
-                <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100/80 text-xs dark:border-slate-700 dark:bg-slate-800/80">
+                <div role="group" aria-label={languageLabel} className="flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100/80 text-xs dark:border-slate-700 dark:bg-slate-800/80">
                   <Link
                     href={englishPath}
+                    hrefLang="en"
+                    lang="en"
+                    aria-label="English"
+                    aria-current={isItalian ? undefined : 'true'}
                     onClick={() => setMenuOpen(false)}
                     className={`flex items-center gap-1 rounded-full px-3 py-1.5 transition-all ${
                       isItalian
@@ -181,6 +196,10 @@ export default function Header() {
                   </Link>
                   <Link
                     href={italianPath}
+                    hrefLang="it"
+                    lang="it"
+                    aria-label="Italiano"
+                    aria-current={isItalian ? 'true' : undefined}
                     onClick={() => setMenuOpen(false)}
                     className={`flex items-center gap-1 rounded-full px-3 py-1.5 transition-all ${
                       isItalian
@@ -195,6 +214,7 @@ export default function Header() {
 
                 <Link
                   href={ctaHref}
+            data-track-cta="header_book_call"
                   onClick={() => setMenuOpen(false)}
                   className="rounded-full border border-[var(--brand-gold)]/70 bg-[var(--brand-gold)]/12 px-4 py-1.5 text-xs font-semibold text-slate-900 transition-all hover:bg-[var(--brand-gold)]/20 dark:border-[var(--brand-gold)]/45 dark:bg-[var(--brand-gold)]/10 dark:text-[var(--brand-gold)]"
                 >

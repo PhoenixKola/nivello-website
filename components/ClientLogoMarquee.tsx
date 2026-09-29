@@ -4,12 +4,12 @@ import { getProjectPath, getProjects } from '@/lib/projects'
 import type { Locale } from '@/lib/site'
 
 const logos: Record<string, { src: string; width: number; height: number; contrast?: 'dark-logo' | 'light-logo'; className?: string }> = {
-  'rombo-nord': { src: '/client-logos/rombo-nord.png', width: 512, height: 512, className: 'max-h-[88px] max-w-[166px] sm:max-h-[98px] sm:max-w-[190px]' },
-  'le-camelie': { src: '/client-logos/le-camelie.png', width: 228, height: 237, className: 'max-h-[88px] max-w-[166px] sm:max-h-[98px] sm:max-w-[190px]' },
+  'rombo-nord': { src: '/client-logos/rombo-nord.webp', width: 400, height: 400, className: 'max-h-[88px] max-w-[166px] sm:max-h-[98px] sm:max-w-[190px]' },
+  'le-camelie': { src: '/client-logos/le-camelie.webp', width: 228, height: 237, className: 'max-h-[88px] max-w-[166px] sm:max-h-[98px] sm:max-w-[190px]' },
   'gjergj-jozef-kola': { src: '/client-logos/gjergj-jozef-kola.png', width: 305, height: 57, contrast: 'dark-logo' },
-  consteam: { src: '/client-logos/consteam.png', width: 3172, height: 1509, contrast: 'light-logo' },
+  consteam: { src: '/client-logos/consteam.webp', width: 400, height: 190, contrast: 'light-logo' },
   'your-assist-in-italy': { src: '/client-logos/your-assist-in-italy.svg', width: 130, height: 49, className: 'max-h-[84px] max-w-[170px] sm:max-h-[92px] sm:max-w-[196px]' },
-  progreen: { src: '/client-logos/progreen.png', width: 2000, height: 755 }
+  progreen: { src: '/client-logos/progreen.webp', width: 400, height: 151 }
 }
 
 const copy = {
@@ -48,7 +48,7 @@ export default function ClientLogoMarquee({ locale }: { locale: Locale }) {
   })
 
   return (
-    <div className="relative z-20 w-full pb-8 lg:-mt-12 lg:pb-10 xl:-mt-16">
+    <div className="relative z-20 w-full pb-8 lg:-mt-2 lg:pb-10 xl:-mt-4">
       <div className="mb-1 flex items-center gap-4 px-4 sm:px-6 lg:px-10">
         <p className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">{t.heading}</p>
         <span className="h-px flex-1 bg-gradient-to-r from-slate-300 via-slate-200 to-transparent dark:from-white/20 dark:via-white/10" aria-hidden="true" />

@@ -52,6 +52,7 @@ export default function BottomCta({ locale = 'en' }: { locale?: Locale }) {
             </div>
             <Link
               href={getRoutePath('contact', locale)}
+              data-track-cta="bottom_cta"
               className="inline-flex w-fit items-center justify-center gap-2 rounded-full border border-slate-900 bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-slate-800 dark:border-white/15 dark:bg-transparent dark:text-white dark:hover:border-[var(--brand-gold)]/55 dark:hover:bg-white/[0.06]"
             >
               {content.button}

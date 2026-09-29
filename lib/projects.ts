@@ -66,8 +66,8 @@ const projects = [
         desc: 'Sito bilingue per uno storico ristorante e cocktail bar sul mare a Pegli, con percorsi chiari verso menu, eventi e prenotazioni.',
         details: ['Menu drink e ristorante separati', 'Flusso prenotazione collegato al contatto', 'Visual atmosferici allineati al brand'],
         challenge: 'Rombo Nord aveva bisogno di una presenza digitale allineata alla reputazione locale, con menu, eventi e prenotazioni facili da raggiungere.',
-        solution: 'Abbiamo costruito un sito hospitality bilingue con navigazione chiara, atmosfera visiva e percorsi diretti verso le informazioni piu richieste.',
-        result: 'Un’esperienza brand piu curata che aiuta clienti locali e internazionali a capire il locale prima ancora di arrivare.',
+        solution: 'Abbiamo costruito un sito hospitality bilingue con navigazione chiara, atmosfera visiva e percorsi diretti verso le informazioni più richieste.',
+        result: 'Un’esperienza brand più curata che aiuta clienti locali e internazionali a capire il locale prima ancora di arrivare.',
         services: ['Strategia', 'Design', 'Sviluppo', 'Struttura bilingue']
       }
     } satisfies Record<Locale, LocalizedProject>
@@ -97,7 +97,7 @@ const projects = [
         details: ['Gallerie camere e servizi', 'Layout con segnali di fiducia', 'Call to action chiara verso prenotazione'],
         challenge: 'La guesthouse aveva bisogno di un sito compatto capace di comunicare comfort, posizione e valore della prenotazione in modo rapido.',
         solution: 'Abbiamo organizzato contenuti intorno a camere, posizione, servizi e prenotazione, mantenendo l’interfaccia calma e leggibile.',
-        result: 'Un percorso di prenotazione piu chiaro e una prima impressione piu forte per chi confronta soggiorni nel centro di Genova.',
+        result: 'Un percorso di prenotazione più chiaro e una prima impressione più forte per chi confronta soggiorni nel centro di Genova.',
         services: ['Strategia', 'Design', 'Sviluppo', 'Flusso prenotazione']
       }
     } satisfies Record<Locale, LocalizedProject>
@@ -127,7 +127,7 @@ const projects = [
         details: ['Intro autore e libri in evidenza', 'Pagine libro pronte per e-commerce', 'Contatto per lettori e media'],
         challenge: 'L’autore aveva bisogno di una casa multilingua per biografia, libri e contatti senza rendere l’esperienza troppo commerciale.',
         solution: 'Abbiamo progettato un’interfaccia editoriale sobria, con scoperta libri, contesto biografico e percorsi pratici per lettori e media.',
-        result: 'Una presenza letteraria calma che offre piu controllo su come l’opera viene presentata online.',
+        result: 'Una presenza letteraria calma che offre più controllo su come l’opera viene presentata online.',
         services: ['Struttura contenuti', 'Design', 'Sviluppo', 'Pagine multilingua']
       }
     } satisfies Record<Locale, LocalizedProject>
@@ -156,8 +156,8 @@ const projects = [
         desc: "Sito multi-pagina responsive per un'azienda di pulizie e manutenzioni, con focus su servizi, contatti e fiducia.",
         details: ['Servizi organizzati per offerta', 'Form contatto e richiesta rapida', 'Layout professionale B2B e B2C'],
         challenge: 'Consteam doveva spiegare diverse linee di servizio locali in modo professionale sia per clienti privati sia business.',
-        solution: 'Abbiamo diviso l’offerta in aree chiare, aggiunto segnali di fiducia e reso i percorsi di contatto visibili in piu punti.',
-        result: 'Una presenza servizi piu ordinata, con richieste piu semplici e un profilo digitale piu credibile.',
+        solution: 'Abbiamo diviso l’offerta in aree chiare, aggiunto segnali di fiducia e reso i percorsi di contatto visibili in più punti.',
+        result: 'Una presenza servizi più ordinata, con richieste più semplici e un profilo digitale più credibile.',
         services: ['Architettura servizi', 'UI design', 'Sviluppo', 'Flusso contatto']
       }
     } satisfies Record<Locale, LocalizedProject>
@@ -185,9 +185,9 @@ const projects = [
         body: 'Sito bilingue per consulenza immigrazione e trasferimenti in Italia.',
         desc: 'Sito bilingue per una consulenza immigrazione a Firenze, pensato per expat che devono orientarsi tra permessi e autorizzazioni.',
         details: ['Pagine servizio in inglese e italiano', 'Percorsi chiari per consulenza', 'FAQ e testimonianze per fiducia'],
-        challenge: 'Your Assist in Italy doveva rendere servizi complessi di immigrazione e relocation piu comprensibili e affidabili per expat.',
+        challenge: 'Your Assist in Italy doveva rendere servizi complessi di immigrazione e relocation più comprensibili e affidabili per expat.',
         solution: 'Abbiamo creato una struttura bilingue con pagine servizio, percorsi consulenza, FAQ e prove di fiducia per ridurre l’incertezza.',
-        result: 'Una presenza consulenziale piu chiara che aiuta clienti internazionali a capire il prossimo passo prima di prenotare supporto.',
+        result: 'Una presenza consulenziale più chiara che aiuta clienti internazionali a capire il prossimo passo prima di prenotare supporto.',
         services: ['Strategia', 'Messaggio', 'Design', 'Sviluppo bilingue']
       }
     } satisfies Record<Locale, LocalizedProject>
@@ -195,8 +195,8 @@ const projects = [
   {
     slug: 'progreen',
     href: 'https://progreenitaly.com/',
-    shot: '/work-progreen-live.png',
-    appShot: '/work-progreen-app-redacted.png',
+    shot: '/work-progreen-live.webp',
+    appShot: '/work-progreen-app-redacted.webp',
     title: 'ProGreen',
     color: '#90C898',
     kinds: ['website', 'app'] satisfies ProjectKind[],
@@ -219,7 +219,7 @@ const projects = [
       },
       it: {
         category: 'Edilizia',
-        body: 'Landing page per un’impresa edile di Genova, piu un gestionale privato per i cantieri.',
+        body: 'Landing page per un’impresa edile di Genova, più un gestionale privato per i cantieri.',
         desc: 'Landing page per un’impresa di costruzioni, ristrutturazioni ed efficientamento energetico a Genova, pensata per trasformare l’interesse in richieste di sopralluogo, affiancata da un gestionale privato per i cantieri.',
         websiteSummary: 'Una landing page focalizzata che trasforma richieste su costruzioni, ristrutturazioni ed efficientamento in sopralluoghi.',
         app: {
@@ -228,8 +228,8 @@ const projects = [
           details: ['Panoramica cantieri attivi', 'Tracciamento lavori e avanzamento', 'Un solo spazio operativo condiviso']
         },
         details: ['Servizi divisi tra costruzioni, ristrutturazioni ed efficientamento', 'Sopralluogo come call to action principale', 'Portale privato per la gestione di cantieri e lavori'],
-        challenge: 'ProGreen segue costruzioni, ristrutturazioni ed efficientamento energetico a Genova, ma non aveva una presenza pubblica che spiegasse l’offerta ne un unico posto per seguire i cantieri attivi.',
-        solution: 'Abbiamo costruito una landing page centrata sulle tre linee di servizio e sul percorso in quattro fasi, con il sopralluogo come call to action principale, piu un’app web privata per gestire cantieri e lavori.',
+        challenge: 'ProGreen segue costruzioni, ristrutturazioni ed efficientamento energetico a Genova, ma non aveva una presenza pubblica che spiegasse l’offerta né un unico posto per seguire i cantieri attivi.',
+        solution: 'Abbiamo costruito una landing page centrata sulle tre linee di servizio e sul percorso in quattro fasi, con il sopralluogo come call to action principale, più un’app web privata per gestire cantieri e lavori.',
         result: 'Un volto pubblico credibile per l’impresa e uno strumento interno che tiene ogni cantiere e ogni lavoro in un unico posto.',
         services: ['Strategia', 'Design', 'Sviluppo', 'Web app']
       }
@@ -272,4 +272,19 @@ export function getProject(slug: string, locale: Locale) {
 
 export function getProjectPath(slug: string, locale: Locale) {
   return locale === 'it' ? `/it/work/${slug}/` : `/work/${slug}/`
+}
+
+const imageAlt = {
+  en: {
+    website: (title: string) => `${title} website`,
+    app: (title: string) => `${title} private operations app, with client data anonymised`
+  },
+  it: {
+    website: (title: string) => `Sito ${title}`,
+    app: (title: string) => `App gestionale privata di ${title}, con dati dei clienti anonimizzati`
+  }
+} satisfies Record<Locale, Record<ProjectKind, (title: string) => string>>
+
+export function getProjectImageAlt(title: string, kind: ProjectKind, locale: Locale) {
+  return imageAlt[locale][kind](title)
 }

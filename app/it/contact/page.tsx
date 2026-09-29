@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
-import { pageSeo } from '../../seo'
-import ContactItClient from './ContactItClient'
+import ContactPage from '@/components/ContactPage'
+import { pageSeo } from '@/lib/seo'
 
 export const metadata: Metadata = pageSeo.contactIt
 
-export default function ContactItPage() {
-  return <ContactItClient />
+export default function ContactItRoutePage() {
+  return <ContactPage locale="it" />
 }

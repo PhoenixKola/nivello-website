@@ -24,7 +24,7 @@ const copy = {
     contactTitle: 'Domande?',
     contactBody: 'Per richieste sulla privacy o questioni legali, scrivici direttamente.',
     contactCta: 'Scrivi a Nivello',
-    labels: { privacy: 'Privacy', disclaimer: 'Disclaimer', imprint: 'Impronta', terms: 'Termini e condizioni' }
+    labels: { privacy: 'Privacy', disclaimer: 'Disclaimer', imprint: 'Note legali', terms: 'Termini e condizioni' }
   }
 } satisfies Record<Locale, {
   center: string
@@ -69,7 +69,7 @@ export default function LegalPage({
   const content = copy[locale]
 
   return (
-    <main className="relative overflow-hidden bg-stone-50 dark:bg-slate-950/95">
+    <main id="main-content" tabIndex={-1} className="flex-1 outline-none relative overflow-hidden bg-stone-50 dark:bg-slate-950/95">
       <section className="relative">
         <div className="relative mx-auto max-w-6xl px-5 py-16 sm:px-6 sm:py-20 lg:px-8">
           <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3.5 py-1.5 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.05]">

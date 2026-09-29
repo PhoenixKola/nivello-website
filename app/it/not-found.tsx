@@ -3,7 +3,7 @@ import { getRoutePath } from '@/lib/site'
 
 export default function NotFoundIt() {
   return (
-    <div className="flex min-h-[70vh] items-center bg-slate-950">
+    <main id="main-content" tabIndex={-1} className="flex min-h-[70vh] flex-1 items-center bg-slate-950 outline-none">
       <div className="mx-auto flex max-w-xl flex-col items-center px-4 text-center">
         <p className="text-7xl font-semibold tracking-tight text-[var(--brand-gold)] md:text-9xl">
           404
@@ -13,7 +13,7 @@ export default function NotFoundIt() {
         </h1>
         <p className="mt-3 text-sm text-slate-300">
           Potrebbe trattarsi di un link non valido o di un contenuto non ancora
-          pubblicato. Può usare il menu in alto oppure scegliere una delle
+          pubblicato. Puoi usare il menu in alto oppure scegliere una delle
           opzioni qui sotto.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
@@ -31,6 +31,6 @@ export default function NotFoundIt() {
           </Link>
         </div>
       </div>
-    </div>
+    </main>
   )
 }

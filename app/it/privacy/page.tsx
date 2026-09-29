@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import LegalPage from '@/components/LegalPage'
-import { pageSeo } from '../../seo'
+import { pageSeo } from '@/lib/seo'
 
 export const metadata: Metadata = pageSeo.privacyIt
 

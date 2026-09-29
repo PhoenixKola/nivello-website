@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# playwright
+/test-results/
+/playwright-report/
+
+# admin: local test stack data and live data (never committed)
+/.admin-test/
+/nivello-admin-data/
+nivello-admin-secrets.php

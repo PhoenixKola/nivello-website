@@ -2,8 +2,14 @@
 
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
+import type { Locale } from '@/lib/site'
 
-export default function ThemeToggle() {
+const labels: Record<Locale, { toLight: string; toDark: string }> = {
+  en: { toLight: 'Switch to light mode', toDark: 'Switch to dark mode' },
+  it: { toLight: 'Passa al tema chiaro', toDark: 'Passa al tema scuro' }
+}
+
+export default function ThemeToggle({ locale = 'en' }: { locale?: Locale }) {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
@@ -24,7 +30,7 @@ export default function ThemeToggle() {
     <button
       type="button"
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
-      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      aria-label={isDark ? labels[locale].toLight : labels[locale].toDark}
       className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:bg-slate-700 dark:hover:text-slate-200"
     >
       {isDark ? (

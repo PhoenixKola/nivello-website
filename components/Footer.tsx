@@ -41,9 +41,10 @@ export default function Footer() {
   const content = copy[locale]
   const year = new Date().getFullYear()
   const contactPath = getRoutePath('contact', locale)
-  // The contact page already ends with its own form and FAQ, so repeating the
-  // "get in touch" pitch directly above the footer links reads as filler.
-  const isContactPage = findRouteByPath(pathname)?.key === 'contact'
+  // Contact ends with its own form, and the homepage ends with the Project Launcher,
+  // so a second full-width pitch right above the footer links would compete with them.
+  const routeKey = findRouteByPath(pathname)?.key
+  const hideCta = routeKey === 'contact' || routeKey === 'home'
   const exploreLinks = navRoutes.map(route => ({ href: route.paths[locale], label: route.labels[locale] }))
   const companyLinks = footerRoutes
     .filter(route => route.key !== 'contact')
@@ -51,8 +52,8 @@ export default function Footer() {
 
   return (
     <footer id="site-footer" className="bg-stone-50 text-slate-900 dark:bg-slate-950/95 dark:text-white">
-      <div className={`mx-auto max-w-7xl px-4 pb-8 sm:px-6 md:pb-10 lg:px-8 ${isContactPage ? 'pt-0' : 'pt-16 md:pt-24'}`}>
-        {!isContactPage && (
+      <div className={`mx-auto max-w-7xl px-4 pb-8 sm:px-6 md:pb-10 lg:px-8 ${hideCta ? 'pt-0' : 'pt-16 md:pt-24'}`}>
+        {!hideCta && (
           <section className="relative overflow-hidden bg-slate-100 px-6 py-8 text-slate-950 sm:px-8 sm:py-10 lg:grid lg:grid-cols-[1fr_auto] lg:items-end lg:gap-16 lg:px-12 lg:py-12 dark:bg-slate-950 dark:text-white">
             <div className="absolute inset-y-0 left-0 flex w-1.5 flex-col" aria-hidden="true">
               <span className="h-1/3 w-full bg-[var(--brand-blue)]" />
@@ -68,6 +69,7 @@ export default function Footer() {
             </div>
             <Link
               href={contactPath}
+              data-track-cta="footer_start"
               className="group relative mt-7 inline-flex min-h-12 items-center justify-between gap-8 bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--brand-blue)] lg:mt-0 dark:bg-white dark:text-slate-950 dark:hover:bg-[var(--brand-gold)]"
             >
               {content.cta}
@@ -79,8 +81,8 @@ export default function Footer() {
         <div className="grid gap-12 py-14 sm:grid-cols-2 lg:grid-cols-[1.45fr_0.65fr_0.65fr_1fr] lg:gap-10 lg:py-16">
           <div className="max-w-sm">
             <Link href={getRoutePath('home', locale)} aria-label="Nivello home" className="inline-block">
-              <Image src="/nivello-logo-text-light.svg" alt="Nivello" width={160} height={46} loading="eager" className="block h-auto w-[138px] dark:hidden" />
-              <Image src="/nivello-logo-text.svg" alt="Nivello" width={160} height={46} loading="eager" className="hidden h-auto w-[138px] dark:block" />
+              <Image src="/nivello-logo-text-light.svg" alt="Nivello" width={160} height={46} className="block h-auto w-[138px] dark:hidden" />
+              <Image src="/nivello-logo-text.svg" alt="Nivello" width={160} height={46} className="hidden h-auto w-[138px] dark:block" />
             </Link>
             <p className="mt-5 text-sm leading-relaxed text-slate-600 dark:text-slate-400">{content.intro}</p>
             <div className="mt-6 flex items-center gap-3 text-xs font-semibold text-slate-700 dark:text-slate-300">

@@ -155,6 +155,8 @@ export function OgCard({
         {/* header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+            {/* ImageResponse renders plain HTML; next/image is not available here. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             {logo ? <img src={logo} width={68} height={68} alt="" /> : null}
             <div style={{ display: 'flex', fontSize: 38, fontWeight: 600, letterSpacing: -0.6 }}>Nivello</div>
           </div>

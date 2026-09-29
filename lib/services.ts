@@ -44,12 +44,12 @@ export const services: Service[] = [
         label: 'Strategia',
         title: 'Strategia e posizionamento per siti web',
         shortTitle: 'Strategia',
-        desc: 'Una direzione focalizzata che assegna priorita chiare allo sviluppo.',
-        intro: 'Come servizio di supporto, la strategia chiarisce a chi parla il prodotto, cosa deve dimostrare e quali priorita deve seguire il build.',
-        items: ['Chiarezza su pubblico e offerta', 'Struttura e priorita del sito', 'Mappatura del percorso di conversione', 'Piano di lancio e prossimi passi'],
-        ideal: 'Ideale quando il business ha bisogno di una direzione piu chiara.',
-        deliverables: ['Note di posizionamento', 'Mappa pagine e priorita contenuti', 'Raccomandazioni per la conversione', 'Checklist di lancio'],
-        outcomes: ['Offerta piu chiara', 'Decisioni design piu rapide', 'Meno revisioni su testi e layout'],
+        desc: 'Una direzione focalizzata che assegna priorità chiare allo sviluppo.',
+        intro: 'Come servizio di supporto, la strategia chiarisce a chi parla il prodotto, cosa deve dimostrare e quali priorità deve seguire il build.',
+        items: ['Chiarezza su pubblico e offerta', 'Struttura e priorità del sito', 'Mappatura del percorso di conversione', 'Piano di lancio e prossimi passi'],
+        ideal: 'Ideale quando il business ha bisogno di una direzione più chiara.',
+        deliverables: ['Note di posizionamento', 'Mappa pagine e priorità contenuti', 'Raccomandazioni per la conversione', 'Checklist di lancio'],
+        outcomes: ['Offerta più chiara', 'Decisioni design più rapide', 'Meno revisioni su testi e layout'],
         process: ['Sessione discovery', 'Audit presenza attuale', 'Architettura sito', 'Piano operativo']
       }
     }
@@ -78,9 +78,9 @@ export const services: Service[] = [
         desc: 'Messaggi di supporto che aiutano il prodotto finale a generare contatti qualificati.',
         intro: 'Quando il build lo richiede, costruiamo narrativa, call to action e prove per rendere l’offerta chiara in pochi secondi.',
         items: ['Landing page e sales page', 'Messaggi e microcopy', 'Idee per lead magnet ed email flow', 'Setup base di analytics e tracking'],
-        ideal: 'Ideale per lanci, lead generation e offerte piu leggibili.',
+        ideal: 'Ideale per lanci, lead generation e offerte più leggibili.',
         deliverables: ['Framework messaggi pagina', 'Gerarchia CTA', 'Raccomandazioni lead capture', 'Piano eventi analytics'],
-        outcomes: ['Storia pagina piu chiara', 'Contatti piu qualificati', 'Lanci piu misurabili'],
+        outcomes: ['Storia pagina più chiara', 'Contatti più qualificati', 'Lanci più misurabili'],
         process: ['Revisione offerta', 'Gerarchia messaggi', 'Flusso pagina', 'Setup misurazione']
       }
     }
@@ -107,11 +107,11 @@ export const services: Service[] = [
         title: 'Design brand e interfacce prodotto',
         shortTitle: 'Brand e product design',
         desc: 'Interfacce pulite e contemporanee, progettate per un build solido e usabile.',
-        intro: 'Progettiamo interfacce premium, calme e leggibili intorno al prodotto, dando allo sviluppo un sistema visivo chiaro senza sacrificare l’usabilita.',
+        intro: 'Progettiamo interfacce premium, calme e leggibili intorno al prodotto, dando allo sviluppo un sistema visivo chiaro senza sacrificare l’usabilità.',
         items: ['Look and feel del brand', 'UI design per siti e app', 'Design system e componenti', 'Asset visual per marketing'],
         ideal: 'Ideale per SaaS, agenzie e aziende di servizi.',
         deliverables: ['Direzione visiva', 'Design pagine chiave', 'Stati responsive UI', 'Linee guida componenti'],
-        outcomes: ['Percezione brand piu curata', 'Esperienza mobile piu pulita', 'Linguaggio design riutilizzabile'],
+        outcomes: ['Percezione brand più curata', 'Esperienza mobile più pulita', 'Linguaggio design riutilizzabile'],
         process: ['Mood e direzione', 'Schermate chiave', 'Pass responsive', 'Handoff design']
       }
     }
@@ -138,11 +138,11 @@ export const services: Service[] = [
         title: 'Sviluppo web su misura con React e Next.js',
         shortTitle: 'Sviluppo e implementazione',
         desc: 'Il nostro servizio centrale: siti e app web veloci, accessibili e facili da mantenere.',
-        intro: 'Lo sviluppo e al centro del nostro lavoro. Costruiamo prodotti digitali performanti e mantenibili, pronti al lancio e facili da migliorare.',
-        items: ['Siti corporate e landing page', 'Frontend custom React e Next.js', 'Integrazione headless CMS su richiesta', 'Controlli performance e accessibilita'],
+        intro: 'Lo sviluppo è al centro del nostro lavoro. Costruiamo prodotti digitali performanti e mantenibili, pronti al lancio e facili da migliorare.',
+        items: ['Siti corporate e landing page', 'Frontend custom React e Next.js', 'Integrazione headless CMS su richiesta', 'Controlli performance e accessibilità'],
         ideal: 'Ideale quando vuoi un partner tecnico nel tempo.',
         deliverables: ['Implementazione React e Next.js', 'Sviluppo adattabile a ogni dispositivo', 'Configurazione dell’esportazione statica', 'Supporto al lancio'],
-        outcomes: ['Caricamenti piu rapidi', 'Codice piu ordinato', 'Output statico pronto al deploy'],
+        outcomes: ['Caricamenti più rapidi', 'Codice più ordinato', 'Output statico pronto al deploy'],
         process: ['Setup tecnico', 'Sviluppo pagine', 'QA e performance', 'Handoff lancio']
       }
     }

@@ -97,11 +97,11 @@ const copy = {
     principlesEyebrow: 'Come ragioniamo',
     principlesTitle: 'Team snello. Scelte chiare. Implementazione seria.',
     principlesIntro:
-      'Il build resta al centro. Ogni disciplina di supporto serve a rendere il prodotto finale piu chiaro, solido e semplice da mantenere.',
+      'Il build resta al centro. Ogni disciplina di supporto serve a rendere il prodotto finale più chiaro, solido e semplice da mantenere.',
     principles: [
       {
         title: 'Sviluppo al centro',
-        body: 'Costruiamo in React e Next.js considerando performance, accessibilita e gestione futura come requisiti del prodotto, non come interventi da rimandare.',
+        body: 'Costruiamo in React e Next.js considerando performance, accessibilità e gestione futura come requisiti del prodotto, non come interventi da rimandare.',
         label: 'Disciplina centrale',
         icon: Code2,
         color: 'var(--brand-blue)',
@@ -116,7 +116,7 @@ const copy = {
       },
       {
         title: 'Interfacce con uno scopo',
-        body: 'Il design crea gerarchia, coerenza e un percorso piu fluido dentro il prodotto.',
+        body: 'Il design crea gerarchia, coerenza e un percorso più fluido dentro il prodotto.',
         label: 'Supporto design',
         icon: Palette,
         color: 'var(--brand-purple)'
@@ -246,7 +246,7 @@ export default function AboutPage({ locale = 'en' }: { locale?: Locale }) {
   const badgeIcons = [Code2, Languages, Globe2]
 
   return (
-    <main className="overflow-hidden bg-stone-50 dark:bg-slate-950/95">
+    <main id="main-content" tabIndex={-1} className="flex-1 outline-none overflow-hidden bg-stone-50 dark:bg-slate-950/95">
       <section className="relative">
         <div className="relative mx-auto grid min-h-[78vh] max-w-7xl items-center gap-8 px-5 py-12 sm:px-6 lg:grid-cols-[1.02fr_0.98fr] lg:gap-8 lg:px-10 lg:py-16">
           <motion.div

@@ -21,7 +21,7 @@ export default function WorkHeroGraphic({ locale }: { locale: Locale }) {
           <ArrowUpRight className="h-3.5 w-3.5 text-slate-400" />
         </div>
         <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-950">
-          <Image src="/work-progreen-live.png" alt="" fill sizes="(max-width: 1024px) 82vw, 460px" className="object-cover object-top" priority />
+          <Image src="/work-progreen-live.webp" alt="" fill sizes="(max-width: 1024px) 82vw, 460px" className="object-cover object-top" priority />
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/75 to-transparent px-4 pb-4 pt-12">
             <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#b9e5bf]">ProGreen</p>
             <p className="mt-1 text-sm font-semibold text-white">{t.websiteType}</p>
@@ -38,7 +38,7 @@ export default function WorkHeroGraphic({ locale }: { locale: Locale }) {
           <span className="border-l border-slate-200 pl-2 text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:border-white/10 dark:text-slate-500">{t.appType}</span>
         </div>
         <div className="relative aspect-[16/8] overflow-hidden rounded-xl border border-slate-100 bg-[#f6f7ef] dark:border-white/10">
-          <Image src="/work-progreen-app-redacted.png" alt="" fill sizes="(max-width: 1024px) 76vw, 420px" className="object-cover object-top" priority />
+          <Image src="/work-progreen-app-redacted.webp" alt="" fill sizes="(max-width: 1024px) 76vw, 420px" className="object-cover object-top" loading="eager" />
         </div>
       </div>
 

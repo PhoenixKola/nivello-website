@@ -27,13 +27,17 @@ export const siteRoutes: SiteRoute[] = [
   { key: 'process', paths: { en: '/process/', it: '/it/process/' }, labels: { en: 'How we work', it: 'Metodo' }, nav: true },
   { key: 'contact', paths: { en: '/contact/', it: '/it/contact/' }, labels: { en: 'Contact', it: 'Contatti' }, nav: true, footer: true },
   { key: 'about', paths: { en: '/about/', it: '/it/chi-siamo/' }, labels: { en: 'About', it: 'Chi siamo' }, footer: true },
-  { key: 'imprint', paths: { en: '/imprint/', it: '/it/impronta/' }, labels: { en: 'Imprint', it: 'Impronta' }, footer: true },
+  { key: 'imprint', paths: { en: '/imprint/', it: '/it/impronta/' }, labels: { en: 'Imprint', it: 'Note legali' }, footer: true },
   { key: 'terms', paths: { en: '/terms/', it: '/it/termini/' }, labels: { en: 'Terms & Conditions', it: 'Termini e condizioni' }, footer: true },
   { key: 'privacy', paths: { en: '/privacy/', it: '/it/privacy/' }, labels: { en: 'Privacy', it: 'Privacy' }, footer: true },
   { key: 'disclaimer', paths: { en: '/disclaimer/', it: '/it/disclaimer/' }, labels: { en: 'Disclaimer', it: 'Disclaimer' }, footer: true }
 ]
 
 export const SITE_URL = 'https://www.nivello.it'
+
+// Formspree form IDs are public by design (the browser posts to them directly), so this
+// lives in plain config rather than a pseudo-secret env var that would ship in the bundle anyway.
+export const CONTACT_FORM_ENDPOINT = 'https://formspree.io/f/xyzlpdkl'
 
 export function normalizePath(path: string) {
   const cleanPath = path.split(/[?#]/)[0]?.replace(/\/+$/, '') || '/'
@@ -71,18 +75,15 @@ export function getLocalizedPath(path: string, locale: Locale) {
   const route = findRouteByPath(path)
   if (route) return route.paths[locale]
 
-  const normalized = normalizePath(path)
-  if (locale === 'en') {
-    const englishPath = normalized.replace(/^\/it(?=\/|$)/, '') || '/'
-    return withTrailingSlash(englishPath)
-  }
-
-  return normalized === '/' ? '/it/' : withTrailingSlash(`/it${normalized}`)
+  // Service and case-study detail pages share their slugs across languages; anything else
+  // (e.g. the 404 page) has no counterpart, so the language switch goes to that locale's home.
+  const neutral = normalizePath(path).replace(/^\/it(?=\/|$)/, '') || '/'
+  if (!/^\/(services|work)\/[^/]+$/.test(neutral)) return getRoutePath('home', locale)
+  return withTrailingSlash(locale === 'it' ? `/it${neutral}` : neutral)
 }
 
 export const navRoutes = siteRoutes.filter(route => route.nav)
 export const footerRoutes = siteRoutes.filter(route => route.footer)
-export const sitemapRoutes = siteRoutes
 
 export function absoluteUrl(path: string) {
   return `${SITE_URL}${path === '/' ? '' : path}`

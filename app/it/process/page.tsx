@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
-import { pageSeo } from '../../seo'
-import ProcessItClient from './ProcessItClient'
+import ProcessPage from '@/components/ProcessPage'
+import { pageSeo } from '@/lib/seo'
 
 export const metadata: Metadata = pageSeo.processIt
 
-export default function ProcessItPage() {
-  return <ProcessItClient />
+export default function ProcessItRoutePage() {
+  return <ProcessPage locale="it" />
 }

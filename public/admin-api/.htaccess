@@ -1,0 +1,11 @@
+# Admin API: internal include files are never served directly; responses are never cached.
+Options -Indexes
+
+<FilesMatch "^_">
+  Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+  Header always set Cache-Control "no-store"
+  Header always set X-Robots-Tag "noindex, nofollow"
+</IfModule>

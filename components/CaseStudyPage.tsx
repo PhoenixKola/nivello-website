@@ -1,14 +1,16 @@
 'use client'
 
+import { useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowLeft, ArrowRight, ArrowUpRight, Check, ExternalLink, Globe2, LayoutDashboard, Lightbulb, Target, TrendingUp } from 'lucide-react'
 import BottomCta from '@/components/BottomCta'
 import ProjectTypeBadges from '@/components/ProjectTypeBadges'
+import { track } from '@/lib/analytics'
 import type { Locale } from '@/lib/site'
 import { getRoutePath } from '@/lib/site'
-import { getProject, getProjectPath, getProjects } from '@/lib/projects'
+import { getProject, getProjectPath, getProjects, getProjectImageAlt } from '@/lib/projects'
 
 const copy = {
   en: {
@@ -38,7 +40,7 @@ const copy = {
     shipped: 'Cosa abbiamo realizzato',
     productsEyebrow: 'Un business, due prodotti connessi',
     productsTitle: 'L’esperienza pubblica e lo spazio di lavoro privato.',
-    productsIntro: 'ProGreen aveva bisogno di piu di una nuova vetrina. Abbiamo progettato il percorso cliente e lo strumento operativo come due parti dello stesso sistema.',
+    productsIntro: 'ProGreen aveva bisogno di più di una nuova vetrina. Abbiamo progettato il percorso cliente e lo strumento operativo come due parti dello stesso sistema.',
     websiteLabel: 'Sito / landing page',
     websiteTitle: 'Un volto pubblico chiaro',
     appLabel: 'App web privata',
@@ -71,6 +73,9 @@ function getDomain(href: string) {
 export default function CaseStudyPage({ slug, locale = 'en' }: { slug: string; locale?: Locale }) {
   const project = getProject(slug, locale)
   const reducedMotion = useReducedMotion()
+  useEffect(() => {
+    track('work_case_study_open', slug.replace(/[^a-z0-9]+/g, '_').slice(0, 40))
+  }, [slug])
   if (!project) return null
 
   const t = copy[locale]
@@ -99,7 +104,7 @@ export default function CaseStudyPage({ slug, locale = 'en' }: { slug: string; l
   })
 
   return (
-    <main className="bg-stone-50 dark:bg-slate-950/95" style={{ ['--pc' as string]: color }}>
+    <main id="main-content" tabIndex={-1} className="flex-1 outline-none bg-stone-50 dark:bg-slate-950/95" style={{ ['--pc' as string]: color }}>
       {/* ── Hero ─────────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
         <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 pb-16 pt-10 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:gap-14 lg:px-8 lg:pb-24 lg:pt-14">
@@ -179,7 +184,7 @@ export default function CaseStudyPage({ slug, locale = 'en' }: { slug: string; l
               <a href={project.href} target="_blank" rel="noopener noreferrer" className="group relative block aspect-[16/10] overflow-hidden">
                 <Image
                   src={project.shot}
-                  alt={`${project.title} website`}
+                  alt={getProjectImageAlt(project.title, 'website', locale)}
                   fill
                   sizes="(max-width: 1024px) 100vw, 55vw"
                   className="object-cover object-top transition-transform duration-700 group-hover:scale-[1.02]"
@@ -231,7 +236,7 @@ export default function CaseStudyPage({ slug, locale = 'en' }: { slug: string; l
             <div className="grid gap-6 lg:grid-cols-2">
               <motion.article {...rise(0.05)} className={productPanelClass}>
                 <div className={productWebsiteMediaClass}>
-                  <Image src={project.shot} alt={`${project.title} website`} fill sizes="(max-width: 1024px) 100vw, 50vw" className={productImageClass} />
+                  <Image src={project.shot} alt={getProjectImageAlt(project.title, 'website', locale)} fill sizes="(max-width: 1024px) 100vw, 50vw" className={productImageClass} />
                 </div>
                 <div className={productBodyClass}>
                   <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
@@ -245,7 +250,7 @@ export default function CaseStudyPage({ slug, locale = 'en' }: { slug: string; l
 
               <motion.article {...rise(0.12)} className={productPanelClass}>
                 <div className={productAppMediaClass}>
-                  <Image src={project.appShot || '/work-progreen-app-redacted.png'} alt={`${project.title} private operations app, with client data anonymized`} fill sizes="(max-width: 1024px) 100vw, 50vw" className={productImageClass} />
+                  <Image src={project.appShot || '/work-progreen-app-redacted.webp'} alt={getProjectImageAlt(project.title, 'app', locale)} fill sizes="(max-width: 1024px) 100vw, 50vw" className={productImageClass} />
                 </div>
                 <div className={productBodyClass}>
                   <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
@@ -335,7 +340,7 @@ export default function CaseStudyPage({ slug, locale = 'en' }: { slug: string; l
                 <div className="relative order-first aspect-[16/10] overflow-hidden md:order-last md:aspect-auto md:min-h-[260px]">
                   <Image
                     src={nextProject.shot}
-                    alt={`${nextProject.title} website`}
+                    alt={getProjectImageAlt(nextProject.title, 'website', locale)}
                     fill
                     sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-cover object-top transition-transform duration-700 group-hover:scale-[1.03]"

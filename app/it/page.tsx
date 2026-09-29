@@ -1,14 +1,9 @@
 import type { Metadata } from 'next'
-import { pageSeo } from '../seo'
-import HomeItClient from './HomeItClient'
+import HomePage from '@/components/HomePage'
+import { pageSeo } from '@/lib/seo'
 
-export const metadata: Metadata = {
-  ...pageSeo.homeIt,
-  title: {
-    absolute: 'Nivello'
-  }
-}
+export const metadata: Metadata = pageSeo.homeIt
 
-export default function HomeIt() {
-  return <HomeItClient />
+export default function HomeItPage() {
+  return <HomePage locale="it" />
 }

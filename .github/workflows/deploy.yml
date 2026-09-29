@@ -1,17 +1,21 @@
-name: Deploy Nivello to Hetzner
+name: Verify and deploy Nivello
 
 on:
+  pull_request:
   push:
     branches:
       - main
 
-concurrency:
-  group: nivello-production-deploy
-  cancel-in-progress: true
+# Checkout and artifacts only; the deploy uses its own Hetzner credentials.
+permissions:
+  contents: read
 
 jobs:
-  deploy:
+  verify:
     runs-on: ubuntu-latest
+    concurrency:
+      group: nivello-verify-${{ github.ref }}
+      cancel-in-progress: true
 
     steps:
       - name: Checkout repository
@@ -26,20 +30,93 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Clean previous build
-        run: rm -rf .next out
+      - name: Lint
+        run: npm run lint
 
+      # next build also type-checks the project.
       - name: Build static site
-        run: npm run build
+        run: |
+          rm -rf .next out
+          npm run build
+
+      # The admin test suites run the PHP API with `php -S` against mock GitHub/scraper services.
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: curl, mbstring, json
+          coverage: none
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Smoke tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: test-results/
+          retention-days: 7
+
+      - name: Write deploy manifest
+        run: bash scripts/write-deploy-manifest.sh out
+
+      - name: Upload build output
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-out
+          path: out/
+          include-hidden-files: true # .htaccess and .nivello-manifest
+          retention-days: 7
+
+  deploy:
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # Never cancel a deploy mid-upload; queue the next one instead.
+    concurrency:
+      group: nivello-production-deploy
+      cancel-in-progress: false
+    env:
+      HETZNER_HOST: ${{ secrets.HETZNER_HOST }}
+      HETZNER_PORT: ${{ secrets.HETZNER_PORT }}
+      HETZNER_USER: ${{ secrets.HETZNER_USER }}
+      LFTP_PASSWORD: ${{ secrets.HETZNER_PASSWORD }}
+      REMOTE_ROOT: /public_html
+
+    steps:
+      - name: Checkout deploy scripts
+        uses: actions/checkout@v4
+
+      - name: Download verified build output
+        uses: actions/download-artifact@v4
+        with:
+          name: site-out
+          path: out/
 
       - name: Install lftp
         run: sudo apt-get update && sudo apt-get install -y lftp
 
-      - name: Upload static files to Hetzner
-        # Both paths belong to separate subdomains and must survive the mirror cleanup.
+      # Deletion is limited to entries a Nivello build shipped (see scripts/deploy-plan.sh),
+      # so sibling apps in the shared web root (casco-bene/, demo/, future ones) are never touched.
+      - name: Fetch previous deploy manifest
         run: |
-          lftp -u "${{ secrets.HETZNER_USER }}","${{ secrets.HETZNER_PASSWORD }}" -p "${{ secrets.HETZNER_PORT }}" sftp://"${{ secrets.HETZNER_HOST }}" <<EOF
-          set sftp:auto-confirm yes
-          mirror -R --delete --verbose --exclude='^(casco-bene|demo)(/|$)' ./out /public_html
-          bye
-          EOF
+          if lftp --env-password -u "$HETZNER_USER" -p "$HETZNER_PORT" "sftp://$HETZNER_HOST" \
+            -e "set sftp:auto-confirm yes; get $REMOTE_ROOT/.nivello-manifest -o prev-manifest; bye"; then
+            echo "Using the previous deploy manifest."
+          else
+            echo "No previous manifest found; using the bootstrap list of legacy entries."
+            cp scripts/deploy-bootstrap-manifest.txt prev-manifest
+          fi
+
+      - name: Plan deploy
+        run: |
+          bash scripts/deploy-plan.sh out prev-manifest "$REMOTE_ROOT" > deploy.lftp
+          echo "Planned operations:"
+          grep -E '^(mirror|put|rm)' deploy.lftp
+
+      - name: Upload to Hetzner
+        run: lftp --env-password -u "$HETZNER_USER" -p "$HETZNER_PORT" "sftp://$HETZNER_HOST" -f deploy.lftp

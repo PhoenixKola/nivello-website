@@ -1,2 +1,36 @@
 DirectoryIndex index.html
 ErrorDocument 404 /404.html
+
+# Deploy bookkeeping file (read over SFTP only).
+<Files ".nivello-manifest">
+  Require all denied
+</Files>
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()"
+  # Clickjacking protection: legacy header plus the CSP directive modern browsers use.
+  # frame-ancestors is the only CSP directive set, so scripts/styles/fetch are unaffected.
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Content-Security-Policy "frame-ancestors 'self'"
+
+  # HSTS is intentionally not enabled yet: sibling subdomains share this host and HTTPS
+  # coverage for all of them has not been verified. Once it is, enable (without
+  # includeSubDomains unless every subdomain is HTTPS-only):
+  # Header always set Strict-Transport-Security "max-age=31536000"
+
+  # Hashed Next.js build assets never change under the same URL.
+  <If "%{REQUEST_URI} =~ m#^/_next/static/#">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </If>
+
+  # The service-worker kill-switch must always be revalidated.
+  <Files "sw.js">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </Files>
+</IfModule>
+
+# A full Content-Security-Policy is a staged follow-up: roll it out as
+# Content-Security-Policy-Report-Only first and verify Next inline scripts, Framer Motion
+# inline styles, and the Formspree fetch (https://formspree.io) before enforcing.

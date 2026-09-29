@@ -33,7 +33,7 @@ const copy = {
     ]
   },
   it: {
-    title: 'Le domande che ci fanno piu spesso.',
+    title: 'Le domande che ci fanno più spesso.',
     intro: 'Se non trovi qui la risposta che cerchi, scrivici un messaggio breve e ti risponderemo direttamente.',
     outroStart: 'Hai ancora dubbi?',
     link: 'Inviaci un messaggio veloce',
@@ -41,7 +41,7 @@ const copy = {
     faqs: [
       {
         question: 'Quanto dura in media un progetto di sito web?',
-        answer: 'La maggior parte dei progetti dura tra le due e le sei settimane, in base a contenuti, complessita e velocita di feedback.'
+        answer: 'La maggior parte dei progetti dura tra le due e le sei settimane, in base a contenuti, complessità e velocità di feedback.'
       },
       {
         question: 'Lavorate solo con aziende italiane?',
@@ -49,7 +49,7 @@ const copy = {
       },
       {
         question: 'Potete aiutarci anche con i testi, non solo con il design?',
-        answer: 'Si. Spesso lavoriamo su struttura, messaggi e microcopy per allineare i contenuti al design e agli obiettivi.'
+        answer: 'Sì. Spesso lavoriamo su struttura, messaggi e microcopy per allineare i contenuti al design e agli obiettivi.'
       },
       {
         question: 'Come funziona la collaborazione nel concreto, settimana per settimana?',

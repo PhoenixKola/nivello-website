@@ -1,0 +1,115 @@
+name: Nivello lead discovery
+
+# Dispatched by the Nivello admin API (public/admin-api/_discovery.php). One run = one segment of a
+# logical discovery batch; long batches continue in follow-up runs from the server-side checkpoint.
+# The run-name must keep the "<batch_id> · segment <n>" format: the server uses it to find the run.
+run-name: "Nivello discovery ${{ inputs.batch_id }} · segment ${{ inputs.segment }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      batch_id:
+        description: Nivello batch id (batch_ + 16 hex)
+        required: true
+        type: string
+      segment:
+        description: Run segment for this batch (1 = first run, 2+ = continuation)
+        required: true
+        default: "1"
+        type: string
+      callback_url:
+        description: Nivello callback endpoint (https://…/admin-api/github-callback.php)
+        required: true
+        type: string
+      country:
+        required: true
+        type: string
+      city:
+        required: true
+        type: string
+      category:
+        required: false
+        default: ""
+        type: string
+      target:
+        description: Qualified new leads wanted
+        required: true
+        type: string
+      languages:
+        description: Comma-separated Google Maps locales (en,it,sq,de,fr,es)
+        required: true
+        default: en
+        type: string
+      no_website:
+        required: false
+        default: false
+        type: boolean
+      require_phone:
+        required: false
+        default: false
+        type: boolean
+      email:
+        required: false
+        default: false
+        type: boolean
+      instagram:
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+# One active scrape at a time. Nivello queues further batches itself and only dispatches the next one
+# when the slot is free, so a pending run here is never silently replaced by another batch.
+concurrency:
+  group: nivello-lead-discovery
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      SCRAPER_IMAGE: ${{ vars.NIVELLO_SCRAPER_IMAGE || 'gosom/google-maps-scraper:latest' }}
+    steps:
+      - name: Check out runner script
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/lead-discovery-runner.mjs
+          sparse-checkout-cone-mode: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Localhost-only inside this runner; Nivello never talks to it.
+      - name: Start local Google Maps scraper
+        run: |
+          mkdir -p "$RUNNER_TEMP/gmapsdata"
+          docker run -d --name nivello-scraper \
+            -p 127.0.0.1:8080:8080 \
+            -v "$RUNNER_TEMP/gmapsdata:/gmapsdata" \
+            "$SCRAPER_IMAGE" -data-folder /gmapsdata
+
+      - name: Run discovery
+        env:
+          # Inputs are passed through env (never interpolated into shell code).
+          NIVELLO_BATCH_ID: ${{ inputs.batch_id }}
+          NIVELLO_SEGMENT: ${{ inputs.segment }}
+          NIVELLO_CALLBACK_URL: ${{ inputs.callback_url }}
+          NIVELLO_CALLBACK_SECRET: ${{ secrets.NIVELLO_ADMIN_CALLBACK_SECRET }}
+          SCRAPER_URL: http://127.0.0.1:8080
+          SCRAPER_RESTART_CMD: docker restart nivello-scraper
+          # Leaves ~10 minutes of the 60-minute job for the final pass, callbacks and cleanup.
+          TIME_BUDGET_SECONDS: "2880"
+        run: node scripts/lead-discovery-runner.mjs
+
+      - name: Scraper log tail
+        if: failure()
+        run: docker logs --tail 40 nivello-scraper 2>&1 || true
+
+      - name: Stop local scraper
+        if: always()
+        run: docker rm -f nivello-scraper >/dev/null 2>&1 || true

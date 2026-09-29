@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import LegalPage from '@/components/LegalPage'
-import { pageSeo } from '../../seo'
+import { pageSeo } from '@/lib/seo'
 
 export const metadata: Metadata = pageSeo.imprintIt
 
@@ -9,7 +9,7 @@ export default function ImprontaPageIt() {
     <LegalPage
       locale="it"
       kind="imprint"
-      label="Impronta"
+      label="Note legali"
       title="Informazioni legali."
       intro="Il nome dello studio e i contatti relativi a questo sito."
     >

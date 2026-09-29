@@ -44,6 +44,19 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Server-rendered entrance: content stays visible without JS and needs no client boundary. */
+@keyframes nv-rise {
+  from {
+    opacity: 0;
+    transform: translate(var(--nv-rise-x, 0), var(--nv-rise-y, 28px));
+  }
+}
+
+.nv-rise {
+  animation: nv-rise 0.7s ease-out both;
+  animation-delay: var(--nv-rise-delay, 0s);
+}
+
 @keyframes client-logos-scroll {
   to { transform: translateX(-50%); }
 }
@@ -173,4 +186,51 @@ body {
 .dark .legal-copy a {
   color: var(--brand-gold);
   text-decoration-color: color-mix(in srgb, var(--brand-gold), transparent 70%);
+}
+
+/* ─── Admin workspace motion (collapses to instant under prefers-reduced-motion) ─── */
+@keyframes admin-fade-in {
+  from { opacity: 0; }
+}
+@keyframes admin-pop-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.985); }
+}
+@keyframes admin-slide-in {
+  from { transform: translateX(24px); opacity: 0.4; }
+}
+@keyframes admin-slide-in-left {
+  from { transform: translateX(-24px); opacity: 0.4; }
+}
+@keyframes admin-sheen {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+.admin-fade-in { animation: admin-fade-in 0.18s ease-out both; }
+.admin-pop-in { animation: admin-pop-in 0.2s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+.admin-slide-in { animation: admin-slide-in 0.24s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+.admin-slide-in-left { animation: admin-slide-in-left 0.24s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+.admin-progress-sheen {
+  overflow: hidden;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.45), transparent);
+  animation: admin-sheen 1.6s ease-in-out infinite;
+}
+.admin-grid-bg {
+  background-image:
+    linear-gradient(to right, rgb(100 116 139 / 0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(100 116 139 / 0.12) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 30%, transparent 100%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-progress-sheen { animation: none; opacity: 0; }
+}
+
+/* Admin proposals: printing shows only the proposal document, on white A4 pages. */
+@media print {
+  @page { size: A4; margin: 16mm 14mm; }
+  body:has([data-print-root]) { background: #fff !important; }
+  body:has([data-print-root]) * { visibility: hidden; }
+  body:has([data-print-root]) [data-print-root],
+  body:has([data-print-root]) [data-print-root] * { visibility: visible; }
+  body:has([data-print-root]) [data-print-root] { position: absolute; inset: 0 auto auto 0; width: 100%; overflow: visible; }
 }

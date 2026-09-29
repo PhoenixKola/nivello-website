@@ -118,7 +118,7 @@ export default function ContactPage({ locale = 'en' }: { locale?: Locale }) {
   })
 
   return (
-    <main className="bg-stone-50 dark:bg-slate-950/95">
+    <main id="main-content" tabIndex={-1} className="flex-1 outline-none bg-stone-50 dark:bg-slate-950/95">
       {/* ── Hero ─────────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
         <div aria-hidden className="pointer-events-none absolute inset-0">

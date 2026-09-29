@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import CaseStudyPage from '@/components/CaseStudyPage'
 import { absoluteUrl } from '@/lib/site'
+import { localeAlternates } from '@/lib/seo'
 import { getProject, getProjectPath, getProjects } from '@/lib/projects'
 
 export function generateStaticParams() {
@@ -12,25 +13,29 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const project = getProject(slug, 'it')
   if (!project) return {}
+  const title = `Case study ${project.title}`
 
   return {
-    title: { absolute: 'Nivello' },
+    title,
     description: project.desc,
-    alternates: {
-      canonical: getProjectPath(project.slug, 'it'),
-      languages: {
-        en: getProjectPath(project.slug, 'en'),
-        it: getProjectPath(project.slug, 'it')
-      }
-    },
+    alternates: localeAlternates(
+      { en: getProjectPath(project.slug, 'en'), it: getProjectPath(project.slug, 'it') },
+      'it'
+    ),
     openGraph: {
-      title: `${project.title} case study`,
+      title: `${title} | Nivello`,
       description: project.desc,
       url: absoluteUrl(getProjectPath(project.slug, 'it')),
       siteName: 'Nivello',
       type: 'article',
       locale: 'it_IT',
       images: [{ url: project.shot, width: 1200, height: 800, alt: project.title }]
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${title} | Nivello`,
+      description: project.desc,
+      images: [project.shot]
     }
   }
 }

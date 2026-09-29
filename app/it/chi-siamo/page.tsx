@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import AboutPage from '@/components/AboutPage'
-import { pageSeo } from '../../seo'
+import { pageSeo } from '@/lib/seo'
 
 export const metadata: Metadata = pageSeo.aboutIt
 

@@ -35,13 +35,13 @@ const copy = {
     firstOutput: 'Primo output concreto',
     howEyebrow: 'Come funziona il progetto',
     howTitle: 'Una sequenza pratica, con un output utile a ogni fase.',
-    howBody: 'Il lavoro e strutturato per costruire ogni decisione sulla precedente. Vedi progressi presto, revisioni materiali concreti e sai sempre quale sara il prossimo passo.',
+    howBody: 'Il lavoro è strutturato per costruire ogni decisione sulla precedente. Vedi progressi presto, revisioni materiali concreti e sai sempre quale sarà il prossimo passo.',
     ideal: 'Ideale per',
     leaveWith: 'Cosa ottieni',
     deliverable: 'Deliverable',
-    outcome: 'Perche conta',
+    outcome: 'Perché conta',
     outcomesEyebrow: 'Cosa cambia',
-    outcomesTitle: 'Il risultato non e un altro documento. Sono decisioni migliori.',
+    outcomesTitle: 'Il risultato non è un altro documento. Sono decisioni migliori.',
     next: 'Continua con',
     viewNext: 'Vedi il prossimo servizio'
   }
@@ -66,7 +66,7 @@ export default function ServiceDetailPage({ slug, locale = 'en' }: { slug: Servi
   })
 
   return (
-    <main className="bg-stone-50 dark:bg-slate-950/95" style={{ ['--service-color' as string]: service.color }}>
+    <main id="main-content" tabIndex={-1} className="flex-1 outline-none bg-stone-50 dark:bg-slate-950/95" style={{ ['--service-color' as string]: service.color }}>
       <section>
         <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-20 sm:px-6 md:py-28 lg:grid-cols-[1.02fr_0.98fr] lg:px-8">
           <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={reducedMotion ? { duration: 0 } : { duration: 0.6, ease: 'easeOut' }} className="max-w-3xl">
