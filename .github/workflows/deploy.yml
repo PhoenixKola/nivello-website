@@ -119,4 +119,11 @@ jobs:
           grep -E '^(mirror|put|rm)' deploy.lftp
 
       - name: Upload to Hetzner
-        run: lftp --env-password -u "$HETZNER_USER" -p "$HETZNER_PORT" "sftp://$HETZNER_HOST" -f deploy.lftp
+        # -f cannot be combined with a host argument, so the plan is sourced after connecting.
+        # deploy.lftp sets cmd:fail-exit and ends with "bye", so failures still fail the job.
+        run: |
+          lftp --env-password \
+            -u "$HETZNER_USER" \
+            -p "$HETZNER_PORT" \
+            -e "source deploy.lftp" \
+            "sftp://$HETZNER_HOST"
