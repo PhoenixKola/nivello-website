@@ -10,10 +10,20 @@ if (!defined('NIVELLO_ADMIN')) {
 
 // Persistent data lives outside the web root so deploys (which rewrite public_html) cannot touch it.
 // NIVELLO_ADMIN_DATA_DIR may override it for local development and tests.
+function admin_private_root(string $documentRoot): string
+{
+    $documentRoot = rtrim(str_replace(chr(92), '/', $documentRoot), '/');
+    // Hetzner konsoleH serves /usr/www/users/<login>; the private home is /usr/home/<login>.
+    if (preg_match('#^/usr/www/users/([^/]+)$#', $documentRoot, $m) && is_dir('/usr/home/' . $m[1])) {
+        return '/usr/home/' . $m[1];
+    }
+    return dirname($documentRoot);
+}
+
 define(
     'ADMIN_DATA_DIR',
     getenv('NIVELLO_ADMIN_DATA_DIR')
-        ?: dirname(rtrim(str_replace(chr(92), '/', (string) ($_SERVER['DOCUMENT_ROOT'] ?? __DIR__ . '/..')), '/')) . '/nivello-admin-data'
+        ?: admin_private_root((string) ($_SERVER['DOCUMENT_ROOT'] ?? __DIR__ . '/..')) . '/nivello-admin-data'
 );
 
 /**
