@@ -37,7 +37,9 @@ test('inbox: a captured inquiry can be opened, noted and converted to a lead', a
 
   await login(page)
   await nav(page).getByRole('link', { name: /^Inbox/ }).click()
-  await page.getByRole('button', { name: /Paolo Bianchi/ }).click()
+  // Wait for the Inbox view: the Overview's "New inquiries" list has a button with the same name.
+  await expect(page.getByRole('heading', { name: 'Inbox', level: 1 })).toBeVisible()
+  await page.locator('#admin-main').getByRole('button', { name: /Paolo Bianchi/ }).first().click()
   const drawer = page.getByRole('dialog', { name: 'Inquiry from Paolo Bianchi' })
   await expect(drawer.getByText('The email delivery (Formspree) failed')).toBeVisible()
   await drawer.getByLabel('Add a note').fill('Wants to launch in May')
@@ -60,7 +62,8 @@ test('inbox renders submitted HTML as plain text', async ({ page }) => {
 
   await login(page)
   await page.goto('/admin/#/inbox')
-  await page.getByRole('button', { name: /<i>Mallory<\/i>/ }).click()
+  await expect(page.getByRole('heading', { name: 'Inbox', level: 1 })).toBeVisible()
+  await page.locator('#admin-main').getByRole('button', { name: /<i>Mallory<\/i>/ }).first().click()
   const drawer = page.getByRole('dialog', { name: 'Inquiry from <i>Mallory</i>' })
   await expect(drawer.getByText(payload)).toBeVisible()
   await expect(drawer.locator('img[src="x"], b')).toHaveCount(0)
