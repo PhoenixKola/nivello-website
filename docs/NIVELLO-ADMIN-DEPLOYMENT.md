@@ -107,8 +107,11 @@ Inbox, projects and proposals live in the main CRM store, next to leads. Records
 
 - **How it counts:** `lib/analytics.ts` posts small events to `admin-api/analytics-track.php`, which is public but write-only.
 - **Protections:** same-origin only, 2 KB maximum, 300 events per client per hour, and an allowlist of event names.
-- **What is stored:** daily aggregate counters only. There are no cookies, IP addresses, user agents or fingerprints. Visitors with Do Not Track or Global Privacy Control are not counted, and the admin area is never tracked.
+- **What is stored:** daily aggregate counters only. There are no cookies, stored IP addresses, user agents or fingerprints. Visitors with Do Not Track or Global Privacy Control are not counted, and the admin area is never tracked.
 - **Sessions:** a "session" is a random id per browser tab (`sessionStorage`), not a person.
+- **Countries:** the visitor's IP is looked up in memory against a local country table (`public/admin-api/_geo-ipv4.bin` / `_geo-ipv6.bin`) and only the 2-letter country code is counted; the IP is never stored or logged. When the IP gives no answer (private networks, local testing), the browser time zone is used as a rough fallback.
+  - Country data: [sapics/ip-location-db](https://github.com/sapics/ip-location-db) "geo-whois-asn-country", © [NRO](https://www.nro.net), CC BY 4.0.
+  - To refresh it (a few times a year is plenty), download `geo-whois-asn-country-ipv4-num.csv` and `geo-whois-asn-country-ipv6-num.csv` from that repository and run `node scripts/build-geoip.mjs <ipv4-num.csv> <ipv6-num.csv>`.
 - **Setup:** none. Numbers appear after the first deploy that includes the tracker.
 
 ### Contact Inbox

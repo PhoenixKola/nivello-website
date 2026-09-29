@@ -6,5 +6,5 @@ test('PHP storage, session, SSRF, plan and score checks', () => {
   const output = run.stdout.slice(run.stdout.indexOf('{'))
   const report = JSON.parse(output)
   expect(report.failed, JSON.stringify(report.failed, null, 2)).toEqual([])
-  expect(report.total).toBeGreaterThanOrEqual(18)
+  expect(report.total).toBeGreaterThanOrEqual(19)
 })

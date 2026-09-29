@@ -38,6 +38,15 @@ function rangeFor(preset: Preset, custom: { from: string; to: string }): { from:
 
 const pretty = (label: string) => label.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase())
 
+const regionNames = (() => {
+  try {
+    return new Intl.DisplayNames(['en'], { type: 'region' })
+  } catch {
+    return null
+  }
+})()
+const countryName = (code: string) => (code === '(unknown)' ? 'Unknown' : (regionNames?.of(code) ?? code))
+
 function Delta({ current, previous }: { current: number; previous: number }) {
   if (previous === 0) return current > 0 ? <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400">New</span> : null
   const change = ((current - previous) / previous) * 100
@@ -66,12 +75,13 @@ function Stat({ label, value, hint, delta }: { label: string; value: string; hin
 }
 
 function Funnel({ steps }: { steps: { label: string; value: number }[] }) {
-  const top = Math.max(1, steps[0]?.value ?? 0)
+  // Scale to the largest step: older data may hold repeated start events, and a bar must never leave its track.
+  const top = Math.max(1, ...steps.map(step => step.value))
   return (
     <ol className="space-y-3 px-5 pb-5 pt-3">
       {steps.map((step, i) => {
         const prev = i > 0 ? steps[i - 1].value : null
-        const rate = prev ? Math.round((step.value / prev) * 100) : null
+        const rate = prev && step.value <= prev ? Math.round((step.value / prev) * 100) : null
         return (
           <li key={step.label}>
             <div className="mb-1 flex items-baseline justify-between gap-3 text-xs">
@@ -84,7 +94,7 @@ function Funnel({ steps }: { steps: { label: string; value: number }[] }) {
             <div className="h-2.5 rounded-full bg-slate-100 dark:bg-white/[0.06]">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-[var(--brand-blue)] to-[var(--brand-purple)]"
-                style={{ width: `${Math.max(step.value ? 2 : 0, (step.value / top) * 100)}%` }}
+                style={{ width: `${Math.min(100, Math.max(step.value ? 2 : 0, (step.value / top) * 100))}%` }}
               />
             </div>
           </li>
@@ -219,7 +229,7 @@ export default function Analytics() {
             </Card>
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
               <ListCard title="Top pages" items={data.topPages.slice(0, 5)} empty="No page views yet." />
-              <ListCard title="Top referrers" items={data.topReferrers.slice(0, 5)} empty="No referrers yet." />
+              <ListCard title="Top countries" items={data.countries.slice(0, 5).map(c => ({ ...c, label: countryName(c.label) }))} empty="No country data yet." />
               <ListCard title="Top CTAs" items={data.ctas.slice(0, 5)} empty="No CTA clicks yet." prettify />
             </div>
           </>
@@ -233,7 +243,13 @@ export default function Analytics() {
                 <TrendChart points={points} series={['Page views', 'Sessions']} formatLabel={dayLabel} />
               </div>
             </Card>
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <ListCard
+                title="Countries"
+                description="From an IP-to-country lookup; the IP address itself is never stored."
+                items={data.countries.map(c => ({ ...c, label: countryName(c.label) }))}
+                empty="No country data yet."
+              />
               <ListCard title="Referrers" description="Where sessions came from." items={data.topReferrers} empty="No referrers yet." />
               <ListCard title="Devices" items={data.devices} empty="No device data yet." prettify />
               <ListCard title="Languages" items={data.locales.map(l => ({ ...l, label: l.label === 'it' ? 'Italian' : l.label === 'en' ? 'English' : l.label }))} empty="No language data yet." />
@@ -310,7 +326,7 @@ export default function Analytics() {
       {body}
       <p className="flex items-start gap-2 text-xs text-slate-400 dark:text-slate-500">
         <ShieldCheck aria-hidden="true" className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-        First-party, cookie-free and aggregate only: no IP addresses, user agents or personal data are stored. Sessions are per browser tab, not unique people.
+        First-party, cookie-free and aggregate only: no IP addresses, user agents or personal data are stored. Countries come from an in-memory IP lookup (country data © NRO, CC BY 4.0). Sessions are per browser tab, not unique people.
       </p>
     </div>
   )

@@ -41,10 +41,8 @@ export default function Footer() {
   const content = copy[locale]
   const year = new Date().getFullYear()
   const contactPath = getRoutePath('contact', locale)
-  // Contact ends with its own form, and the homepage ends with the Project Launcher,
-  // so a second full-width pitch right above the footer links would compete with them.
-  const routeKey = findRouteByPath(pathname)?.key
-  const hideCta = routeKey === 'contact' || routeKey === 'home'
+  // The contact page ends with its own form, so a second pitch there would compete with it.
+  const hideCta = findRouteByPath(pathname)?.key === 'contact'
   const exploreLinks = navRoutes.map(route => ({ href: route.paths[locale], label: route.labels[locale] }))
   const companyLinks = footerRoutes
     .filter(route => route.key !== 'contact')

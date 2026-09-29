@@ -95,7 +95,7 @@ test.describe('analytics', () => {
   test('aggregates sessions, pages, referrers, events and conversion rates', async () => {
     clearRateLimits()
     for (const [i, path] of ['/', '/work/', '/it/'].entries()) {
-      await track({ e: 'page_view', p: path, s: sid(10 + i), l: path.startsWith('/it') ? 'it' : 'en', d: i ? 'mobile' : 'desktop', r: i === 1 ? 'https://linkedin.com/feed' : '' })
+      await track({ e: 'page_view', p: path, s: sid(10 + i), l: path.startsWith('/it') ? 'it' : 'en', d: i ? 'mobile' : 'desktop', r: i === 1 ? 'https://linkedin.com/feed' : '', z: ['Europe/Rome', 'Europe/Kiev', 'UTC'][i] })
     }
     await track({ e: 'page_view', p: '/services', s: sid(10), r: `${ADMIN_BASE}/` })
     await track({ e: 'cta_click', p: '/', s: sid(10), c: 'hero_book_call' })
@@ -123,6 +123,10 @@ test.describe('analytics', () => {
     expect(data.launcherOutcomes).toEqual([{ label: 'website_new', count: 1 }])
     expect(data.caseStudies).toEqual([{ label: 'alpha', count: 1 }])
     expect(data.locales.find((l: any) => l.label === 'it')?.count).toBe(1)
+    // Country comes from the browser time zone (legacy names included); UTC-style zones stay unknown.
+    const countries = Object.fromEntries(data.countries.map((c: any) => [c.label, c.count]))
+    expect(countries).toMatchObject({ IT: 1, UA: 1 })
+    expect(countries['(unknown)']).toBe(2)
     expect(data.series).toHaveLength(1)
 
     // Nothing personal is stored in the aggregate document.

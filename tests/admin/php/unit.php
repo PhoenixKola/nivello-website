@@ -200,6 +200,17 @@ check('the access code comes from server secrets (hash preferred) and is never i
     putenv('NIVELLO_ADMIN_ACCESS_CODE');
 });
 
+check('IP-to-country lookup covers IPv4, IPv6 and mapped addresses and ignores private ranges', function () {
+    require_once __DIR__ . '/../../../public/admin-api/_geoip.php';
+    ensure(ip_country('79.106.0.1') === 'AL', 'Albanian IPv4');
+    ensure(ip_country('::ffff:79.106.0.1') === 'AL', 'IPv4-mapped IPv6');
+    ensure(ip_country('2.36.0.1') === 'IT', 'Italian IPv4');
+    ensure(ip_country('2a02:e00::1') === 'DE', 'IPv6');
+    foreach (['127.0.0.1', '192.168.1.1', '10.0.0.5', '::1', 'fd00::1', 'not-an-ip'] as $ip) {
+        ensure(ip_country($ip) === null, "$ip has no country");
+    }
+});
+
 // ── Operations suite ───────────────────────────────────────────────────────
 
 require_once __DIR__ . '/../../../public/admin-api/_health.php';

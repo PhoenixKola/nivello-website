@@ -12,6 +12,8 @@ if (!defined('NIVELLO_ADMIN')) {
  * persistent identifiers are stored. "Sessions" are per-browser-tab session ids, not people.
  */
 
+require_once __DIR__ . '/_geoip.php';
+
 const ANALYTICS_EVENTS = ['page_view', 'cta_click', 'project_launcher_start', 'project_launcher_complete', 'contact_start', 'contact_submit', 'work_case_study_open'];
 const ANALYTICS_DEVICES = ['mobile', 'tablet', 'desktop'];
 const ANALYTICS_LOCALES = ['en', 'it'];
@@ -29,6 +31,7 @@ function analytics_blank(): array
         'referrers' => [],
         'devices' => [],
         'locales' => [],
+        'countries' => [],
         'events' => [],
         'labels' => [],
         'sessionIds' => [],
@@ -79,6 +82,33 @@ function normalize_path(mixed $path): ?string
     return mb_substr($path, 0, 160);
 }
 
+/** Legacy zone names some browsers still report, mapped to the current IANA name. */
+const ANALYTICS_TZ_ALIASES = [
+    'Europe/Kiev' => 'Europe/Kyiv', 'Asia/Calcutta' => 'Asia/Kolkata', 'Asia/Saigon' => 'Asia/Ho_Chi_Minh',
+    'Asia/Katmandu' => 'Asia/Kathmandu', 'Asia/Rangoon' => 'Asia/Yangon', 'Atlantic/Faeroe' => 'Atlantic/Faroe',
+    'America/Buenos_Aires' => 'America/Argentina/Buenos_Aires', 'Europe/Belfast' => 'Europe/London',
+    'Asia/Istanbul' => 'Europe/Istanbul', 'Europe/Nicosia' => 'Asia/Nicosia', 'US/Eastern' => 'America/New_York',
+    'US/Central' => 'America/Chicago', 'US/Mountain' => 'America/Denver', 'US/Pacific' => 'America/Los_Angeles',
+];
+
+/**
+ * Fallback country from the browser's time zone (e.g. Europe/Rome -> IT). Coarse: countries sharing
+ * an offset are often reported under one zone. Returns '(unknown)' for UTC-style or unknown zones.
+ */
+function timezone_country(mixed $zone): string
+{
+    if (!is_string($zone) || !preg_match('#^[A-Za-z][A-Za-z0-9_+\-]*(/[A-Za-z0-9_+\-]+){0,2}$#', $zone) || strlen($zone) > 64) {
+        return '(unknown)';
+    }
+    $zone = ANALYTICS_TZ_ALIASES[$zone] ?? $zone;
+    try {
+        $code = (new DateTimeZone($zone))->getLocation()['country_code'] ?? '??';
+    } catch (Throwable) {
+        return '(unknown)';
+    }
+    return is_string($code) && preg_match('/^[A-Z]{2}$/', $code) ? $code : '(unknown)';
+}
+
 function referrer_host(mixed $referrer): string
 {
     if (!is_string($referrer) || $referrer === '' || strlen($referrer) > 500) {
@@ -126,6 +156,8 @@ function analytics_validate(array $in): array
         'locale' => $locale,
         'device' => in_array($in['d'] ?? null, ANALYTICS_DEVICES, true) ? $in['d'] : 'unknown',
         'referrer' => referrer_host($in['r'] ?? null),
+        // IP lookup in memory (never stored); the browser time zone is only a fallback, e.g. for local testing.
+        'country' => ip_country((string) ($_SERVER['REMOTE_ADDR'] ?? '')) ?? timezone_country($in['z'] ?? null),
         'label' => $label,
     ];
 }
@@ -146,6 +178,7 @@ function analytics_record(array $in, ?string $date = null): void
             }
             bump($day['devices'], $e['device'], 10);
             bump($day['locales'], $e['locale'], 10);
+            bump($day['countries'], $e['country'], 300);
         }
         if ($e['event'] === 'page_view') {
             $day['pageViews']++;
@@ -202,7 +235,7 @@ function analytics_summary(string $from, string $to): array
     $dates = date_range($from, $to);
     $totals = ['pageViews' => 0, 'sessions' => 0];
     $events = array_fill_keys(array_diff(ANALYTICS_EVENTS, ['page_view']), 0);
-    $maps = ['pages' => [], 'landingPages' => [], 'referrers' => [], 'devices' => [], 'locales' => [], 'labels' => []];
+    $maps = ['pages' => [], 'landingPages' => [], 'referrers' => [], 'devices' => [], 'locales' => [], 'countries' => [], 'labels' => []];
     $series = [];
     $unreadable = [];
     foreach ($dates as $date) {
@@ -263,6 +296,7 @@ function analytics_summary(string $from, string $to): array
         'topReferrers' => top_n($maps['referrers']),
         'devices' => top_n($maps['devices'], 5),
         'locales' => top_n($maps['locales'], 5),
+        'countries' => top_n($maps['countries'], 12),
         'ctas' => top_n($byEvent['cta_click']),
         'caseStudies' => top_n($byEvent['work_case_study_open']),
         'launcherOutcomes' => top_n($byEvent['project_launcher_complete']),

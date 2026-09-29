@@ -218,7 +218,7 @@ export default function HomeBuildPipeline({ locale }: { locale: Locale }) {
 
   return (
     <section className="bg-stone-50 dark:bg-slate-950/95" aria-labelledby="home-process-heading">
-      <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
+      <div className="mx-auto max-w-6xl px-4 pb-20 pt-12 md:pb-28 md:pt-16">
         <div className="mb-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">

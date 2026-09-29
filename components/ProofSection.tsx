@@ -21,10 +21,22 @@ const quotes: Record<Locale, ProofQuote[]> = {
       quote: 'Nivello gave us a modern site and a clearer story. We finally feel proud to share the link with guests.'
     },
     {
+      slug: 'le-camelie',
+      name: 'The owners',
+      role: 'Le Camelie, Genova',
+      quote: 'Guests now see the rooms, the location and how to book in a few seconds. More of them book directly with us instead of asking first.'
+    },
+    {
       slug: 'gjergj-jozef-kola',
       name: 'Gjergj',
       role: 'Author',
       quote: 'Communication was clear, deadlines were respected, and every design choice had a reason behind it.'
+    },
+    {
+      slug: 'consteam',
+      name: 'The founders',
+      role: 'Consteam',
+      quote: 'Our services finally make sense on one page, for private clients and companies alike. Requests arrive with the details we need to quote.'
     },
     {
       slug: 'your-assist-in-italy',
@@ -47,10 +59,22 @@ const quotes: Record<Locale, ProofQuote[]> = {
       quote: 'Nivello ci ha dato un sito moderno e una storia più chiara. Ora siamo felici di condividere il link con gli ospiti.'
     },
     {
+      slug: 'le-camelie',
+      name: 'I titolari',
+      role: 'Le Camelie, Genova',
+      quote: 'Ora gli ospiti vedono camere, posizione e come prenotare in pochi secondi. Sempre più persone prenotano direttamente, senza doverci scrivere prima.'
+    },
+    {
       slug: 'gjergj-jozef-kola',
       name: 'Gjergj',
       role: 'Autore',
       quote: 'Comunicazione chiara, rispetto delle scadenze e scelte di design sempre motivate.'
+    },
+    {
+      slug: 'consteam',
+      name: 'I fondatori',
+      role: 'Consteam',
+      quote: 'I nostri servizi finalmente si capiscono al primo sguardo, per privati e aziende. Le richieste arrivano già con i dettagli che ci servono per il preventivo.'
     },
     {
       slug: 'your-assist-in-italy',
@@ -158,7 +182,7 @@ export default function ProofSection({ locale }: { locale: Locale }) {
         </div>
 
         {/* ── Client selector: an editorial index, not a pill row ── */}
-        <div role="tablist" aria-label={t.selector} className="grid grid-cols-2 gap-x-4 lg:grid-cols-4 lg:gap-x-0">
+        <div role="tablist" aria-label={t.selector} className="grid grid-cols-2 gap-x-4 sm:grid-cols-3 lg:grid-cols-6 lg:gap-x-0">
           {items.map((item, index) => {
             const isActive = index === activeIndex
             return (

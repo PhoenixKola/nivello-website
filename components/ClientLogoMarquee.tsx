@@ -48,7 +48,7 @@ export default function ClientLogoMarquee({ locale }: { locale: Locale }) {
   })
 
   return (
-    <div className="relative z-20 w-full pb-8 lg:-mt-2 lg:pb-10 xl:-mt-4">
+    <div className="relative z-20 mt-4 w-full pb-4 lg:-mt-2 lg:pb-6">
       <div className="mb-1 flex items-center gap-4 px-4 sm:px-6 lg:px-10">
         <p className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">{t.heading}</p>
         <span className="h-px flex-1 bg-gradient-to-r from-slate-300 via-slate-200 to-transparent dark:from-white/20 dark:via-white/10" aria-hidden="true" />

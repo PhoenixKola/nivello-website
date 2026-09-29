@@ -294,6 +294,7 @@ export type AnalyticsSummary = {
   topReferrers: CountItem[]
   devices: CountItem[]
   locales: CountItem[]
+  countries: CountItem[]
   ctas: CountItem[]
   caseStudies: CountItem[]
   launcherOutcomes: CountItem[]

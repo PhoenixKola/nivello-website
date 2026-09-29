@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { ArrowRight, CheckCircle2, Code2, Globe2, Languages } from 'lucide-react'
-import HeroBuildEngine from '@/components/HeroBuildEngine'
+import AnimatedHeroGraphic from '@/components/AnimatedHeroGraphic'
 import ClientLogoMarquee from '@/components/ClientLogoMarquee'
 import HomeBuildPipeline from '@/components/HomeBuildPipeline'
 import HomeProjectStage from '@/components/HomeProjectStage'
@@ -38,7 +38,7 @@ export default function HomePage({ locale }: { locale: Locale }) {
   return (
     <main id="main-content" tabIndex={-1} className="flex-1 bg-stone-50 outline-none dark:bg-slate-950/95">
       <section className="relative overflow-hidden bg-stone-50 dark:bg-slate-950/95">
-        <div className="relative z-10 mx-auto grid min-h-[60vh] max-w-7xl items-center gap-10 px-6 py-8 sm:py-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:px-10 lg:py-12">
+        <div className="relative z-10 mx-auto grid min-h-[60vh] max-w-7xl items-center gap-10 px-6 py-8 sm:py-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:px-10 lg:pb-0 lg:pt-12">
           <div className="nv-rise text-center lg:text-left">
             <div className="mb-7 inline-flex items-center gap-2.5 rounded-full border border-slate-200/80 bg-white/85 px-4 py-2 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-white/5">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--brand-gold)]" />
@@ -84,7 +84,7 @@ export default function HomePage({ locale }: { locale: Locale }) {
           </div>
 
           <div className="flex items-center justify-center lg:justify-end">
-            <HeroBuildEngine />
+            <AnimatedHeroGraphic />
           </div>
         </div>
         <ClientLogoMarquee locale={locale} />
