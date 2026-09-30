@@ -6,6 +6,13 @@ export type AppHighlight = {
   title: string
   description: string
   details: string[]
+  result?: string
+}
+
+export type WebsiteHighlight = {
+  description: string
+  details: string[]
+  result: string
 }
 
 type LocalizedProject = {
@@ -13,6 +20,7 @@ type LocalizedProject = {
   body: string
   desc: string
   websiteSummary?: string
+  website?: WebsiteHighlight
   app?: AppHighlight
   details: string[]
   challenge: string
@@ -33,6 +41,7 @@ export type Project = {
   body: string
   desc: string
   websiteSummary?: string
+  website?: WebsiteHighlight
   app?: AppHighlight
   details: string[]
   challenge: string
@@ -206,12 +215,18 @@ const projects = [
         body: 'Landing page for a Genova construction firm, plus a private site-management app.',
         desc: 'Landing page for a construction, renovation, and energy-efficiency company in Genova, built to turn interest into site-visit requests, alongside a private app for managing their sites.',
         websiteSummary: 'A focused landing page that turns construction, renovation, and energy-efficiency enquiries into site-visit requests.',
+        website: {
+          description: 'A responsive public presence that explains ProGreen’s construction, renovation, and energy-efficiency services and guides enquiries toward a site visit.',
+          details: ['Three service lines positioned clearly', 'Clear four-step service journey', 'Responsive marketing experience', 'Site-visit request as the primary conversion'],
+          result: 'A credible public presence with a direct path from service discovery to a site-visit request.'
+        },
         app: {
           title: 'Site operations, organised in one place.',
-          description: 'A private web app that gives the ProGreen team one clear workspace for active sites, jobs, progress, and next actions.',
-          details: ['Active-site overview', 'Job and progress tracking', 'One shared operational workspace']
+          description: 'A private operational platform that brings active sites, daily activity, documents, costs, and deadlines into one shared team workspace.',
+          details: ['Active-site and job overview', 'Daily reports and progress updates', 'Documents, costs, deadlines, and operational activity', 'One shared workspace for the team'],
+          result: 'A single operational view for following each job from daily site activity through documents, costs, and deadlines.'
         },
-        details: ['Services split into construction, renovation, and efficiency', 'Site visit as the primary call to action', 'Private portal for site and job management'],
+        details: ['Services split into construction, renovation, and efficiency', 'Responsive service experience', 'Site visit as the primary call to action'],
         challenge: 'ProGreen covers construction, renovation, and energy efficiency in Genova, but had no public presence explaining the offer and no single place to keep track of active sites.',
         solution: 'We built a focused landing page around the three service lines and their four-step process, with the site visit as the main call to action, plus a private web app for managing sites and jobs.',
         result: 'A credible public face for the company and an internal tool that keeps every site and job in one place.',
@@ -222,12 +237,18 @@ const projects = [
         body: 'Landing page per un’impresa edile di Genova, più un gestionale privato per i cantieri.',
         desc: 'Landing page per un’impresa di costruzioni, ristrutturazioni ed efficientamento energetico a Genova, pensata per trasformare l’interesse in richieste di sopralluogo, affiancata da un gestionale privato per i cantieri.',
         websiteSummary: 'Una landing page focalizzata che trasforma richieste su costruzioni, ristrutturazioni ed efficientamento in sopralluoghi.',
+        website: {
+          description: 'Una presenza pubblica responsive che presenta i servizi di costruzione, ristrutturazione ed efficientamento di ProGreen e guida le richieste verso il sopralluogo.',
+          details: ['Tre linee di servizio presentate con chiarezza', 'Percorso di servizio chiaro in quattro fasi', 'Esperienza marketing responsive', 'Richiesta di sopralluogo come conversione principale'],
+          result: 'Una presenza pubblica credibile, con un percorso diretto dalla scoperta dei servizi alla richiesta di sopralluogo.'
+        },
         app: {
           title: 'La gestione dei cantieri, in un unico spazio.',
-          description: 'Un’app web privata che offre al team ProGreen uno spazio chiaro per cantieri attivi, lavori, avanzamento e prossime azioni.',
-          details: ['Panoramica cantieri attivi', 'Tracciamento lavori e avanzamento', 'Un solo spazio operativo condiviso']
+          description: 'Una piattaforma operativa privata che riunisce cantieri attivi, attività giornaliere, documenti, costi e scadenze in un unico spazio condiviso dal team.',
+          details: ['Panoramica di cantieri e lavori attivi', 'Rapportini giornalieri e avanzamento', 'Documenti, costi, scadenze e attività operative', 'Un solo spazio di lavoro per il team'],
+          result: 'Una vista operativa unica per seguire ogni lavoro, dalle attività giornaliere in cantiere a documenti, costi e scadenze.'
         },
-        details: ['Servizi divisi tra costruzioni, ristrutturazioni ed efficientamento', 'Sopralluogo come call to action principale', 'Portale privato per la gestione di cantieri e lavori'],
+        details: ['Servizi divisi tra costruzioni, ristrutturazioni ed efficientamento', 'Esperienza servizi responsive', 'Sopralluogo come call to action principale'],
         challenge: 'ProGreen segue costruzioni, ristrutturazioni ed efficientamento energetico a Genova, ma non aveva una presenza pubblica che spiegasse l’offerta né un unico posto per seguire i cantieri attivi.',
         solution: 'Abbiamo costruito una landing page centrata sulle tre linee di servizio e sul percorso in quattro fasi, con il sopralluogo come call to action principale, più un’app web privata per gestire cantieri e lavori.',
         result: 'Un volto pubblico credibile per l’impresa e uno strumento interno che tiene ogni cantiere e ogni lavoro in un unico posto.',

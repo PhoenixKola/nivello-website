@@ -35,12 +35,33 @@ test('theme toggle switches the theme', async ({ page }) => {
 
 test('project launcher carries context into the contact form', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: /^Web app/ }).click()
-  await page.getByRole('button', { name: /^Redesign/ }).click()
-  await page.getByRole('link', { name: 'Start this project' }).click()
+  const launcher = page.getByRole('region', { name: 'Two quick answers, and your project is already taking shape.' })
+  await launcher.getByRole('button', { name: /^Web app/ }).click()
+  await launcher.getByRole('button', { name: /^Redesign/ }).click()
+  await launcher.getByRole('link', { name: 'Start this project' }).click()
   await expect(page).toHaveURL(/\/contact\/\?build=app&stage=redesign$/)
   await expect(page.locator('select[name="projectType"]')).toHaveValue('Custom web app / software')
   await expect(page.locator('input[name="projectBrief"]')).toHaveValue('Web app / software · Redesign')
+})
+
+test('featured work defaults to ProGreen and exposes both project surfaces', async ({ page }) => {
+  await page.goto('/')
+  const spotlight = page.getByRole('region', { name: 'Real projects, brought on stage.' })
+  const projectTabs = spotlight.getByRole('tab')
+
+  await expect(projectTabs.first()).toHaveText('ProGreen')
+  await expect(projectTabs.first()).toHaveAttribute('aria-selected', 'true')
+  await expect(spotlight.getByText('01 / 06', { exact: true })).toBeVisible()
+  await expect(spotlight.getByText('Public website', { exact: true })).toBeVisible()
+  await expect(spotlight.getByText('Site-visit request as the primary conversion', { exact: true })).toBeVisible()
+
+  const appMode = spotlight.getByRole('button', { name: 'Web app', exact: true })
+  await appMode.focus()
+  await appMode.press('Enter')
+  await expect(appMode).toHaveAttribute('aria-pressed', 'true')
+  await expect(spotlight.getByText('Operations web app', { exact: true })).toBeVisible()
+  await expect(spotlight.getByText('Daily reports and progress updates', { exact: true })).toBeVisible()
+  await expect(spotlight.getByRole('img', { name: 'Anonymised preview of the ProGreen web app' })).toBeVisible()
 })
 
 test('contact page loads without launcher context', async ({ page }) => {

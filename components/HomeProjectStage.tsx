@@ -4,7 +4,7 @@ import { useCallback, useId, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { ArrowLeft, ArrowRight, ArrowUpRight, ExternalLink, Lock } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ArrowUpRight, ExternalLink, Globe2, LayoutDashboard, Lock } from 'lucide-react'
 import { getProjectPath, getProjects, type Project } from '@/lib/projects'
 import { getRoutePath, type Locale } from '@/lib/site'
 
@@ -31,7 +31,9 @@ const copy = {
     liveSite: 'Visit live site',
     website: 'Website',
     app: 'Web app',
-    appCategory: 'Internal web app',
+    surfaceLabel: 'Project surface',
+    websiteCategory: 'Public website',
+    appCategory: 'Operations web app',
     privateWorkspace: 'Private workspace',
     result: 'Result',
     previous: 'Previous project',
@@ -49,7 +51,9 @@ const copy = {
     liveSite: 'Visita il sito live',
     website: 'Sito',
     app: 'App web',
-    appCategory: 'App web interna',
+    surfaceLabel: 'Esperienza',
+    websiteCategory: 'Sito pubblico',
+    appCategory: 'Gestionale operativo',
     privateWorkspace: 'Spazio riservato',
     result: 'Risultato',
     previous: 'Progetto precedente',
@@ -69,7 +73,12 @@ function getDomain(href: string) {
 
 export default function HomeProjectStage({ locale }: { locale: Locale }) {
   const t = copy[locale]
-  const projects = useMemo(() => getProjects(locale), [locale])
+  const projects = useMemo(() => {
+    const allProjects = getProjects(locale)
+    const proGreen = allProjects.find(item => item.slug === 'progreen')
+
+    return proGreen ? [proGreen, ...allProjects.filter(item => item.slug !== 'progreen')] : allProjects
+  }, [locale])
   const reducedMotion = useReducedMotion()
   const baseId = useId()
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
@@ -119,9 +128,10 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
 
   const media = showingApp ? project.appShot! : project.shot
   const mediaAlt = showingApp ? t.appAlt(project.title) : t.websiteAlt(project.title)
-  const category = showingApp ? t.appCategory : project.category
-  const body = showingApp ? project.app!.description : project.websiteSummary ?? project.desc
-  const bullets = showingApp ? project.app!.details : project.details
+  const category = hasApp ? (showingApp ? t.appCategory : t.websiteCategory) : project.category
+  const body = showingApp ? project.app!.description : project.website?.description ?? project.websiteSummary ?? project.desc
+  const bullets = showingApp ? project.app!.details : project.website?.details ?? project.details
+  const result = showingApp ? project.app!.result : project.website?.result ?? project.result
 
   return (
     <section className="bg-stone-50 dark:bg-slate-950/95" aria-labelledby="home-work-heading">
@@ -220,9 +230,9 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
                   <motion.div
                     key={mediaKey}
                     className="absolute inset-0"
-                    initial={{ opacity: 0, clipPath: 'inset(0 0 100% 0)', scale: 1.02 }}
-                    animate={{ opacity: 1, clipPath: 'inset(0 0 0% 0)', scale: 1 }}
-                    exit={{ opacity: 0 }}
+                    initial={{ opacity: 0, scale: 1.012 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.998 }}
                     transition={fast}
                   >
                     <Image
@@ -238,27 +248,44 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
             </div>
 
             {/* website / app switch + prev-next */}
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               {hasApp ? (
-                <div className="inline-flex rounded-full border border-slate-200 bg-white p-1 dark:border-white/12 dark:bg-white/[0.04]">
-                  {[
-                    { label: t.website, active: !showingApp, onClick: () => setAppMode(false) },
-                    { label: t.app, active: showingApp, onClick: () => setAppMode(true) }
-                  ].map(option => (
-                    <button
-                      key={option.label}
-                      type="button"
-                      aria-pressed={option.active}
-                      onClick={option.onClick}
-                      className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
-                        option.active
-                          ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950'
-                          : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
+                <div className="w-full sm:w-auto">
+                  <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+                    {t.surfaceLabel}
+                  </p>
+                  <div
+                    role="group"
+                    aria-label={t.surfaceLabel}
+                    className="relative isolate grid min-h-12 w-full grid-cols-2 rounded-2xl border border-slate-200 bg-slate-100/80 p-1 shadow-sm sm:w-[248px] dark:border-white/15 dark:bg-slate-950/75 dark:shadow-none"
+                  >
+                    <motion.span
+                      aria-hidden="true"
+                      className="absolute inset-y-1 left-1 -z-10 w-[calc(50%-4px)] rounded-xl bg-slate-900 shadow-[0_8px_20px_-12px_rgba(15,23,42,0.8)] dark:bg-white dark:shadow-none"
+                      initial={false}
+                      animate={{ x: showingApp ? '100%' : '0%' }}
+                      transition={fast}
+                    />
+                    {[
+                      { label: t.website, active: !showingApp, onClick: () => setAppMode(false), Icon: Globe2 },
+                      { label: t.app, active: showingApp, onClick: () => setAppMode(true), Icon: LayoutDashboard }
+                    ].map(option => (
+                      <button
+                        key={option.label}
+                        type="button"
+                        aria-pressed={option.active}
+                        onClick={option.onClick}
+                        className={`relative z-10 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-blue)] dark:focus-visible:outline-[var(--brand-gold)] ${
+                          option.active
+                            ? 'text-white dark:text-slate-950'
+                            : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                        }`}
+                      >
+                        <option.Icon className={`h-3.5 w-3.5 ${option.active ? 'text-[var(--brand-gold)] dark:text-[var(--brand-blue)]' : ''}`} aria-hidden="true" />
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               ) : (
                 <span />
@@ -292,7 +319,7 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
           <AnimatePresence initial={false} mode="wait">
             <motion.div
               key={mediaKey}
-              className="flex min-w-0 flex-col"
+              className="flex min-w-0 flex-col lg:max-w-[27rem] lg:self-center lg:py-5 xl:py-7"
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
@@ -312,9 +339,9 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
                 {project.title}
               </h3>
 
-              <p className="mt-3 text-sm leading-relaxed text-slate-500 dark:text-slate-300/80">{body}</p>
+              <p className="mt-4 text-base leading-relaxed text-slate-500 dark:text-slate-300/80">{body}</p>
 
-              <ul className="mt-5 space-y-2.5">
+              <ul className="mt-6 space-y-3">
                 {bullets.map(detail => (
                   <li key={detail} className="flex items-start gap-2.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
                     <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--brand-blue)] dark:bg-[var(--brand-gold)]" />
@@ -323,12 +350,12 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
                 ))}
               </ul>
 
-              {!showingApp && (
-                <div className="mt-5 rounded-xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/[0.03]">
+              {result && (
+                <div className="mt-6 rounded-xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/[0.03]">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
                     {t.result}
                   </p>
-                  <p className="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{project.result}</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{result}</p>
                 </div>
               )}
 
