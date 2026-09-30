@@ -73,6 +73,7 @@ final class Store
             'batchSeen' => [],
             'tags' => [],
             'savedViews' => [],
+            'calendarEvents' => [],
             'duplicateCandidates' => [],
             'inbox' => [],
             'projects' => [],

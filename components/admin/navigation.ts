@@ -1,11 +1,11 @@
 import type { ComponentType } from 'react'
-import { Activity, BarChart3, FileText, FolderKanban, Inbox, LayoutDashboard, Radar, Settings } from 'lucide-react'
+import { Activity, BarChart3, CalendarDays, FileText, FolderKanban, Inbox, LayoutDashboard, Radar, Settings } from 'lucide-react'
 import type { AdminSection } from '@/lib/admin/hooks'
 
 /**
  * Two-level navigation: the sidebar lists product areas; pages inside an area use local tabs.
  */
-export type AreaId = 'overview' | 'leadforge' | 'analytics' | 'inbox' | 'projects' | 'proposals' | 'health' | 'settings'
+export type AreaId = 'overview' | 'leadforge' | 'analytics' | 'inbox' | 'calendar' | 'projects' | 'proposals' | 'health' | 'settings'
 
 export type Area = {
   id: AreaId
@@ -21,7 +21,7 @@ export const AREA_GROUPS: { label: string; areas: Area[] }[] = [
   {
     label: 'Growth',
     areas: [
-      { id: 'leadforge', label: 'Lead Forge', icon: Radar, home: 'leads', sections: ['find', 'leads', 'followups', 'duplicates', 'history'] },
+      { id: 'leadforge', label: 'Lead Forge', icon: Radar, home: 'leads', sections: ['find', 'leads', 'followups', 'insights', 'duplicates', 'history'] },
       { id: 'analytics', label: 'Analytics', icon: BarChart3, home: 'analytics', sections: ['analytics'] }
     ]
   },
@@ -29,6 +29,7 @@ export const AREA_GROUPS: { label: string; areas: Area[] }[] = [
     label: 'Business',
     areas: [
       { id: 'inbox', label: 'Inbox', icon: Inbox, home: 'inbox', sections: ['inbox'] },
+      { id: 'calendar', label: 'Calendar', icon: CalendarDays, home: 'calendar', sections: ['calendar'] },
       { id: 'projects', label: 'Projects', icon: FolderKanban, home: 'projects', sections: ['projects'] },
       { id: 'proposals', label: 'Proposals', icon: FileText, home: 'proposals', sections: ['proposals'] }
     ]
@@ -50,6 +51,7 @@ export const LEADFORGE_TABS: { section: AdminSection; label: string }[] = [
   { section: 'find', label: 'Find leads' },
   { section: 'leads', label: 'Leads' },
   { section: 'followups', label: 'Follow-ups' },
+  { section: 'insights', label: 'Insights' },
   { section: 'duplicates', label: 'Duplicate review' },
   { section: 'history', label: 'Discovery history' }
 ]
@@ -61,8 +63,10 @@ export const SECTION_TITLES: Record<AdminSection, string> = {
   followups: 'Follow-ups',
   duplicates: 'Duplicate review',
   history: 'Discovery history',
+  insights: 'Lead insights',
   analytics: 'Analytics',
   inbox: 'Inbox',
+  calendar: 'Calendar',
   projects: 'Projects',
   proposals: 'Proposals',
   health: 'Site Health',

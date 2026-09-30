@@ -1,6 +1,27 @@
+'use client'
 /* eslint-disable @next/next/no-img-element */
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import type { Proposal } from '@/lib/admin/types'
-import { DOC_COPY, NIVELLO, computeDraft, docDate, docMoney, formatQuantity, proposalUnitLabel, type Draft } from './model'
+import { computeDraft, type Draft } from './model'
+import {
+  acceptanceLabel,
+  clientDetails,
+  itemQuantity,
+  itemTitle,
+  milestoneLabel,
+  sectionFill,
+  sectionLetter,
+  summaryAdjustments,
+  TEMPLATE_COLORS,
+  TEMPLATE_COLUMNS_MM,
+  TEMPLATE_LABELS,
+  TEMPLATE_SUPPLIER,
+  templateLogo,
+  textBlocks,
+  tDate,
+  tMoney,
+  type TemplateLabels
+} from './template'
 
 /** A Proposal-shaped snapshot of an unsaved draft, with totals computed like the server does. */
 export function draftToProposal(d: Draft, base: Proposal): Proposal {
@@ -43,168 +64,301 @@ export function draftToProposal(d: Draft, base: Proposal): Proposal {
   }
 }
 
-function Section({ title, text }: { title: string; text: string }) {
-  if (!text.trim()) return null
+const C = Object.fromEntries(Object.entries(TEMPLATE_COLORS).map(([key, hex]) => [key, `#${hex}`])) as Record<keyof typeof TEMPLATE_COLORS, string>
+const SHEET_WIDTH_PX = (210 / 25.4) * 96
+const font = { fontFamily: 'Arial, Helvetica, sans-serif' }
+
+/** Nivello logo from the template itself (as the DOCX/PDF use); the site logo stands in while it loads. */
+function useTemplateLogo() {
+  const [logo, setLogo] = useState<string | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    templateLogo().then(src => !cancelled && setLogo(src))
+    return () => {
+      cancelled = true
+    }
+  }, [])
+  return logo ?? '/nivello-logo-text-light.svg'
+}
+
+/** Scales the fixed A4 sheet down to the available width, like a PDF viewer. */
+function useFitZoom() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [zoom, setZoom] = useState(1)
+  useEffect(() => {
+    const node = ref.current
+    if (!node) return
+    const observer = new ResizeObserver(([entry]) => setZoom(Math.min(1, entry.contentRect.width / SHEET_WIDTH_PX)))
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [])
+  return [ref, zoom] as const
+}
+
+function Heading({ children }: { children: ReactNode }) {
   return (
-    <section className="mt-8 break-inside-avoid-page">
-      <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0b6fc0]">{title}</h2>
-      <p className="whitespace-pre-line text-[13px] leading-relaxed text-slate-700">{text}</p>
-    </section>
+    <h2 className="mt-[4.5mm] mb-[1.2mm] text-[8pt] font-bold uppercase" style={{ color: C.blue }}>
+      {children}
+    </h2>
   )
 }
 
-/** Print-quality HTML rendition of the proposal; mirrors the PDF layout. Always light, like paper. */
-export default function ProposalDocument({ proposal: p }: { proposal: Proposal }) {
-  const t = DOC_COPY[p.language]
-  const money = (cents: number) => docMoney(cents, p.currency, p.language)
-  const unitLabel = (unit: Proposal['items'][number]['unit'], quantity: number) => proposalUnitLabel(unit, quantity, p.language)
+function Body({ text }: { text: string }) {
+  return (
+    <p className="mb-[1.4mm] whitespace-pre-line text-[8pt] leading-[3.4mm]" style={{ color: C.muted }}>
+      {text}
+    </p>
+  )
+}
 
-  const table = (items: Proposal['items']) => (
-    <table className="w-full border-collapse text-[12.5px]">
-      <thead>
-        <tr className="border-b-2 border-slate-900 text-left text-[11px] uppercase tracking-wide text-slate-500">
-          <th className="py-2 pr-3 font-semibold">{t.description}</th>
-          <th className="w-16 py-2 pr-3 text-right font-semibold">{t.qty}</th>
-          <th className="w-28 py-2 pr-3 text-right font-semibold">{t.unitPrice}</th>
-          <th className="w-28 py-2 text-right font-semibold">{t.total}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {items.map((item, n) => (
-          <tr key={n} className="break-inside-avoid border-b border-slate-200 align-top">
-            <td className="py-2.5 pr-3">
-              <p className="font-medium text-slate-900">{item.code ? `${item.code}) ` : ''}{item.title || '—'}{item.optional ? ` (${p.language === 'it' ? 'opzionale' : 'optional'})` : ''}</p>
-              {item.description && <p className="mt-0.5 whitespace-pre-line text-[11.5px] text-slate-500">{item.description}</p>}
-            </td>
-            <td className="py-2.5 pr-3 text-right tabular-nums text-slate-700">{item.unit === 'fixed' ? '1' : `${formatQuantity(item.quantity, p.language)} ${unitLabel(item.unit, item.quantity)}`}</td>
-            <td className="py-2.5 pr-3 text-right tabular-nums text-slate-700">{item.unit === 'fixed' ? '—' : money(item.unitPrice)}</td>
-            <td className="py-2.5 text-right font-medium tabular-nums text-slate-900">{money(item.total)}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+function Footer({ page, pages, labels }: { page: number; pages: number; labels: TemplateLabels }) {
+  return (
+    <footer className="absolute inset-x-[14.5mm] bottom-[4.5mm] flex items-baseline justify-between gap-4 pt-[2.4mm] text-[7pt]" style={{ borderTop: `0.25mm solid ${C.border}`, color: C.muted }}>
+      <span className="font-bold" style={{ color: C.ink }}>
+        {TEMPLATE_SUPPLIER.footerBrand}
+      </span>
+      <span>{TEMPLATE_SUPPLIER.footerContact}</span>
+      <span>
+        {labels.page} {page} {labels.of} {pages}
+      </span>
+    </footer>
+  )
+}
+
+function Sheet({ children, page, pages, labels }: { children: ReactNode; page: number; pages: number; labels: TemplateLabels }) {
+  return (
+    <div
+      data-preview-page={page}
+      className="relative mx-auto min-h-[297mm] w-[210mm] bg-white px-[14.5mm] pb-[16mm] pt-[11.8mm] shadow-[0_2px_24px_rgba(15,23,42,0.14)] print:shadow-none print:[break-after:page]"
+      style={{ ...font, color: C.ink, colorScheme: 'light' }}
+    >
+      {children}
+      <Footer page={page} pages={pages} labels={labels} />
+    </div>
+  )
+}
+
+/**
+ * In-admin preview of the Preventivo, drawn with the same template design the DOCX/PDF use:
+ * shared wording, colours, column widths, money/date formats and block order (template.ts).
+ * Sections B onward start on a new sheet after the continuation header, as in the template.
+ */
+export default function ProposalDocument({ proposal: p }: { proposal: Proposal }) {
+  const labels = TEMPLATE_LABELS[p.language]
+  const logo = useTemplateLogo()
+  const [fitRef, zoom] = useFitZoom()
+  const money = (cents: number) => tMoney(cents, p.currency, p.language)
+  const client = clientDetails(p)
+  const blocks = textBlocks(p)
+  const [first, ...rest] = p.sections
+  const pages = rest.length ? 2 : 1
+  const cell = { borderLeft: `0.21mm solid ${C.border}` }
+
+  const sectionBlock = (section: Proposal['sections'][number], index: number) => {
+    const letter = sectionLetter(index)
+    return (
+      <section key={section.id} aria-label={`${labels.section} ${letter}`} className="break-inside-avoid-page">
+        <div className="mt-[1mm] flex min-h-[7.37mm] items-center justify-between gap-4 px-[2.4mm] py-[1.4mm] text-[9pt] font-bold text-white" style={{ background: `#${sectionFill(index)}` }}>
+          <h3 className="min-w-0">
+            {labels.section} {letter} — {section.title.toUpperCase()}
+          </h3>
+          <span className="shrink-0 whitespace-nowrap">
+            {labels.subtotal} {money(section.subtotal)}
+          </span>
+        </div>
+        <div className="h-[3.6mm]" />
+        {section.note && <Body text={section.note} />}
+        <table className="w-full table-fixed border-collapse text-[8pt]" style={{ border: `0.26mm solid ${C.border}` }}>
+          <colgroup>
+            {TEMPLATE_COLUMNS_MM.map((width, n) => (
+              <col key={n} style={{ width: `${width}mm` }} />
+            ))}
+          </colgroup>
+          <thead>
+            <tr className="h-[6.3mm] text-[7.6pt] font-bold" style={{ background: C.tableHead, color: C.text, borderBottom: `0.44mm solid ${C.border}` }}>
+              <th className="px-[1.7mm] text-left">{labels.item}</th>
+              <th className="px-[1.5mm] text-left" style={cell}>
+                {labels.quantity}
+              </th>
+              <th className="px-[1.6mm] text-right" style={cell}>
+                {labels.price}
+              </th>
+              <th className="px-[1.6mm] text-right" style={cell}>
+                {labels.total}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {section.items.map((item, itemIndex) => (
+              <tr key={item.id} className="break-inside-avoid align-top" style={{ background: itemIndex % 2 ? C.rowAlt : '#FFFFFF', borderBottom: `0.25mm solid ${C.rowLine}` }}>
+                <td className="px-[1.7mm] py-[1.6mm]">
+                  <p className="text-[8.5pt] font-bold leading-[3.5mm]">{itemTitle(p, item, letter, itemIndex)}</p>
+                  {item.description && (
+                    <p className="mt-[0.5mm] whitespace-pre-line text-[7.6pt] leading-[2.9mm]" style={{ color: C.muted }}>
+                      {item.description}
+                    </p>
+                  )}
+                </td>
+                <td className="px-[1mm] py-[1.6mm] text-center tabular-nums" style={{ ...cell, color: C.text }}>
+                  {itemQuantity(p, item)}
+                </td>
+                <td className="whitespace-nowrap px-[1.6mm] py-[1.6mm] text-right tabular-nums" style={{ ...cell, color: C.text }}>
+                  {money(item.unitPrice)}
+                </td>
+                <td className="whitespace-nowrap px-[1.6mm] py-[1.6mm] text-right font-bold tabular-nums" style={cell}>
+                  {money(item.total)}
+                </td>
+              </tr>
+            ))}
+            <tr className="h-[7mm]" style={{ background: C.sectionTotal, borderTop: `0.42mm solid ${C.blue}` }}>
+              <td colSpan={3} className="px-[1.8mm] text-right text-[8.5pt] font-bold">
+                {labels.sectionSubtotal} {letter}
+              </td>
+              <td className="whitespace-nowrap px-[1.6mm] text-right text-[9pt] font-bold tabular-nums" style={cell}>
+                {money(section.subtotal)}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div className="h-[4mm]" />
+      </section>
+    )
+  }
+
+  const boxTable = (title: string, rows: { label: string; value: number }[], total: { label: string; value: number }) => (
+    <section aria-label={title} className="mb-[4mm] break-inside-avoid" style={{ background: C.panel, border: `0.25mm solid ${C.border}` }}>
+      <h2 className="px-[2.6mm] pb-[1.2mm] pt-[1.6mm] text-[7.6pt] font-bold" style={{ color: C.blue }}>
+        {title}
+      </h2>
+      {rows.map((row, n) => (
+        <div key={n} className="flex items-start justify-between gap-4 px-[2.6mm] py-[1.3mm] text-[8pt]" style={{ borderTop: `0.14mm solid ${C.boxLine}` }}>
+          <span className="min-w-0">{row.label}</span>
+          <span className="shrink-0 whitespace-nowrap font-bold tabular-nums">{money(row.value)}</span>
+        </div>
+      ))}
+      <div className="flex min-h-[6.9mm] items-center justify-between gap-4 px-[2.6mm] text-[9pt] font-bold" style={{ background: C.boxTotal, borderTop: `0.42mm solid ${C.blue}` }}>
+        <span>{total.label}</span>
+        <span className="whitespace-nowrap text-[9.5pt] tabular-nums">{money(total.value)}</span>
+      </div>
+    </section>
+  )
+
+  const closing = (
+    <>
+      {boxTable(labels.summary, [...p.sections.map(section => ({ label: section.title, value: section.subtotal })), ...summaryAdjustments(p)], { label: labels.grandTotal, value: p.totals.total })}
+      {p.milestones.length > 0 && boxTable(labels.payments, p.milestones.map(milestone => ({ label: milestoneLabel(p, milestone), value: milestone.amount })), { label: labels.grandTotal, value: p.totals.total })}
+      {blocks.after.map(block => (
+        <div key={block.title}>
+          <Heading>{block.title}</Heading>
+          <Body text={block.text} />
+        </div>
+      ))}
+      <section aria-label={labels.acceptance} className="break-inside-avoid">
+        <Heading>{labels.acceptance}</Heading>
+        <div className="grid grid-cols-2 text-[7.6pt]" style={{ color: C.muted }}>
+          <div>
+            <p>{acceptanceLabel(p)}</p>
+            <div className="mr-[18mm] mt-[6mm]" style={{ borderBottom: `0.3mm solid ${C.text}` }} />
+          </div>
+          <div className="pl-[1.2mm]">
+            <p>{labels.signature}</p>
+            <div className="mr-[18mm] mt-[6mm]" style={{ borderBottom: `0.3mm solid ${C.text}` }} />
+          </div>
+        </div>
+      </section>
+    </>
   )
 
   return (
-    <article className="mx-auto w-full max-w-[210mm] bg-white px-[14mm] py-[16mm] text-slate-900 shadow-[0_2px_24px_rgba(15,23,42,0.12)] print:max-w-none print:px-0 print:py-0 print:shadow-none" style={{ colorScheme: 'light' }}>
-      <header className="flex flex-wrap items-start justify-between gap-6 border-b border-slate-200 pb-6">
-        <div>
-          <img src="/nivello-logo-text-light.svg" alt="Nivello" width={150} height={43} className="h-auto w-[140px]" />
-          <p className="mt-2 text-[11px] text-slate-500">
-            {NIVELLO.web} · {NIVELLO.email}
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0b6fc0]">{t.proposal}</p>
-          <p className="mt-1 font-mono text-sm text-slate-700">{p.number}</p>
-        </div>
-      </header>
-
-      <h1 className="mt-8 text-[26px] font-bold leading-tight tracking-tight">{p.title || '—'}</h1>
-
-      <dl className="mt-6 grid grid-cols-1 gap-4 text-[12.5px] sm:grid-cols-[1.4fr_1fr_1fr]">
-        <div>
-          <dt className="text-[11px] uppercase tracking-wide text-slate-500">{t.preparedFor}</dt>
-          {p.clientLogo && (
-            <img src={`/admin-api/proposal-file.php?action=logo&id=${p.id}`} alt="" className="mt-2 max-h-12 max-w-36 object-contain object-left" />
-          )}
-          <dd className="mt-1 font-medium">{p.clientCompany || p.clientName || '—'}</dd>
-          {p.clientCompany && p.clientName && <dd className="text-slate-600">{p.clientName}</dd>}
-          {p.clientEmail && <dd className="text-slate-600">{p.clientEmail}</dd>}
-          {p.clientSector && <dd className="text-slate-600">{p.clientSector}</dd>}
-          {p.clientAddress && <dd className="text-slate-600">{p.clientAddress}</dd>}
-          {p.clientPhone && <dd className="text-slate-600">{p.clientPhone}</dd>}
-        </div>
-        <div>
-          <dt className="text-[11px] uppercase tracking-wide text-slate-500">{t.issueDate}</dt>
-          <dd className="mt-1">{docDate(p.issueDate, p.language)}</dd>
-        </div>
-        <div>
-          <dt className="text-[11px] uppercase tracking-wide text-slate-500">{t.validUntil}</dt>
-          <dd className="mt-1">{docDate(p.validUntil, p.language)}</dd>
-        </div>
-      </dl>
-
-      <Section title={t.introduction} text={p.intro} />
-      <Section title={t.scope} text={p.scope} />
-
-      <section className="mt-8">
-        <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0b6fc0]">{t.investment}</h2>
-        <div className="space-y-7">
-          {p.sections.map((section, sectionIndex) => (
-            <section key={section.id} className="break-inside-avoid-page">
-              <div className="mb-2 flex items-end justify-between gap-4 border-b-2 border-slate-900 pb-2">
-                <div>
-                  <h3 className="text-[12px] font-bold uppercase tracking-[0.08em]">{p.language === 'it' ? 'Sezione' : 'Section'} {String.fromCharCode(65 + sectionIndex)} — {section.title}</h3>
-                  {section.note && <p className="mt-1 text-[11px] text-slate-500">{section.note}</p>}
+    <div ref={fitRef} className="w-full">
+      <article aria-label={`${labels.word} ${p.number}`} className="mx-auto w-[210mm] space-y-6 [zoom:var(--sheet-zoom)] print:space-y-0 print:[zoom:1]" style={{ '--sheet-zoom': zoom } as CSSProperties}>
+        <Sheet page={1} pages={pages} labels={labels}>
+          <header className="flex items-start justify-between">
+            <img src={logo} alt="Nivello" className="mt-[5.3mm] h-[15.1mm] w-[52.9mm] object-contain object-left" />
+            <dl className="w-[73.3mm] bg-white px-[2.6mm] pb-[1.6mm] pt-[1.6mm]" style={{ border: `0.3mm solid ${C.metaBorder}` }}>
+              <p className="text-right text-[7.6pt] font-bold tracking-[0.04em]" style={{ color: C.gold }}>
+                {labels.caps}
+              </p>
+              {(
+                [
+                  [labels.number, p.number],
+                  [labels.date, tDate(p.issueDate)],
+                  [labels.validUntil, tDate(p.validUntil)]
+                ] as const
+              ).map(([label, value]) => (
+                <div key={label} className="mt-[2.2mm] flex items-baseline justify-between gap-3 pr-[2mm]">
+                  <dt className="text-[7pt]" style={{ color: C.faint }}>
+                    {label}
+                  </dt>
+                  <dd className="text-[7.6pt] font-bold tabular-nums">{value}</dd>
                 </div>
-                <span className="shrink-0 text-[11px] font-semibold tabular-nums">{money(section.subtotal)}</span>
-              </div>
-              {table(section.items)}
-            </section>
-          ))}
-        </div>
-        <div className="ml-auto mt-3 w-full max-w-72 space-y-1 text-[12.5px] break-inside-avoid">
-          <div className="flex justify-between">
-            <span className="text-slate-600">{t.subtotal}</span>
-            <span className="tabular-nums">{money(p.totals.subtotal)}</span>
-          </div>
-          {p.totals.discount > 0 && (
-            <div className="flex justify-between">
-              <span className="text-slate-600">
-                {t.discount}
-                {p.discount.type === 'percent' ? ` (${formatQuantity(p.discount.value, p.language)}%)` : ''}
-              </span>
-              <span className="tabular-nums">−{money(p.totals.discount)}</span>
-            </div>
-          )}
-          {p.tax.rate > 0 && (
-            <div className="flex justify-between">
-              <span className="text-slate-600">
-                {p.tax.label} ({formatQuantity(p.tax.rate, p.language)}%)
-              </span>
-              <span className="tabular-nums">{money(p.totals.tax)}</span>
-            </div>
-          )}
-          <div className="flex justify-between border-t-2 border-slate-900 pt-2 text-[15px] font-bold">
-            <span>{t.grandTotal}</span>
-            <span className="tabular-nums">{money(p.totals.total)}</span>
-          </div>
-        </div>
-      </section>
-
-      {p.milestones.length > 0 && (
-        <section className="mt-8 break-inside-avoid">
-          <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0b6fc0]">{t.payments}</h2>
-          <table className="w-full border-collapse text-[12.5px]">
-            <tbody>
-              {p.milestones.map((m, n) => (
-                <tr key={n} className="border-b border-slate-200">
-                  <td className="py-2 pr-3 font-medium">{m.label}</td>
-                  <td className="py-2 pr-3 text-slate-600">{m.due}</td>
-                  <td className="w-16 py-2 pr-3 text-right tabular-nums text-slate-600">{formatQuantity(m.percent, p.language)}%</td>
-                  <td className="w-28 py-2 text-right font-medium tabular-nums">{money(m.amount)}</td>
-                </tr>
               ))}
-            </tbody>
-          </table>
-        </section>
-      )}
+            </dl>
+          </header>
 
-      <Section title={t.assumptions} text={p.assumptions} />
-      <Section title={t.terms} text={p.terms} />
+          <div className="mt-[10mm] text-center">
+            <p className="text-[26pt] font-bold leading-[11mm]">{labels.word}</p>
+            <h1 className="mx-auto mt-[1mm] max-w-[181mm] text-[19pt] font-bold leading-[7.4mm]">{p.title || '—'}</h1>
+          </div>
 
-      <section className="mt-10 break-inside-avoid border-t-2 border-slate-900 pt-5">
-        <h2 className="text-[12px] font-bold uppercase tracking-[0.12em]">{p.language === 'it' ? 'Accettazione del preventivo' : 'Proposal acceptance'}</h2>
-        <div className="mt-7 grid grid-cols-2 gap-10 text-[11px] text-slate-500">
-          <div><p>{p.language === 'it' ? 'Luogo e data' : 'Place and date'}{p.acceptance.place ? ` · ${p.acceptance.place}` : ''}</p><div className="mt-8 border-b border-slate-500" /></div>
-          <div><p>{p.language === 'it' ? 'Firma del cliente' : 'Client signature'}</p><div className="mt-8 border-b border-slate-500" /></div>
-        </div>
-      </section>
+          <div className="mt-[4.8mm] grid grid-cols-2 px-[1.8mm]">
+            <div className="flex min-h-[26.9mm] flex-col justify-center px-[2.7mm] py-[2mm]" style={{ background: C.panel, border: `0.3mm solid ${C.border}` }}>
+              <p className="text-[7pt] font-bold" style={{ color: C.blue }}>
+                {labels.supplier}
+              </p>
+              <p className="mt-[0.8mm] text-[10.6pt] font-bold">{TEMPLATE_SUPPLIER.name}</p>
+              {TEMPLATE_SUPPLIER.lines.map(line => (
+                <p key={line} className="text-[8pt] leading-[3.4mm]" style={{ color: C.muted }}>
+                  {line}
+                </p>
+              ))}
+            </div>
+            <div className="grid min-h-[26.9mm] grid-cols-[34.6mm_minmax(0,1fr)] items-center" style={{ background: C.panel, border: `0.3mm solid ${C.border}`, borderLeft: 'none' }}>
+              <div className="flex items-center justify-center">
+                {p.clientLogo && <img src={`/admin-api/proposal-file.php?action=logo&id=${p.id}&v=${p.clientLogo.size}`} alt="" className="max-h-[16mm] max-w-[30mm] object-contain" />}
+              </div>
+              <div className="min-w-0 py-[2mm] pr-[2.7mm]">
+                <p className="text-[7pt] font-bold" style={{ color: C.blue }}>
+                  {labels.client}
+                </p>
+                <p className="mt-[0.8mm] break-words text-[10.6pt] font-bold leading-[4.2mm]">{client.name}</p>
+                {[client.sector, client.address, client.contact].filter(Boolean).map(line => (
+                  <p key={line} className="break-words text-[8pt] leading-[3.4mm]" style={{ color: C.muted }}>
+                    {line}
+                  </p>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="h-[3.7mm]" />
 
-      <footer className="mt-10 border-t border-slate-200 pt-4 text-[10.5px] text-slate-400">
-        {NIVELLO.name} · {NIVELLO.web} · {NIVELLO.email} · {p.number}
-      </footer>
-    </article>
+          {blocks.before.map(block => (
+            <div key={block.title}>
+              <Heading>{block.title}</Heading>
+              <Body text={block.text} />
+            </div>
+          ))}
+          {blocks.before.length > 0 && <div className="h-[2mm]" />}
+          {first && sectionBlock(first, 0)}
+          {!rest.length && closing}
+        </Sheet>
+
+        {rest.length > 0 && (
+          <Sheet page={2} pages={pages} labels={labels}>
+            <header className="mb-[4mm] flex items-end justify-between pb-[1.6mm]" style={{ borderBottom: `0.34mm solid ${C.border}` }}>
+              <img src={logo} alt="Nivello" className="h-[10.5mm] w-[36.9mm] object-contain object-left" />
+              <div className="text-right">
+                <p className="text-[8pt] font-bold">{p.number}</p>
+                <p className="text-[7pt]" style={{ color: C.muted }}>
+                  {client.name} · {labels.word}
+                </p>
+              </div>
+            </header>
+            {rest.map((section, n) => sectionBlock(section, n + 1))}
+            {closing}
+          </Sheet>
+        )}
+      </article>
+    </div>
   )
 }

@@ -24,7 +24,7 @@ export default defineConfig({
     {
       // Shares one data store: runs serially.
       name: 'admin-api',
-      testMatch: ['admin/api.spec.ts', 'admin/ops.spec.ts', 'admin/php-unit.spec.ts'],
+      testMatch: ['admin/api.spec.ts', 'admin/ops.spec.ts', 'admin/overview-calendar.spec.ts', 'admin/php-unit.spec.ts'],
       fullyParallel: false,
       use: { baseURL: `http://127.0.0.1:${adminPort}` }
     },

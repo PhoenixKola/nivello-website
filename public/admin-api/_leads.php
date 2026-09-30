@@ -234,6 +234,13 @@ function record_duplicate_candidate(array &$state, array $existing, array $candi
 
 // ── Score ───────────────────────────────────────────────────────────────────
 
+/** Score bands shared by filters, analytics and the UI ("High opportunity" = 70+). */
+const LEAD_SCORE_HIGH = 70;
+
+/**
+ * Deterministic opportunity score (0–100) with its reasons. All rules live here so they can be tuned
+ * in one place; the score is always derived, never stored. It ranks leads, it does not predict conversion.
+ */
 function lead_score(array $lead, ?int $now = null): array
 {
     $now ??= time();
@@ -257,6 +264,9 @@ function lead_score(array $lead, ?int $now = null): array
     $hasWebsite ? $add(-5, 'Already has a website') : $add(12, 'No website');
     if (!$hasPhone && !$hasEmail && !$hasInstagram) {
         $add(-25, 'No way to contact');
+    }
+    if (($lead['category'] ?? '') !== '' && ($lead['address'] ?? '') !== '' && ($lead['city'] ?? '') !== '') {
+        $add(5, 'Complete business profile');
     }
 
     $reviews = (int) ($lead['reviewCount'] ?? 0);
@@ -308,6 +318,12 @@ function parse_lead_filters(array $input): array
     $flag = fn ($v) => $v === true || $v === '1' || $v === 'true';
     $batch = (string) ($input['batch'] ?? '');
     $tag = (string) ($input['tag'] ?? '');
+    $day = function ($v) {
+        $v = substr(is_string($v) ? $v : '', 0, 10);
+        return preg_match('/^\d{4}-\d{2}-\d{2}$/', $v) && checkdate((int) substr($v, 5, 2), (int) substr($v, 8, 2), (int) substr($v, 0, 4)) ? $v : '';
+    };
+    $minScore = is_numeric($input['minScore'] ?? null) ? (int) $input['minScore'] : 0;
+    $followUp = (string) ($input['followUp'] ?? '');
     return [
         'q' => mb_substr(trim((string) ($input['q'] ?? '')), 0, 120),
         'status' => $list($input['status'] ?? [], LEAD_STATUSES),
@@ -321,9 +337,48 @@ function parse_lead_filters(array $input): array
         'hasEmail' => $flag($input['hasEmail'] ?? false),
         'hasInstagram' => $flag($input['hasInstagram'] ?? false),
         'followUpDue' => $flag($input['followUpDue'] ?? false),
-        'createdFrom' => iso_to_ts($input['createdFrom'] ?? null),
-        'createdTo' => iso_to_ts($input['createdTo'] ?? null),
+        'hasPhone' => $flag($input['hasPhone'] ?? false),
+        'hasWebsite' => $flag($input['hasWebsite'] ?? false),
+        'minScore' => max(0, min(100, $minScore)),
+        'followUp' => in_array($followUp, FOLLOW_UP_FILTERS, true) ? $followUp : '',
+        'createdFrom' => $day($input['createdFrom'] ?? null),
+        'createdTo' => $day($input['createdTo'] ?? null),
     ];
+}
+
+const FOLLOW_UP_FILTERS = ['overdue', 'today', 'upcoming', 'none'];
+
+/** The browser's UTC offset (minutes, as from Date#getTimezoneOffset), which defines "today". */
+function tz_offset_param(mixed $value): int
+{
+    return is_numeric($value) ? max(-900, min(900, (int) $value)) : 0;
+}
+
+/** Last second of the local day containing $now. */
+function local_day_end(int $now, int $tzOffset): int
+{
+    $offset = $tzOffset * 60;
+    $local = $now - $offset;
+    return $local - (($local % 86400) + 86400) % 86400 + 86399 + $offset;
+}
+
+/** Local calendar date (YYYY-MM-DD) of a timestamp. */
+function local_date(int $ts, int $tzOffset): string
+{
+    return gmdate('Y-m-d', $ts - $tzOffset * 60);
+}
+
+/** overdue | today | upcoming for an open follow-up, done when completed or the lead is closed, null when none. */
+function follow_up_bucket(array $lead, int $now, int $todayEnd): ?string
+{
+    $ts = iso_to_ts($lead['followUpAt'] ?? null);
+    if ($ts === null) {
+        return null;
+    }
+    if (!empty($lead['followUpCompletedAt']) || in_array($lead['status'], CLOSED_STATUSES, true)) {
+        return 'done';
+    }
+    return $ts < $now ? 'overdue' : ($ts <= $todayEnd ? 'today' : 'upcoming');
 }
 
 function follow_up_is_due(array $lead, int $now): bool
@@ -332,7 +387,7 @@ function follow_up_is_due(array $lead, int $now): bool
     return $ts !== null && $ts <= $now && empty($lead['followUpCompletedAt']) && !in_array($lead['status'], CLOSED_STATUSES, true);
 }
 
-function lead_matches(array $lead, array $f, int $now): bool
+function lead_matches(array $lead, array $f, int $now, int $tzOffset = 0): bool
 {
     if ($f['status'] && !in_array($lead['status'], $f['status'], true)) {
         return false;
@@ -362,8 +417,23 @@ function lead_matches(array $lead, array $f, int $now): bool
     if ($f['followUpDue'] && !follow_up_is_due($lead, $now)) {
         return false;
     }
-    $created = iso_to_ts($lead['createdAt']) ?? 0;
-    if (($f['createdFrom'] !== null && $created < $f['createdFrom']) || ($f['createdTo'] !== null && $created > $f['createdTo'])) {
+    if (($f['hasPhone'] ?? false) && $lead['phone'] === '' && $lead['whatsapp'] === '') {
+        return false;
+    }
+    if (($f['hasWebsite'] ?? false) && $lead['website'] === '') {
+        return false;
+    }
+    if (($f['followUp'] ?? '') !== '') {
+        $bucket = follow_up_bucket($lead, $now, local_day_end($now, $tzOffset));
+        if ($f['followUp'] === 'none' ? in_array($bucket, ['overdue', 'today', 'upcoming'], true) : $bucket !== $f['followUp']) {
+            return false;
+        }
+    }
+    $createdDay = local_date(iso_to_ts($lead['createdAt']) ?? 0, $tzOffset);
+    if ((($f['createdFrom'] ?? '') !== '' && $createdDay < $f['createdFrom']) || (($f['createdTo'] ?? '') !== '' && $createdDay > $f['createdTo'])) {
+        return false;
+    }
+    if (($f['minScore'] ?? 0) > 0 && lead_score($lead, $now)['score'] < $f['minScore']) {
         return false;
     }
     if ($f['q'] !== '') {
@@ -380,10 +450,10 @@ function lead_matches(array $lead, array $f, int $now): bool
     return true;
 }
 
-function filter_leads(array $leads, array $filters): array
+function filter_leads(array $leads, array $filters, int $tzOffset = 0): array
 {
     $now = time();
-    return array_values(array_filter($leads, fn ($lead) => lead_matches($lead, $filters, $now)));
+    return array_values(array_filter($leads, fn ($lead) => lead_matches($lead, $filters, $now, $tzOffset)));
 }
 
 // ── CSV ─────────────────────────────────────────────────────────────────────

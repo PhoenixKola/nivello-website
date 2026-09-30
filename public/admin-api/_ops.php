@@ -758,3 +758,98 @@ function related_to_lead(array $state, string $leadId): array
         'proposals' => array_values(array_map(fn ($p) => proposal_summary($p), array_filter($state['proposals'], fn ($p) => $p['leadId'] === $leadId))),
     ];
 }
+
+// ── Lead Forge analytics ────────────────────────────────────────────────────
+
+/**
+ * Lifecycle metrics from real records only: statuses, follow-up dates and leadId links on
+ * proposals and projects. Nothing is forecast or attributed.
+ */
+function lead_forge_stats(array $state, int $now, int $tzOffset): array
+{
+    $todayEnd = local_day_end($now, $tzOffset);
+    $withProposal = [];
+    $accepted = [];
+    foreach ($state['proposals'] as $proposal) {
+        if ($proposal['leadId']) {
+            $withProposal[$proposal['leadId']] = true;
+            if ($proposal['status'] === 'accepted') {
+                $accepted[$proposal['leadId']] = true;
+            }
+        }
+    }
+    $withProject = [];
+    foreach ($state['projects'] as $project) {
+        if ($project['leadId']) {
+            $withProject[$project['leadId']] = true;
+        }
+    }
+
+    $byStatus = array_fill_keys(LEAD_STATUSES, 0);
+    $followUps = ['overdue' => 0, 'today' => 0, 'upcoming' => 0];
+    $scoreBands = ['high' => 0, 'medium' => 0, 'low' => 0];
+    $sources = [];
+    $batches = [];
+    $converted = ['proposal' => 0, 'project' => 0, 'won' => 0, 'accepted' => 0];
+    foreach ($state['leads'] as $lead) {
+        $byStatus[$lead['status']] = ($byStatus[$lead['status']] ?? 0) + 1;
+        $bucket = follow_up_bucket($lead, $now, $todayEnd);
+        if (isset($followUps[$bucket])) {
+            $followUps[$bucket]++;
+        }
+        $score = lead_score($lead, $now)['score'];
+        $scoreBands[$score >= LEAD_SCORE_HIGH ? 'high' : ($score >= 45 ? 'medium' : 'low')]++;
+        $hasProposal = isset($withProposal[$lead['id']]);
+        $hasProject = isset($withProject[$lead['id']]);
+        $converted['proposal'] += $hasProposal ? 1 : 0;
+        $converted['project'] += $hasProject ? 1 : 0;
+        $converted['won'] += $lead['status'] === 'won' ? 1 : 0;
+        $converted['accepted'] += isset($accepted[$lead['id']]) ? 1 : 0;
+        $source = $lead['source'] ?? 'manual';
+        $sources[$source] ??= ['source' => $source, 'leads' => 0, 'proposals' => 0, 'won' => 0];
+        $sources[$source]['leads']++;
+        $sources[$source]['proposals'] += $hasProposal ? 1 : 0;
+        $sources[$source]['won'] += $lead['status'] === 'won' ? 1 : 0;
+        if (!empty($lead['sourceBatchId'])) {
+            $b = &$batches[$lead['sourceBatchId']];
+            $b ??= ['inCrm' => 0, 'qualified' => 0, 'proposals' => 0];
+            $b['inCrm']++;
+            $b['qualified'] += in_array($lead['status'], ['interested', 'proposal', 'won'], true) ? 1 : 0;
+            $b['proposals'] += $hasProposal ? 1 : 0;
+            unset($b);
+        }
+    }
+
+    $recentBatches = $state['batches'];
+    usort($recentBatches, fn ($a, $b) => strcmp($b['createdAt'], $a['createdAt']));
+    $batchRows = [];
+    foreach (array_slice($recentBatches, 0, 8) as $batch) {
+        $row = $batches[$batch['id']] ?? ['inCrm' => 0, 'qualified' => 0, 'proposals' => 0];
+        $batchRows[] = [
+            'id' => $batch['id'],
+            'label' => batch_label($batch),
+            'status' => $batch['status'],
+            'checked' => (int) ($batch['counters']['checked'] ?? 0),
+            'imported' => (int) ($batch['counters']['imported'] ?? 0),
+        ] + $row;
+    }
+
+    $total = count($state['leads']);
+    $decided = $byStatus['won'] + $byStatus['lost'];
+    $rate = fn (int $part, int $whole) => $whole > 0 ? round($part * 100 / $whole, 1) : null;
+    return [
+        'total' => $total,
+        'active' => $total - $decided,
+        'byStatus' => $byStatus,
+        'followUps' => $followUps,
+        'scoreBands' => $scoreBands,
+        'converted' => $converted,
+        'rates' => [
+            'toProposal' => $rate($converted['proposal'], $total),
+            'toProject' => $rate($converted['project'], $total),
+            'winRate' => $rate($byStatus['won'], $decided),
+        ],
+        'sources' => array_values($sources),
+        'batches' => $batchRows,
+    ];
+}

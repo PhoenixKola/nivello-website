@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, type DragEvent, type FormEvent } from 'react'
 import { AlertCircle, CalendarClock, FilePlus2, FolderKanban, GripVertical, Link2, MoveRight, Plus, Trash2, X } from 'lucide-react'
 import { api } from '@/lib/admin/api'
-import { CURRENCIES, PRIORITIES, PRIORITY_LABEL, PROJECT_STAGES, PROPOSAL_STATUS_META, STAGE_LABEL, STATUS_LABEL } from '@/lib/admin/constants'
+import { CURRENCIES, PRIORITIES, PRIORITY_LABEL, PROJECT_STAGES, PROPOSAL_STATUS_META, STAGE_LABEL, STATUS_LABEL, WORKFLOW_GROUPS } from '@/lib/admin/constants'
 import { formatDay, formatMoney } from '@/lib/admin/format'
 import { useDebounced, useMediaQuery } from '@/lib/admin/hooks'
 import type { Currency, LeadPriority, Project, ProjectDetail, ProjectList, ProjectStage } from '@/lib/admin/types'
@@ -38,13 +38,6 @@ function DueBadge({ project }: { project: Project }) {
   )
 }
 
-/** Visual board groups only; every project keeps its exact stage. */
-const WORKFLOW_GROUPS: { id: string; label: string; stages: ProjectStage[] }[] = [
-  { id: 'sales', label: 'Sales', stages: ['lead', 'discovery', 'proposal', 'approved'] },
-  { id: 'delivery', label: 'Delivery', stages: ['design', 'development', 'qa'] },
-  { id: 'completed', label: 'Completed', stages: ['delivered'] },
-  { id: 'aftercare', label: 'Aftercare', stages: ['maintenance', 'archived'] }
-]
 const STAGE_DOT = Object.fromEntries(PROJECT_STAGES.map(s => [s.value, s.dot])) as Record<ProjectStage, string>
 
 function StageChip({ stage }: { stage: ProjectStage }) {
@@ -421,7 +414,9 @@ function NewProjectModal({ open, onClose, onCreated }: { open: boolean; onClose:
   )
 }
 
-function ProjectDrawer({ id, onClose, onChanged }: { id: string; onClose: () => void; onChanged: () => void }) {
+type DrawerTab = 'overview' | 'tasks' | 'milestones' | 'activity'
+
+function ProjectDrawer({ id, initialTab = 'overview', onClose, onChanged }: { id: string; initialTab?: DrawerTab; onClose: () => void; onChanged: () => void }) {
   const { openLead, navigate } = useAdmin()
   const toast = useToast()
   const [data, setData] = useState<ProjectDetail | null>(null)
@@ -431,7 +426,7 @@ function ProjectDrawer({ id, onClose, onChanged }: { id: string; onClose: () => 
   const [saved, setSaved] = useState(false)
   const [picker, setPicker] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [tab, setTab] = useState<'overview' | 'tasks' | 'milestones' | 'activity'>('overview')
+  const [tab, setTab] = useState<DrawerTab>(initialTab)
 
   const apply = useCallback((detail: ProjectDetail) => {
     setData(detail)
@@ -651,7 +646,7 @@ export default function Projects() {
   const debouncedQ = useDebounced(q)
   const [data, setData] = useState<ProjectList | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [creating, setCreating] = useState(false)
+  const [creating, setCreating] = useState(() => route.params.get('new') === '1')
   const [version, setVersion] = useState(0)
   const selected = route.params.get('project')
 
@@ -792,14 +787,17 @@ export default function Projects() {
 
       <NewProjectModal
         open={creating}
-        onClose={() => setCreating(false)}
+        onClose={() => {
+          setCreating(false)
+          if (route.params.get('new')) navigate('projects')
+        }}
         onCreated={id => {
           setCreating(false)
           refresh()
           open(id)
         }}
       />
-      {selected && /^prj_[a-f0-9]{16}$/.test(selected) && <ProjectDrawer key={selected} id={selected} onClose={() => navigate('projects')} onChanged={refresh} />}
+      {selected && /^prj_[a-f0-9]{16}$/.test(selected) && <ProjectDrawer key={selected} id={selected} initialTab={route.params.get('tab') === 'tasks' ? 'tasks' : route.params.get('tab') === 'milestones' ? 'milestones' : 'overview'} onClose={() => navigate('projects')} onChanged={refresh} />}
     </div>
   )
 }

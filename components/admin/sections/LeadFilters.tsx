@@ -1,15 +1,17 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { SlidersHorizontal, X } from 'lucide-react'
-import { EMPTY_FILTERS, LEAD_STATUSES, PRIORITIES, PRIORITY_LABEL, STATUS_LABEL } from '@/lib/admin/constants'
-import type { LeadFilters, LeadList, Tag } from '@/lib/admin/types'
+import { api } from '@/lib/admin/api'
+import { EMPTY_FILTERS, HIGH_SCORE, LEAD_STATUSES, PRIORITIES, PRIORITY_LABEL, STATUS_LABEL } from '@/lib/admin/constants'
+import { formatDay } from '@/lib/admin/format'
+import type { FollowUpFilter, LeadFilters, LeadList, Tag } from '@/lib/admin/types'
 import { Button } from '../ui/Button'
 import { Switch } from '../ui/Controls'
 import { SearchInput } from '../ui/Inputs'
 import { MultiSelect, Select } from '../ui/Listbox'
 import Popover from '../ui/Popover'
-import { cx, focusRing, labelText } from '../ui/styles'
+import { cx, fieldBase, focusRing, labelText } from '../ui/styles'
 
 type Props = {
   filters: LeadFilters
@@ -21,6 +23,15 @@ type Props = {
 
 const ANY = '__any__'
 
+const FOLLOW_UP_LABEL: Record<FollowUpFilter, string> = { overdue: 'Overdue', today: 'Today', upcoming: 'Upcoming', none: 'No follow-up' }
+const SCORE_OPTIONS = [
+  { value: '0', label: 'Any score' },
+  { value: '40', label: '40 or more' },
+  { value: '55', label: '55 or more' },
+  { value: String(HIGH_SCORE), label: `${HIGH_SCORE} or more (high)` },
+  { value: '85', label: '85 or more' }
+]
+
 function facetOptions(values: string[] | undefined, current: string, anyLabel: string) {
   const list = values ?? []
   const withCurrent = current && !list.includes(current) ? [current, ...list] : list
@@ -31,16 +42,29 @@ export function countActiveFilters(filters: LeadFilters) {
   return (
     filters.status.length +
     filters.priority.length +
-    [filters.country, filters.city, filters.category, filters.tag, filters.batch].filter(Boolean).length +
-    [filters.noWebsite, filters.hasEmail, filters.hasInstagram, filters.followUpDue].filter(Boolean).length
+    [filters.country, filters.city, filters.category, filters.tag, filters.batch, filters.followUp, filters.createdFrom, filters.createdTo].filter(Boolean).length +
+    [filters.noWebsite, filters.hasEmail, filters.hasInstagram, filters.followUpDue, filters.hasPhone, filters.hasWebsite, filters.minScore > 0].filter(Boolean).length
   )
 }
 
 export default function LeadFiltersBar({ filters, onChange, facets, tags, batchLabel }: Props) {
   const [moreOpen, setMoreOpen] = useState(false)
+  const [batches, setBatches] = useState<{ value: string; label: string }[] | null>(null)
   const moreRef = useRef<HTMLButtonElement>(null)
   const set = <K extends keyof LeadFilters>(key: K, value: LeadFilters[K]) => onChange({ ...filters, [key]: value })
-  const extraCount = [filters.country, filters.city, filters.category, filters.tag].filter(Boolean).length + [filters.noWebsite, filters.hasEmail, filters.hasInstagram, filters.followUpDue].filter(Boolean).length
+  const extraCount = countActiveFilters(filters) - filters.status.length - filters.priority.length - (filters.batch ? 1 : 0)
+
+  useEffect(() => {
+    if (!moreOpen || batches) return
+    let cancelled = false
+    api
+      .batches(1, 30)
+      .then(result => !cancelled && setBatches(result.items.map(b => ({ value: b.id, label: `${b.params.category || 'All categories'} · ${b.params.city} · ${formatDay(b.createdAt.slice(0, 10))}` }))))
+      .catch(() => !cancelled && setBatches([]))
+    return () => {
+      cancelled = true
+    }
+  }, [moreOpen, batches])
 
   const chips: { key: string; label: string; clear: () => void }[] = []
   if (filters.batch) chips.push({ key: 'batch', label: `Batch: ${batchLabel ?? 'loading…'}`, clear: () => set('batch', '') })
@@ -54,6 +78,12 @@ export default function LeadFiltersBar({ filters, onChange, facets, tags, batchL
   if (filters.hasEmail) chips.push({ key: 'he', label: 'Has email', clear: () => set('hasEmail', false) })
   if (filters.hasInstagram) chips.push({ key: 'hi', label: 'Has Instagram', clear: () => set('hasInstagram', false) })
   if (filters.followUpDue) chips.push({ key: 'fd', label: 'Follow-up due', clear: () => set('followUpDue', false) })
+  if (filters.followUp) chips.push({ key: 'fu', label: `Follow-up: ${FOLLOW_UP_LABEL[filters.followUp]}`, clear: () => set('followUp', '') })
+  if (filters.minScore > 0) chips.push({ key: 'ms', label: `Score ${filters.minScore}+`, clear: () => set('minScore', 0) })
+  if (filters.hasPhone) chips.push({ key: 'hp', label: 'Has phone', clear: () => set('hasPhone', false) })
+  if (filters.hasWebsite) chips.push({ key: 'hw', label: 'Has website', clear: () => set('hasWebsite', false) })
+  if (filters.createdFrom) chips.push({ key: 'cf', label: `Added from ${formatDay(filters.createdFrom)}`, clear: () => set('createdFrom', '') })
+  if (filters.createdTo) chips.push({ key: 'ct', label: `Added until ${formatDay(filters.createdTo)}`, clear: () => set('createdTo', '') })
 
   return (
     <div className="space-y-2.5">
@@ -67,8 +97,23 @@ export default function LeadFiltersBar({ filters, onChange, facets, tags, batchL
         </Button>
       </div>
 
-      <Popover anchorRef={moreRef} open={moreOpen} onClose={() => setMoreOpen(false)} align="end" minWidth={320} className="p-4" role="dialog" ariaLabel="More filters">
+      <Popover anchorRef={moreRef} open={moreOpen} onClose={() => setMoreOpen(false)} align="end" minWidth={320} className="max-h-[75vh] overflow-y-auto p-4" role="dialog" ariaLabel="More filters">
         <div className="grid gap-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <p className={labelText}>Opportunity score</p>
+              <Select label="Opportunity score" value={String(filters.minScore)} onChange={v => set('minScore', Number(v))} options={SCORE_OPTIONS} />
+            </div>
+            <div>
+              <p className={labelText}>Follow-up</p>
+              <Select
+                label="Follow-up"
+                value={filters.followUp || ANY}
+                onChange={v => set('followUp', v === ANY ? '' : (v as FollowUpFilter))}
+                options={[{ value: ANY, label: 'Any' }, ...(Object.keys(FOLLOW_UP_LABEL) as FollowUpFilter[]).map(v => ({ value: v, label: FOLLOW_UP_LABEL[v] }))]}
+              />
+            </div>
+          </div>
           <div>
             <p className={labelText}>Country</p>
             <Select label="Country" value={filters.country || ANY} onChange={v => set('country', v === ANY ? '' : v)} options={facetOptions(facets?.countries, filters.country, 'Any country')} />
@@ -85,11 +130,31 @@ export default function LeadFiltersBar({ filters, onChange, facets, tags, batchL
             <p className={labelText}>Tag</p>
             <Select label="Tag" value={filters.tag || ANY} onChange={v => set('tag', v === ANY ? '' : v)} options={[{ value: ANY, label: 'Any tag' }, ...tags.map(t => ({ value: t.id, label: t.name }))]} />
           </div>
+          <div>
+            <p className={labelText}>Discovery batch</p>
+            <Select
+              label="Discovery batch"
+              value={filters.batch || ANY}
+              onChange={v => set('batch', v === ANY ? '' : v)}
+              options={[{ value: ANY, label: batches ? 'Any batch' : 'Loading batches…' }, ...(filters.batch && !batches?.some(b => b.value === filters.batch) ? [{ value: filters.batch, label: batchLabel ?? 'Selected batch' }] : []), ...(batches ?? [])]}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="block">
+              <span className={labelText}>Added from</span>
+              <input type="date" value={filters.createdFrom} max={filters.createdTo || undefined} onChange={e => set('createdFrom', e.target.value)} className={cx(fieldBase, 'h-9')} />
+            </label>
+            <label className="block">
+              <span className={labelText}>Added until</span>
+              <input type="date" value={filters.createdTo} min={filters.createdFrom || undefined} onChange={e => set('createdTo', e.target.value)} className={cx(fieldBase, 'h-9')} />
+            </label>
+          </div>
           <div className="mt-1 space-y-3 border-t border-slate-100 pt-3 dark:border-white/[0.07]">
-            <Switch checked={filters.noWebsite} onChange={v => set('noWebsite', v)} label="No website" />
+            <Switch checked={filters.hasPhone} onChange={v => set('hasPhone', v)} label="Has phone" />
+            <Switch checked={filters.noWebsite} onChange={v => onChange({ ...filters, noWebsite: v, hasWebsite: v ? false : filters.hasWebsite })} label="No website" />
+            <Switch checked={filters.hasWebsite} onChange={v => onChange({ ...filters, hasWebsite: v, noWebsite: v ? false : filters.noWebsite })} label="Has website" />
             <Switch checked={filters.hasEmail} onChange={v => set('hasEmail', v)} label="Has email" />
             <Switch checked={filters.hasInstagram} onChange={v => set('hasInstagram', v)} label="Has Instagram" />
-            <Switch checked={filters.followUpDue} onChange={v => set('followUpDue', v)} label="Follow-up due" />
           </div>
         </div>
       </Popover>

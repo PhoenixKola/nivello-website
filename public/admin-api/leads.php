@@ -128,7 +128,7 @@ api_run([
     'GET list' => function () {
         $state = Store::instance()->read();
         $filters = parse_lead_filters($_GET);
-        $matched = filter_leads($state['leads'], $filters);
+        $matched = filter_leads($state['leads'], $filters, tz_offset_param($_GET['tzOffset'] ?? 0));
         $now = time();
 
         $sort = in_array($_GET['sort'] ?? '', LEAD_SORTS, true) ? $_GET['sort'] : 'updated';
@@ -183,20 +183,14 @@ api_run([
     'GET followups' => function () {
         $state = Store::instance()->read();
         $bucket = v_enum($_GET['bucket'] ?? 'overdue', 'Bucket', ['overdue', 'today', 'upcoming', 'done']);
-        // The browser's UTC offset (minutes, as from Date#getTimezoneOffset) defines "today".
-        $offset = v_int($_GET['tzOffset'] ?? 0, 'Timezone offset', -900, 900) * 60;
         $now = time();
-        $localNow = $now - $offset;
-        $todayEnd = $localNow - ($localNow % 86400) + 86399 + $offset;
+        $todayEnd = local_day_end($now, v_int($_GET['tzOffset'] ?? 0, 'Timezone offset', -900, 900));
         $buckets = ['overdue' => [], 'today' => [], 'upcoming' => [], 'done' => []];
         foreach ($state['leads'] as $lead) {
-            $ts = iso_to_ts($lead['followUpAt'] ?? null);
-            if ($ts === null) {
-                continue;
+            $key = follow_up_bucket($lead, $now, $todayEnd);
+            if ($key !== null) {
+                $buckets[$key][] = $lead;
             }
-            $closed = !empty($lead['followUpCompletedAt']) || in_array($lead['status'], CLOSED_STATUSES, true);
-            $key = $closed ? 'done' : ($ts < $now ? 'overdue' : ($ts <= $todayEnd ? 'today' : 'upcoming'));
-            $buckets[$key][] = $lead;
         }
         $items = $buckets[$bucket];
         usort($items, fn ($a, $b) => $bucket === 'done' ? strcmp($b['followUpAt'], $a['followUpAt']) : strcmp($a['followUpAt'], $b['followUpAt']));
@@ -356,8 +350,11 @@ api_run([
     },
 
     'POST complete-follow-up' => function () {
-        $id = v_id(json_body()['id'] ?? '', 'lead');
-        return Store::instance()->mutate(function (array &$state) use ($id) {
+        $body = json_body();
+        $id = v_id($body['id'] ?? '', 'lead');
+        $next = v_datetime($body['next'] ?? null, 'Next follow-up');
+        $nextAction = array_key_exists('nextAction', $body) ? v_string($body['nextAction'], 'Next action', 300) : null;
+        return Store::instance()->mutate(function (array &$state) use ($id, $next, $nextAction) {
             $i = find_lead_index($state, $id);
             if ($state['leads'][$i]['followUpAt'] === null) {
                 throw new ApiError('VALIDATION_ERROR', 'This lead has no follow-up to complete.', 422);
@@ -365,9 +362,21 @@ api_run([
             $state['leads'][$i]['followUpCompletedAt'] = now_iso();
             $state['leads'][$i]['updatedAt'] = now_iso();
             add_activity($state, $id, 'follow_up_completed', 'Follow-up marked done');
+            $changes = [];
+            if ($next !== null) {
+                $changes['followUpAt'] = $next;
+            }
+            if ($nextAction !== null) {
+                $changes['nextAction'] = $nextAction;
+            }
+            if ($changes) {
+                apply_lead_changes($state, $i, $changes);
+            }
             return lead_detail($state, $id);
         });
     },
+
+    'GET stats' => fn () => lead_forge_stats(Store::instance()->read(), time(), tz_offset_param($_GET['tzOffset'] ?? 0)),
 
     'POST enrich' => function () {
         $id = v_id(json_body()['id'] ?? '', 'lead');

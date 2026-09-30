@@ -11,8 +11,8 @@ import { StatusBadge } from '../ui/Badge'
 import { Button } from '../ui/Button'
 import { Card } from '../ui/Card'
 import { EmptyState, Pagination, Skeleton, Tabs } from '../ui/Controls'
-import { useToast } from '../ui/Toast'
 import { cx, focusRing } from '../ui/styles'
+import CompleteFollowUpDialog from './CompleteFollowUpDialog'
 import ContactActions from './ContactActions'
 
 type Bucket = 'overdue' | 'today' | 'upcoming' | 'done'
@@ -26,7 +26,7 @@ const EMPTY: Record<Bucket, string> = {
 
 export default function FollowUps() {
   const { dataVersion, openLead, notifyChanged } = useAdmin()
-  const toast = useToast()
+  const [completing, setCompleting] = useState<LeadSummary | null>(null)
   const now = useNow(60000)
   const [bucket, setBucket] = useState<Bucket>('overdue')
   const [page, setPage] = useState(1)
@@ -47,16 +47,6 @@ export default function FollowUps() {
       cancelled = true
     }
   }, [bucket, page, dataVersion])
-
-  const complete = async (id: string) => {
-    try {
-      await api.completeFollowUp(id)
-      toast.success('Follow-up marked done')
-      notifyChanged()
-    } catch (err) {
-      toast.error('Could not update follow-up', (err as Error).message)
-    }
-  }
 
   const counts = data?.counts
   return (
@@ -106,7 +96,7 @@ export default function FollowUps() {
                   </div>
                   <ContactActions lead={lead} only={['call', 'whatsapp', 'email']} />
                   {bucket !== 'done' && (
-                    <Button size="sm" variant="secondary" icon={<CalendarCheck className="h-3.5 w-3.5" />} onClick={() => complete(lead.id)}>
+                    <Button size="sm" variant="secondary" icon={<CalendarCheck className="h-3.5 w-3.5" />} onClick={() => setCompleting(lead)}>
                       Done
                     </Button>
                   )}
@@ -124,6 +114,14 @@ export default function FollowUps() {
           </div>
         )}
       </Card>
+      <CompleteFollowUpDialog
+        lead={completing}
+        onClose={() => setCompleting(null)}
+        onDone={() => {
+          setCompleting(null)
+          notifyChanged()
+        }}
+      />
     </div>
   )
 }

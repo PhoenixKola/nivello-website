@@ -23,6 +23,54 @@ export function templateBytes(): Promise<ArrayBuffer> {
   return templateCache
 }
 
+let logoCache: Promise<string | null> | null = null
+
+/** The Nivello logo embedded in the template, as a data URL (null if it cannot be read). */
+export function templateLogo(): Promise<string | null> {
+  logoCache ??= (async () => {
+    try {
+      const { default: JSZip } = await import('jszip')
+      const zip = await JSZip.loadAsync(await templateBytes())
+      const file = zip.file('word/media/image1.png')
+      return file ? `data:image/png;base64,${await file.async('base64')}` : null
+    } catch {
+      logoCache = null
+      return null
+    }
+  })()
+  return logoCache
+}
+
+/** Colours measured from Word's rendering of the template (hex without #), shared by the PDF and the preview. */
+export const TEMPLATE_COLORS = {
+  ink: '0F172A',
+  text: '475569',
+  muted: '64748B',
+  faint: '94A3B8',
+  blue: '159BFF',
+  gold: 'FFBF43',
+  border: 'D9E2EC',
+  metaBorder: 'CBD5E1',
+  panel: 'F7F9FC',
+  tableHead: 'E9EEF5',
+  rowAlt: 'FAFBFD',
+  rowLine: 'E7ECF2',
+  sectionTotal: 'EAF6FF',
+  boxLine: 'E2E8F0',
+  boxTotal: 'EEF7FD'
+} as const
+
+/** Item table column widths in mm (description, quantity, price, total) on the 181 mm text width. */
+export const TEMPLATE_COLUMNS_MM = [113.5, 18.5, 24.6, 24.4] as const
+
+/** The supplier block and footer text printed by the template. */
+export const TEMPLATE_SUPPLIER = {
+  name: 'Nivello',
+  lines: ['Soluzioni digitali', 'office@nivello.it', 'www.nivello.it'],
+  footerBrand: 'Nivello · Soluzioni digitali',
+  footerContact: 'office@nivello.it · www.nivello.it'
+} as const
+
 /** Template wording; Italian is the template's own text, English replaces it word for word. */
 export const TEMPLATE_LABELS = {
   it: {

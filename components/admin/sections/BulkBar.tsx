@@ -23,6 +23,9 @@ type Props = {
   onDone: () => void
 }
 
+type BulkOp = 'status' | 'priority' | 'followUp' | 'addTag' | 'removeTag'
+const CONFIRM_ABOVE = 25
+
 function MenuButton({ label, icon, items }: { label: string; icon: React.ReactNode; items: { label: string; onSelect: () => void }[] }) {
   return (
     <Menu
@@ -56,10 +59,11 @@ export default function BulkBar({ ids, tags, totalMatching, allMatchingSelected,
   const [tagMode, setTagMode] = useState<'addTag' | 'removeTag' | null>(null)
   const [tagId, setTagId] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [pending, setPending] = useState<{ title: string; run: () => Promise<boolean> } | null>(null)
   const [busy, setBusy] = useState(false)
   const count = ids.length
 
-  const run = async (op: 'status' | 'priority' | 'followUp' | 'addTag' | 'removeTag', value: string | null, message: string) => {
+  const apply = async (op: BulkOp, value: string | null, message: string) => {
     setBusy(true)
     try {
       const result = await api.bulk(ids, op, value)
@@ -72,6 +76,21 @@ export default function BulkBar({ ids, tags, totalMatching, allMatchingSelected,
     } finally {
       setBusy(false)
     }
+  }
+
+  /** Changes to many leads at once ask first; small selections apply immediately. */
+  const run = async (op: BulkOp, value: string | null, message: string, description: string) => {
+    if (count <= CONFIRM_ABOVE) return apply(op, value, message)
+    return new Promise<boolean>(resolve => {
+      setPending({
+        title: `${description} for ${formatNumber(count)} leads?`,
+        run: async () => {
+          const ok = await apply(op, value, message)
+          resolve(ok)
+          return ok
+        }
+      })
+    })
   }
 
   const exportSelected = async () => {
@@ -107,8 +126,8 @@ export default function BulkBar({ ids, tags, totalMatching, allMatchingSelected,
           </button>
         )}
         <span className="mx-1 hidden h-5 w-px bg-white/20 sm:block dark:bg-slate-900/15" aria-hidden="true" />
-        <MenuButton label="Status" icon={<Flag className="h-3.5 w-3.5" />} items={LEAD_STATUSES.map(s => ({ label: s.label, onSelect: () => run('status', s.value satisfies LeadStatus, `Status set to ${s.label}`) }))} />
-        <MenuButton label="Priority" icon={<Flag className="h-3.5 w-3.5" />} items={PRIORITIES.map(p => ({ label: p.label, onSelect: () => run('priority', p.value satisfies LeadPriority, `Priority set to ${p.label}`) }))} />
+        <MenuButton label="Status" icon={<Flag className="h-3.5 w-3.5" />} items={LEAD_STATUSES.map(s => ({ label: s.label, onSelect: () => run('status', s.value satisfies LeadStatus, `Status set to ${s.label}`, `Set status to ${s.label}`) }))} />
+        <MenuButton label="Priority" icon={<Flag className="h-3.5 w-3.5" />} items={PRIORITIES.map(p => ({ label: p.label, onSelect: () => run('priority', p.value satisfies LeadPriority, `Priority set to ${p.label}`, `Set priority to ${p.label}`) }))} />
         <MenuButton
           label="Tags"
           icon={<TagIcon className="h-3.5 w-3.5" />}
@@ -117,10 +136,14 @@ export default function BulkBar({ ids, tags, totalMatching, allMatchingSelected,
             { label: 'Remove tag…', onSelect: () => setTagMode('removeTag') }
           ]}
         />
-        <button type="button" onClick={() => setFollowUpOpen(true)} className={cx('inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium hover:bg-white/10 dark:hover:bg-slate-900/10', focusRing)}>
-          <CalendarClock className="h-3.5 w-3.5" />
-          Follow-up
-        </button>
+        <MenuButton
+          label="Follow-up"
+          icon={<CalendarClock className="h-3.5 w-3.5" />}
+          items={[
+            { label: 'Set follow-up…', onSelect: () => setFollowUpOpen(true) },
+            { label: 'Clear follow-up', onSelect: () => run('followUp', null, 'Follow-ups cleared', 'Clear follow-ups') }
+          ]}
+        />
         <button type="button" onClick={exportSelected} className={cx('inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium hover:bg-white/10 dark:hover:bg-slate-900/10', focusRing)}>
           <Download className="h-3.5 w-3.5" />
           Export
@@ -148,7 +171,8 @@ export default function BulkBar({ ids, tags, totalMatching, allMatchingSelected,
               variant="primary"
               loading={busy}
               onClick={async () => {
-                if (await run('followUp', followUp, followUp ? 'Follow-up scheduled' : 'Follow-up cleared')) setFollowUpOpen(false)
+                setFollowUpOpen(false)
+                await run('followUp', followUp, followUp ? 'Follow-up scheduled' : 'Follow-up cleared', followUp ? 'Schedule a follow-up' : 'Clear follow-ups')
               }}
             >
               {followUp ? 'Schedule' : 'Clear follow-ups'}
@@ -174,7 +198,10 @@ export default function BulkBar({ ids, tags, totalMatching, allMatchingSelected,
               loading={busy}
               disabled={!tagId}
               onClick={async () => {
-                if (tagMode && (await run(tagMode, tagId, tagMode === 'addTag' ? 'Tag added' : 'Tag removed'))) setTagMode(null)
+                if (!tagMode) return
+                const tagName = tags.find(t => t.id === tagId)?.name ?? 'tag'
+                setTagMode(null)
+                await run(tagMode, tagId, tagMode === 'addTag' ? 'Tag added' : 'Tag removed', tagMode === 'addTag' ? `Add “${tagName}”` : `Remove “${tagName}”`)
               }}
             >
               {tagMode === 'addTag' ? 'Add tag' : 'Remove tag'}
@@ -188,6 +215,17 @@ export default function BulkBar({ ids, tags, totalMatching, allMatchingSelected,
           <p className="text-sm text-slate-500">No tags exist yet. Create tags from a lead or in Settings.</p>
         )}
       </Modal>
+
+      <ConfirmDialog
+        open={pending !== null}
+        onClose={() => setPending(null)}
+        title={pending?.title ?? ''}
+        description="This changes every selected lead and is recorded in each lead’s activity."
+        confirmLabel="Apply to all"
+        onConfirm={async () => {
+          if (pending && (await pending.run())) setPending(null)
+        }}
+      />
 
       <ConfirmDialog
         open={confirmDelete}

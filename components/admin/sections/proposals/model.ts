@@ -193,19 +193,8 @@ export const DOC_COPY = {
   }
 }
 
-export const NIVELLO = { name: 'Nivello', email: 'office@nivello.it', web: 'www.nivello.it' }
-
 export function docLocale(language: 'en' | 'it') {
   return language === 'it' ? 'it-IT' : 'en-GB'
-}
-
-export function docMoney(cents: number, currency: string, language: 'en' | 'it') {
-  return new Intl.NumberFormat(docLocale(language), { style: 'currency', currency, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(cents / 100)
-}
-
-export function docDate(date: string | null, language: 'en' | 'it') {
-  if (!date) return '—'
-  return new Intl.DateTimeFormat(docLocale(language), { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${date}T00:00:00Z`))
 }
 
 export function formatQuantity(q: number, language: 'en' | 'it') {

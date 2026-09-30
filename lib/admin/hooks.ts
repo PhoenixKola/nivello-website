@@ -9,13 +9,15 @@ export type AdminSection =
   | 'followups'
   | 'duplicates'
   | 'history'
+  | 'insights'
   | 'analytics'
   | 'inbox'
+  | 'calendar'
   | 'projects'
   | 'proposals'
   | 'health'
   | 'settings'
-const SECTIONS: AdminSection[] = ['dashboard', 'find', 'leads', 'followups', 'duplicates', 'history', 'analytics', 'inbox', 'projects', 'proposals', 'health', 'settings']
+const SECTIONS: AdminSection[] = ['dashboard', 'find', 'leads', 'followups', 'duplicates', 'history', 'insights', 'analytics', 'inbox', 'calendar', 'projects', 'proposals', 'health', 'settings']
 
 export type AdminRoute = { section: AdminSection; params: URLSearchParams }
 

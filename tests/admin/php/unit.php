@@ -183,6 +183,106 @@ check('opportunity score is deterministic and explained', function () {
     ensure(lead_score($lead, 1_700_000_000) === $score, 'deterministic');
 });
 
+check('a complete business profile is a transparent score reason', function () {
+    $lead = blank_lead();
+    $lead['phone'] = '+355 69 123 4567';
+    $base = lead_score($lead, 1_700_000_000)['score'];
+    $lead['category'] = 'Dentist';
+    $lead['address'] = 'Rruga 1';
+    $lead['city'] = 'Tirana';
+    $score = lead_score($lead, 1_700_000_000);
+    ensure(in_array('Complete business profile', array_column($score['reasons'], 'label'), true), 'reason listed');
+    ensure($score['score'] === $base + 5, 'adds 5 points');
+});
+
+check('lead filters: follow-up buckets, minimum score, phone and created dates', function () {
+    $now = strtotime('2026-03-10T12:00:00Z');
+    $make = function (string $id, ?string $followUpAt, array $extra = []) {
+        $lead = array_merge(blank_lead(), ['id' => $id, 'companyName' => $id, 'followUpAt' => $followUpAt, 'createdAt' => '2026-03-01T10:00:00Z'], $extra);
+        return $lead;
+    };
+    $leads = [
+        $make('overdue', '2026-03-09T09:00:00Z'),
+        $make('today', '2026-03-10T15:00:00Z', ['phone' => '+39 010 555 1234']),
+        $make('upcoming', '2026-03-12T09:00:00Z'),
+        $make('none', null),
+        $make('done', '2026-03-09T09:00:00Z', ['followUpCompletedAt' => '2026-03-09T10:00:00Z']),
+    ];
+    $ids = function (array $filters, int $tz = 0) use ($leads, $now) {
+        $f = parse_lead_filters($filters);
+        return array_column(array_values(array_filter($leads, fn ($l) => lead_matches($l, $f, $now, $tz))), 'id');
+    };
+    ensure($ids(['followUp' => 'overdue']) === ['overdue'], 'overdue');
+    ensure($ids(['followUp' => 'today']) === ['today'], 'today');
+    ensure($ids(['followUp' => 'upcoming']) === ['upcoming'], 'upcoming');
+    ensure($ids(['followUp' => 'none']) === ['none', 'done'], 'none includes completed');
+    ensure($ids(['hasPhone' => '1']) === ['today'], 'has phone');
+    ensure($ids(['minScore' => '60']) === ['today'], 'min score ' . json_encode(array_map(fn ($l) => lead_score($l, $now)['score'], $leads)));
+    ensure($ids(['createdFrom' => '2026-03-02']) === [] && count($ids(['createdTo' => '2026-03-01'])) === 5, 'created range is inclusive by day');
+    // 15:00 UTC is already "tomorrow" in UTC+10 (offset -600), so it is no longer due today there.
+    ensure($ids(['followUp' => 'today'], -600) === [], 'timezone decides today');
+    ensure(parse_lead_filters(['followUp' => 'bogus', 'minScore' => '500', 'createdFrom' => '2026-02-31'])['followUp'] === '' && parse_lead_filters(['minScore' => '500'])['minScore'] === 100 && parse_lead_filters(['createdFrom' => '2026-02-31'])['createdFrom'] === '', 'invalid filters are dropped');
+});
+
+check('agenda places each dated record once, on the right local day', function () {
+    require_once __DIR__ . '/../../../public/admin-api/_agenda.php';
+    $now = strtotime('2026-03-10T12:00:00Z');
+    $state = Store::emptyState();
+    $lead = array_merge(blank_lead(), ['companyName' => 'Studio Rossi', 'followUpAt' => '2026-03-10T23:30:00Z']);
+    $project = array_merge(blank_project(), ['name' => 'Aurora site', 'clientName' => 'Aurora Fitness', 'stage' => 'development', 'targetDate' => '2026-03-14']);
+    $project['tasks'] = [
+        ['id' => 'task_' . str_repeat('a', 16), 'title' => 'Deploy production', 'status' => 'todo', 'dueDate' => '2026-03-09', 'milestoneId' => null],
+        ['id' => 'task_' . str_repeat('b', 16), 'title' => 'Old done task', 'status' => 'done', 'dueDate' => '2026-03-08', 'milestoneId' => null],
+    ];
+    $project['milestones'] = [['id' => 'pms_' . str_repeat('c', 16), 'title' => 'Launch', 'status' => 'in_progress', 'dueDate' => '2026-03-12']];
+    $proposal = array_merge(blank_proposal(), ['number' => 'NIV-2026-001', 'title' => 'Website', 'status' => 'sent', 'validUntil' => '2026-03-13', 'clientCompany' => 'Client X']);
+    $state['leads'][] = $lead;
+    $state['projects'][] = $project;
+    $state['proposals'][] = $proposal;
+    $state['calendarEvents'][] = ['id' => 'evt_' . str_repeat('d', 16)] + calendar_event_fields(['title' => 'Trade fair', 'allDay' => true, 'start' => '2026-03-11', 'end' => '2026-03-13']) + ['createdAt' => now_iso(), 'updatedAt' => now_iso()];
+    $state['calendarEvents'][] = ['id' => 'evt_' . str_repeat('e', 16)] + calendar_event_fields(['title' => 'Call accountant', 'allDay' => false, 'start' => '2026-03-10T14:00:00Z']) + ['createdAt' => now_iso(), 'updatedAt' => now_iso()];
+
+    $items = agenda_items($state, '2026-03-01', '2026-03-31', 0, $now);
+    $byId = array_column($items, null, 'id');
+    ensure(count($items) === count($byId), 'ids are unique');
+    ensure($byId['lead:' . $lead['id']]['date'] === '2026-03-10' && !$byId['lead:' . $lead['id']]['allDay'], 'follow-up on its UTC day');
+    ensure(in_array('lead:' . $lead['id'], array_column(agenda_items($state, '2026-03-11', '2026-03-11', -60, $now), 'id'), true), 'follow-up moves to the next local day in UTC+1');
+    ensure($byId['task:task_' . str_repeat('a', 16)]['date'] === '2026-03-09' && $byId['task:task_' . str_repeat('a', 16)]['link'] === ['type' => 'project', 'id' => $project['id'], 'tab' => 'tasks'], 'task links to its project tab');
+    ensure($byId['task:task_' . str_repeat('b', 16)]['done'] === true, 'done task flagged');
+    ensure($byId['milestone:pms_' . str_repeat('c', 16)]['link']['tab'] === 'milestones', 'milestone link');
+    ensure($byId['project:' . $project['id']]['date'] === '2026-03-14', 'project target');
+    ensure($byId['proposal:' . $proposal['id']]['link'] === ['type' => 'proposal', 'id' => $proposal['id'], 'tab' => null], 'proposal expiry link');
+    ensure($byId['event:evt_' . str_repeat('d', 16)]['endDate'] === '2026-03-13' && $byId['event:evt_' . str_repeat('d', 16)]['allDay'], 'multi-day all-day event');
+    ensure(count(agenda_items($state, '2026-03-15', '2026-03-31', 0, $now)) === 0, 'range excludes other days');
+
+    $attention = overview_attention($state, [['id' => 'mon_' . str_repeat('f', 16), 'name' => 'Main site', 'state' => 'down', 'last' => ['error' => 'Timed out'], 'warnings' => []]], $now, 0);
+    $urgency = array_column($attention, 'urgency', 'id');
+    ensure(count($attention) === count($urgency), 'attention has no duplicates');
+    ensure($urgency['task:task_' . str_repeat('a', 16)] === 'overdue', 'overdue task');
+    ensure($urgency['lead:' . $lead['id']] === 'today', 'follow-up today');
+    ensure($urgency['event:evt_' . str_repeat('e', 16)] === 'today', 'manual event today');
+    ensure($urgency['proposal:' . $proposal['id']] === 'soon' && $urgency['project:' . $project['id']] === 'soon', 'expiring proposal and due project');
+    ensure($urgency['health:mon_' . str_repeat('f', 16)] === 'issue', 'site down');
+    ensure(!isset($urgency['task:task_' . str_repeat('b', 16)]) && !isset($urgency['milestone:pms_' . str_repeat('c', 16)]), 'done and non-urgent items stay out');
+    ensure(array_key_first($urgency) === 'task:task_' . str_repeat('a', 16), 'overdue first');
+
+    $upcoming = array_column(overview_upcoming($state, array_keys($urgency), $now, 0), 'id');
+    ensure(in_array('milestone:pms_' . str_repeat('c', 16), $upcoming, true) && in_array('event:evt_' . str_repeat('d', 16), $upcoming, true), 'upcoming lists future items');
+    ensure(!array_intersect($upcoming, array_keys($urgency)), 'upcoming never repeats attention items');
+});
+
+check('calendar events validate dates, order, length and text', function () {
+    require_once __DIR__ . '/../../../public/admin-api/_agenda.php';
+    expect_api_error(fn () => calendar_event_fields(['title' => '', 'start' => '2026-03-10']), 'VALIDATION_ERROR');
+    expect_api_error(fn () => calendar_event_fields(['title' => 'X', 'allDay' => true, 'start' => '2026-03-10T10:00:00Z']), 'VALIDATION_ERROR');
+    expect_api_error(fn () => calendar_event_fields(['title' => 'X', 'allDay' => true, 'start' => '2026-03-10', 'end' => '2026-03-09']), 'VALIDATION_ERROR');
+    expect_api_error(fn () => calendar_event_fields(['title' => 'X', 'allDay' => false, 'start' => '2026-03-10T10:00:00Z', 'end' => '2028-03-10T10:00:00Z']), 'VALIDATION_ERROR');
+    expect_api_error(fn () => calendar_event_fields(['title' => 'X', 'start' => '2026-03-10', 'category' => 'party']), 'VALIDATION_ERROR');
+    expect_api_error(fn () => calendar_event_fields(['title' => str_repeat('x', 161), 'start' => '2026-03-10']), 'VALIDATION_ERROR');
+    $timed = calendar_event_fields(['title' => ' Call ', 'allDay' => false, 'start' => '2026-03-10T10:00:00+01:00', 'end' => '2026-03-10T10:00:00+01:00']);
+    ensure($timed['start'] === '2026-03-10T09:00:00Z' && $timed['end'] === null && $timed['title'] === 'Call', 'normalized timed event');
+});
+
 check('CSV export cells are protected against formula injection', function () {
     ensure(csv_safe('=SUM(A1)') === "'=SUM(A1)" && csv_safe('+1') === "'+1" && csv_safe('@x') === "'@x" && csv_safe('Acme') === 'Acme', 'escaping');
 });

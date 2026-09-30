@@ -225,9 +225,9 @@ body {
   .admin-progress-sheen { animation: none; opacity: 0; }
 }
 
-/* Admin proposals: printing shows only the proposal document, on white A4 pages. */
+/* Admin proposals: printing shows only the proposal document; its sheets carry the template margins. */
 @media print {
-  @page { size: A4; margin: 16mm 14mm; }
+  @page { size: A4; margin: 0; }
   body:has([data-print-root]) { background: #fff !important; }
   body:has([data-print-root]) * { visibility: hidden; }
   body:has([data-print-root]) [data-print-root],

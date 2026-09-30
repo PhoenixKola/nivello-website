@@ -40,6 +40,7 @@ import { ConfirmDialog, Drawer } from '../ui/Overlay'
 import TagPicker from '../ui/TagPicker'
 import { useToast } from '../ui/Toast'
 import { cx, fieldBase, focusRing, labelText, surface } from '../ui/styles'
+import CompleteFollowUpDialog from './CompleteFollowUpDialog'
 import ContactActions from './ContactActions'
 
 type SaveState = 'idle' | 'saving' | 'saved'
@@ -148,6 +149,7 @@ function LeadDetailView({ id, onClose }: { id: string; onClose: () => void }) {
   const [logBusy, setLogBusy] = useState(false)
   const [enriching, setEnriching] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [completing, setCompleting] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -310,13 +312,7 @@ function LeadDetailView({ id, onClose }: { id: string; onClose: () => void }) {
                       <Button
                         variant="secondary"
                         icon={<CalendarCheck className="h-4 w-4" />}
-                        onClick={async () => {
-                          try {
-                            apply(await api.completeFollowUp(id))
-                          } catch (err) {
-                            toast.error('Could not update follow-up', (err as Error).message)
-                          }
-                        }}
+                        onClick={() => setCompleting(true)}
                       >
                         Mark done
                       </Button>
@@ -571,6 +567,14 @@ function LeadDetailView({ id, onClose }: { id: string; onClose: () => void }) {
         </div>
       </div>
 
+      <CompleteFollowUpDialog
+        lead={completing ? lead : null}
+        onClose={() => setCompleting(false)}
+        onDone={next => {
+          setCompleting(false)
+          apply(next)
+        }}
+      />
       <ConfirmDialog
         open={confirmDelete}
         onClose={() => setConfirmDelete(false)}

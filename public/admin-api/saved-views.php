@@ -11,10 +11,7 @@ function clean_view_filters(mixed $filters): array
     if (!is_array($filters)) {
         throw new ApiError('VALIDATION_ERROR', 'View filters are invalid.', 422);
     }
-    $parsed = parse_lead_filters($filters);
-    $parsed['createdFrom'] = $parsed['createdFrom'] ? now_iso($parsed['createdFrom']) : null;
-    $parsed['createdTo'] = $parsed['createdTo'] ? now_iso($parsed['createdTo']) : null;
-    return $parsed;
+    return parse_lead_filters($filters);
 }
 
 api_run([
@@ -27,7 +24,7 @@ api_run([
             if (count($state['savedViews']) >= 50) {
                 throw new ApiError('VALIDATION_ERROR', 'Saved view limit reached (50).', 422);
             }
-            $view = ['id' => new_id('view'), 'name' => $name, 'filters' => $filters, 'createdAt' => now_iso()];
+            $view = ['id' => new_id('view'), 'name' => $name, 'filters' => $filters, 'isDefault' => false, 'createdAt' => now_iso()];
             $state['savedViews'][] = $view;
             return ['view' => $view, 'views' => $state['savedViews']];
         });
@@ -35,12 +32,14 @@ api_run([
     'POST update' => function () {
         $body = json_body();
         $id = v_id($body['id'] ?? '', 'view');
-        $name = v_string($body['name'] ?? '', 'View name', 60, true);
+        $name = array_key_exists('name', $body) ? v_string($body['name'], 'View name', 60, true) : null;
         $filters = array_key_exists('filters', $body) ? clean_view_filters($body['filters']) : null;
         return Store::instance()->mutate(function (array &$state) use ($id, $name, $filters) {
             foreach ($state['savedViews'] as $i => $view) {
                 if ($view['id'] === $id) {
-                    $state['savedViews'][$i]['name'] = $name;
+                    if ($name !== null) {
+                        $state['savedViews'][$i]['name'] = $name;
+                    }
                     if ($filters !== null) {
                         $state['savedViews'][$i]['filters'] = $filters;
                     }
@@ -48,6 +47,19 @@ api_run([
                 }
             }
             throw new ApiError('NOT_FOUND', 'Saved view not found.', 404);
+        });
+    },
+    'POST set-default' => function () {
+        $raw = json_body()['id'] ?? null;
+        $id = $raw === null ? null : v_id($raw, 'view');
+        return Store::instance()->mutate(function (array &$state) use ($id) {
+            if ($id !== null && !in_array($id, array_column($state['savedViews'], 'id'), true)) {
+                throw new ApiError('NOT_FOUND', 'Saved view not found.', 404);
+            }
+            foreach ($state['savedViews'] as $i => $view) {
+                $state['savedViews'][$i]['isDefault'] = $view['id'] === $id;
+            }
+            return ['views' => $state['savedViews']];
         });
     },
     'POST delete' => function () {

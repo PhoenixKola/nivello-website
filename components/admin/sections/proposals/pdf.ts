@@ -11,8 +11,11 @@ import {
   sectionFill,
   sectionLetter,
   summaryAdjustments,
+  TEMPLATE_COLORS,
+  TEMPLATE_COLUMNS_MM,
   TEMPLATE_LABELS,
-  templateBytes,
+  TEMPLATE_SUPPLIER,
+  templateLogo,
   textBlocks,
   tDate,
   tMoney
@@ -28,13 +31,8 @@ const LEFT = 14.5
 const RIGHT = 195.5
 const TOP = 11.8
 const BOTTOM = 283.5
-const COL = [14.5, 128.0, 146.5, 171.1, 195.5]
-const INK = '0F172A'
-const TEXT = '475569'
-const MUTED = '64748B'
-const FAINT = '94A3B8'
-const BLUE = '159BFF'
-const BORDER = 'D9E2EC'
+const COL = TEMPLATE_COLUMNS_MM.reduce((edges, width) => [...edges, Math.round((edges[edges.length - 1] + width) * 10) / 10], [LEFT])
+const { ink: INK, text: TEXT, muted: MUTED, faint: FAINT, blue: BLUE, border: BORDER } = TEMPLATE_COLORS
 
 type Rgb = [number, number, number]
 const rgb = (hex: string): Rgb => [parseInt(hex.slice(0, 2), 16), parseInt(hex.slice(2, 4), 16), parseInt(hex.slice(4, 6), 16)]
@@ -42,17 +40,6 @@ const rgb = (hex: string): Rgb => [parseInt(hex.slice(0, 2), 16), parseInt(hex.s
 /** jsPDF's built-in fonts are WinAnsi; map the few characters they lack. */
 function safe(text: string) {
   return text.replace(/−/g, '-').replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/…/g, '...').replace(/[  ]/g, ' ')
-}
-
-async function templateLogo(): Promise<string | null> {
-  try {
-    const { default: JSZip } = await import('jszip')
-    const zip = await JSZip.loadAsync(await templateBytes())
-    const file = zip.file('word/media/image1.png')
-    return file ? `data:image/png;base64,${await file.async('base64')}` : null
-  } catch {
-    return null
-  }
 }
 
 export async function buildProposalPdf(p: Proposal) {
@@ -122,8 +109,8 @@ export async function buildProposalPdf(p: Proposal) {
   box(105.05, partiesTop, 88.7, partiesHeight, BORDER, 0.3)
   const supplierTop = partiesTop + (partiesHeight - 26.9) / 2
   text(labels.supplier, 19.0, supplierTop + 6.7, 7, BLUE, { bold: true })
-  text('Nivello', 19.0, supplierTop + 11.4, 10.6, INK, { bold: true })
-  ;['Soluzioni digitali', 'office@nivello.it', 'www.nivello.it'].forEach((value, index) => text(value, 19.0, supplierTop + 15.1 + index * 3.4, 8, MUTED))
+  text(TEMPLATE_SUPPLIER.name, 19.0, supplierTop + 11.4, 10.6, INK, { bold: true })
+  ;TEMPLATE_SUPPLIER.lines.forEach((value, index) => text(value, 19.0, supplierTop + 15.1 + index * 3.4, 8, MUTED))
   let clientBaseline = partiesTop + (partiesHeight - clientHeight) / 2 + 2.6
   text(labels.client, 139.7, clientBaseline, 7, BLUE, { bold: true })
   clientBaseline += 4.3
@@ -277,8 +264,8 @@ export async function buildProposalPdf(p: Proposal) {
   for (let page = 1; page <= pages; page++) {
     doc.setPage(page)
     line(LEFT, 287.7, RIGHT, 287.7, BORDER, 0.25)
-    text('Nivello · Soluzioni digitali', LEFT, 291.5, 7, INK, { bold: true })
-    text('office@nivello.it · www.nivello.it', 120.5, 291.5, 7, MUTED, { align: 'center' })
+    text(TEMPLATE_SUPPLIER.footerBrand, LEFT, 291.5, 7, INK, { bold: true })
+    text(TEMPLATE_SUPPLIER.footerContact, 120.5, 291.5, 7, MUTED, { align: 'center' })
     text(`${labels.page} ${page} ${labels.of} ${pages}`, RIGHT, 291.5, 7, MUTED, { align: 'right' })
   }
 

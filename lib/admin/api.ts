@@ -1,5 +1,9 @@
 import type {
+  AgendaItem,
   AnalyticsSummary,
+  CalendarEvent,
+  CalendarEventInput,
+  LeadForgeStats,
   Batch,
   DashboardSummary,
   DuplicateItem,
@@ -109,6 +113,9 @@ async function request<T>(endpoint: string, action: string, query: Record<string
 
 const post = <T>(endpoint: string, action: string, body?: unknown) => request<T>(endpoint, action, {}, { method: 'POST', body: body ?? {} })
 
+/** The browser's UTC offset in minutes; the server uses it to decide what "today" means. */
+export const tzOffset = () => String(new Date().getTimezoneOffset())
+
 export function filtersToQuery(filters: Partial<LeadFilters>): Record<string, string> {
   const query: Record<string, string> = {}
   for (const [key, value] of Object.entries(filters)) {
@@ -161,21 +168,28 @@ export const api = {
   health: (refresh = false) => request<Health>('health', 'status', refresh ? { refresh: '1' } : {}),
   backupNow: () => post<{ file: string }>('health', 'backup'),
 
-  dashboard: () => request<DashboardSummary>('dashboard', 'summary'),
+  dashboard: () => request<DashboardSummary>('dashboard', 'summary', { tzOffset: tzOffset() }),
+
+  calendar: (from: string, to: string, signal?: AbortSignal) => request<{ from: string; to: string; today: string; items: AgendaItem[] }>('calendar', 'list', { from, to, tzOffset: tzOffset() }, { signal }),
+  calendarEvent: (id: string) => request<{ event: CalendarEvent }>('calendar', 'event', { id }),
+  createCalendarEvent: (event: CalendarEventInput) => post<{ event: CalendarEvent }>('calendar', 'event-create', { event }),
+  updateCalendarEvent: (id: string, event: CalendarEventInput) => post<{ event: CalendarEvent }>('calendar', 'event-update', { id, event }),
+  deleteCalendarEvent: (id: string) => post<{ deleted: boolean }>('calendar', 'event-delete', { id }),
 
   leads: (filters: Partial<LeadFilters>, page: number, pageSize: number, sort: LeadSort, dir: 'asc' | 'desc', signal?: AbortSignal, withIds = false) =>
     request<LeadList>(
       'leads',
       'list',
-      { ...filtersToQuery(filters), page: String(page), pageSize: String(pageSize), sort, dir, ...(withIds ? { withIds: '1' } : {}) },
+      { ...filtersToQuery(filters), page: String(page), pageSize: String(pageSize), sort, dir, tzOffset: tzOffset(), ...(withIds ? { withIds: '1' } : {}) },
       { signal }
     ),
   followUps: (bucket: 'overdue' | 'today' | 'upcoming' | 'done', page: number) =>
     request<Paged<LeadSummary> & { counts: Record<'overdue' | 'today' | 'upcoming' | 'done', number> }>('leads', 'followups', {
       bucket,
       page: String(page),
-      tzOffset: String(new Date().getTimezoneOffset())
+      tzOffset: tzOffset()
     }),
+  leadStats: () => request<LeadForgeStats>('leads', 'stats', { tzOffset: tzOffset() }),
   lead: (id: string) => request<LeadDetail>('leads', 'get', { id }),
   createLead: (lead: Record<string, unknown>, force = false) => post<LeadDetail>('leads', 'create', { lead, force }),
   updateLead: (id: string, changes: Record<string, unknown>) => post<LeadDetail>('leads', 'update', { id, changes }),
@@ -186,7 +200,8 @@ export const api = {
   deleteNote: (noteId: string) => post<LeadDetail>('leads', 'delete-note', { noteId }),
   logContact: (id: string, payload: { type: string; outcome: string; followUpAt?: string | null; nextAction?: string }) =>
     post<LeadDetail>('leads', 'log-contact', { id, ...payload }),
-  completeFollowUp: (id: string) => post<LeadDetail>('leads', 'complete-follow-up', { id }),
+  completeFollowUp: (id: string, next?: { at: string | null; nextAction?: string }) =>
+    post<LeadDetail>('leads', 'complete-follow-up', { id, ...(next?.at ? { next: next.at } : {}), ...(next?.nextAction !== undefined ? { nextAction: next.nextAction } : {}) }),
   enrich: (id: string) => post<LeadDetail & { result: { instagram: string | null; status: string; error: string | null } }>('leads', 'enrich', { id }),
 
   startDiscovery: (params: Record<string, unknown>) => post<{ batch: Batch }>('discovery', 'start', params),
@@ -268,13 +283,15 @@ export const api = {
   views: () => request<{ views: SavedView[] }>('saved-views', 'list'),
   createView: (name: string, filters: LeadFilters) => post<{ view: SavedView; views: SavedView[] }>('saved-views', 'create', { name, filters }),
   renameView: (id: string, name: string) => post<{ views: SavedView[] }>('saved-views', 'update', { id, name }),
+  updateViewFilters: (id: string, filters: LeadFilters) => post<{ views: SavedView[] }>('saved-views', 'update', { id, filters }),
+  setDefaultView: (id: string | null) => post<{ views: SavedView[] }>('saved-views', 'set-default', { id }),
   deleteView: (id: string) => post<{ views: SavedView[] }>('saved-views', 'delete', { id }),
 
   duplicates: (page: number) => request<Paged<DuplicateItem>>('duplicates', 'list', { page: String(page) }),
   mergeDuplicate: (id: string, fields: string[]) => post<{ merged: string[] }>('duplicates', 'merge', { id, fields }),
   dismissDuplicate: (id: string) => post<{ dismissed: boolean }>('duplicates', 'dismiss', { id }),
 
-  exportLeads: (target: { ids: string[] } | { batchId: string } | { filters: Partial<LeadFilters> }) => downloadCsv(target, 'nivello-leads.csv'),
+  exportLeads: (target: { ids: string[] } | { batchId: string } | { filters: Partial<LeadFilters> }) => downloadCsv('filters' in target ? { ...target, tzOffset: Number(tzOffset()) } : target, 'nivello-leads.csv'),
 
   importPreview: (file: File) => {
     const form = new FormData()

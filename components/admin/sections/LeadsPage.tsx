@@ -29,18 +29,18 @@ const SORTS: { value: string; label: string }[] = [
   { value: 'company:asc', label: 'Company A–Z' }
 ]
 
-function initialState(params: URLSearchParams): { filters: LeadFilters; view: string | null } {
+function initialState(params: URLSearchParams): { filters: LeadFilters; view: string | null; plain: boolean } {
   const view = BUILT_IN_VIEWS.find(v => v.id === params.get('view'))
   const filters: LeadFilters = { ...EMPTY_FILTERS, ...(view?.filters ?? {}) }
   const status = params.get('status')
   if (status && LEAD_STATUSES.some(s => s.value === status)) filters.status = [status as LeadStatus]
   const batch = params.get('batch')
   if (batch && /^batch_[a-f0-9]{16}$/.test(batch)) filters.batch = batch
-  return { filters, view: view?.id ?? (status || batch ? null : 'all') }
+  return { filters, view: view?.id ?? (status || batch ? null : 'all'), plain: !view && !status && !batch }
 }
 
 export default function LeadsPage() {
-  const { route, tags, dataVersion, openLead, notifyChanged } = useAdmin()
+  const { route, navigate, tags, dataVersion, openLead, notifyChanged } = useAdmin()
   const toast = useToast()
   const now = useNow(60000)
   const [initial] = useState(() => initialState(route.params))
@@ -57,7 +57,7 @@ export default function LeadsPage() {
   const [views, setViews] = useState<SavedView[]>([])
   const [batchLabel, setBatchLabel] = useState<string | null>(null)
   const [importOpen, setImportOpen] = useState(false)
-  const [newOpen, setNewOpen] = useState(false)
+  const [newOpen, setNewOpen] = useState(() => route.params.get('new') === '1')
   const [reload, setReload] = useState(0)
   const q = useDebounced(filters.q, 300)
   const query = useMemo(() => ({ ...filters, q }), [filters, q])
@@ -72,8 +72,24 @@ export default function LeadsPage() {
   }
 
   useEffect(() => {
-    api.views().then(result => setViews(result.views)).catch(() => {})
-  }, [])
+    let cancelled = false
+    api
+      .views()
+      .then(result => {
+        if (cancelled) return
+        setViews(result.views)
+        // A default saved view applies when Leads opens without a view or filter in the link.
+        const preferred = initial.plain ? result.views.find(v => v.isDefault) : undefined
+        if (preferred) {
+          setFiltersState(current => (current === initial.filters ? { ...EMPTY_FILTERS, ...preferred.filters } : current))
+          setActiveView(current => (current === initial.view ? preferred.id : current))
+        }
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [initial])
 
   useEffect(() => {
     if (!filters.batch) return
@@ -241,7 +257,10 @@ export default function LeadsPage() {
       <CsvImportModal open={importOpen} onClose={() => setImportOpen(false)} onImported={refresh} />
       <NewLeadModal
         open={newOpen}
-        onClose={() => setNewOpen(false)}
+        onClose={() => {
+          setNewOpen(false)
+          if (route.params.get('new')) navigate('leads')
+        }}
         onCreated={id => {
           refresh()
           openLead(id)

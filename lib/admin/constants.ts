@@ -1,4 +1,4 @@
-import type { BatchStatus, CompanySize, ContactLogType, ContactMethod, Currency, InboxStatus, LeadFilters, LeadPriority, LeadStatus, ProjectStage, ProposalStatus, ProposalUnit, SearchLanguage, TagColor } from './types'
+import type { AgendaSource, BatchStatus, CalendarEventCategory, CompanySize, ContactLogType, ContactMethod, Currency, InboxStatus, LeadFilters, LeadPriority, LeadStatus, ProjectStage, ProposalStatus, ProposalUnit, SearchLanguage, TagColor } from './types'
 
 export const LEAD_STATUSES: { value: LeadStatus; label: string }[] = [
   { value: 'new', label: 'New' },
@@ -83,13 +83,26 @@ export const EMPTY_FILTERS: LeadFilters = {
   noWebsite: false,
   hasEmail: false,
   hasInstagram: false,
-  followUpDue: false
+  followUpDue: false,
+  hasPhone: false,
+  hasWebsite: false,
+  minScore: 0,
+  followUp: '',
+  createdFrom: '',
+  createdTo: ''
 }
+
+/** Matches LEAD_SCORE_HIGH in _leads.php. */
+export const HIGH_SCORE = 70
 
 export const BUILT_IN_VIEWS: { id: string; name: string; filters: Partial<LeadFilters> }[] = [
   { id: 'all', name: 'All leads', filters: {} },
-  { id: 'new', name: 'New', filters: { status: ['new'] } },
-  { id: 'due', name: 'Follow-ups due', filters: { followUpDue: true } },
+  { id: 'new', name: 'New / uncontacted', filters: { status: ['new'] } },
+  { id: 'overdue', name: 'Follow-up overdue', filters: { followUp: 'overdue' } },
+  { id: 'today', name: 'Follow-up today', filters: { followUp: 'today' } },
+  { id: 'no-follow-up', name: 'No follow-up', filters: { followUp: 'none', status: ['new', 'contacted', 'follow_up', 'interested', 'proposal'] } },
+  { id: 'high-score', name: 'High opportunity', filters: { minScore: HIGH_SCORE } },
+  { id: 'no-website-phone', name: 'No website + phone', filters: { noWebsite: true, hasPhone: true } },
   { id: 'high', name: 'High priority', filters: { priority: ['high', 'urgent'] } },
   { id: 'no-website', name: 'No website', filters: { noWebsite: true } },
   { id: 'has-email', name: 'Has email', filters: { hasEmail: true } },
@@ -123,6 +136,14 @@ export const PROJECT_STAGES: { value: ProjectStage; label: string; dot: string }
 export const STAGE_LABEL = Object.fromEntries(PROJECT_STAGES.map(s => [s.value, s.label])) as Record<ProjectStage, string>
 export const OPEN_STAGES: ProjectStage[] = ['lead', 'discovery', 'proposal', 'approved', 'design', 'development', 'qa']
 
+/** Visual pipeline groups used by Projects and the Overview; every project keeps its exact stage. */
+export const WORKFLOW_GROUPS: { id: string; label: string; stages: ProjectStage[] }[] = [
+  { id: 'sales', label: 'Sales', stages: ['lead', 'discovery', 'proposal', 'approved'] },
+  { id: 'delivery', label: 'Delivery', stages: ['design', 'development', 'qa'] },
+  { id: 'completed', label: 'Completed', stages: ['delivered'] },
+  { id: 'aftercare', label: 'Aftercare', stages: ['maintenance', 'archived'] }
+]
+
 export const PROPOSAL_STATUSES: { value: ProposalStatus; label: string; tone: 'slate' | 'blue' | 'green' | 'red' | 'amber' }[] = [
   { value: 'draft', label: 'Draft', tone: 'slate' },
   { value: 'sent', label: 'Sent', tone: 'blue' },
@@ -140,4 +161,23 @@ export const PROPOSAL_UNITS: { value: ProposalUnit; label: string }[] = [
   { value: 'month', label: 'Month' },
   { value: 'item', label: 'Item' },
   { value: 'page', label: 'Page' }
+]
+
+export const AGENDA_SOURCES: { value: AgendaSource; label: string; short: string }[] = [
+  { value: 'lead', label: 'Leads', short: 'Follow-up' },
+  { value: 'task', label: 'Tasks', short: 'Task' },
+  { value: 'milestone', label: 'Milestones', short: 'Milestone' },
+  { value: 'project', label: 'Projects', short: 'Project target' },
+  { value: 'proposal', label: 'Proposals', short: 'Proposal expires' },
+  { value: 'event', label: 'Manual', short: 'Event' }
+]
+export const AGENDA_SOURCE_META = Object.fromEntries(AGENDA_SOURCES.map(s => [s.value, s])) as Record<AgendaSource, (typeof AGENDA_SOURCES)[number]>
+
+export const CALENDAR_EVENT_CATEGORIES: { value: CalendarEventCategory; label: string }[] = [
+  { value: '', label: 'No category' },
+  { value: 'meeting', label: 'Meeting' },
+  { value: 'call', label: 'Call' },
+  { value: 'deadline', label: 'Deadline' },
+  { value: 'reminder', label: 'Reminder' },
+  { value: 'other', label: 'Other' }
 ]

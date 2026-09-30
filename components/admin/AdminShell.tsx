@@ -15,6 +15,8 @@ import FollowUps from './sections/FollowUps'
 import DuplicateReview from './sections/DuplicateReview'
 import DiscoveryHistory from './sections/DiscoveryHistory'
 import Analytics from './sections/Analytics'
+import Calendar from './sections/Calendar'
+import LeadInsights from './sections/LeadInsights'
 import SettingsPage from './sections/Settings'
 import SiteHealth from './sections/SiteHealth'
 import Inbox from './sections/Inbox'
@@ -32,9 +34,11 @@ const VIEWS: Partial<Record<AdminSection, ComponentType>> = {
   followups: FollowUps,
   duplicates: DuplicateReview,
   history: DiscoveryHistory,
+  insights: LeadInsights,
   analytics: Analytics,
   health: SiteHealth,
   inbox: Inbox,
+  calendar: Calendar,
   projects: Projects,
   proposals: Proposals,
   settings: SettingsPage

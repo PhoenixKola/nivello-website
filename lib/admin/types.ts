@@ -83,7 +83,15 @@ export type LeadFilters = {
   hasEmail: boolean
   hasInstagram: boolean
   followUpDue: boolean
+  hasPhone: boolean
+  hasWebsite: boolean
+  minScore: number
+  followUp: '' | FollowUpFilter
+  createdFrom: string
+  createdTo: string
 }
+
+export type FollowUpFilter = 'overdue' | 'today' | 'upcoming' | 'none'
 
 export type LeadSort = 'updated' | 'created' | 'score' | 'company' | 'followUp'
 
@@ -98,7 +106,19 @@ export type LeadList = {
 }
 
 export type Tag = { id: string; name: string; color: TagColor; count: number }
-export type SavedView = { id: string; name: string; filters: LeadFilters; createdAt: string }
+export type SavedView = { id: string; name: string; filters: LeadFilters; isDefault?: boolean; createdAt: string }
+
+export type LeadForgeStats = {
+  total: number
+  active: number
+  byStatus: Record<LeadStatus, number>
+  followUps: { overdue: number; today: number; upcoming: number }
+  scoreBands: { high: number; medium: number; low: number }
+  converted: { proposal: number; project: number; won: number; accepted: number }
+  rates: { toProposal: number | null; toProject: number | null; winRate: number | null }
+  sources: { source: Lead['source']; leads: number; proposals: number; won: number }[]
+  batches: { id: string; label: string; status: BatchStatus; checked: number; imported: number; inCrm: number; qualified: number; proposals: number }[]
+}
 
 export type BatchCounters = {
   checked: number
@@ -205,40 +225,59 @@ export type DiscoveryHealth = {
   latestRun: { id: string; status: string; conclusion: string | null; htmlUrl: string | null; title: string | null; createdAt: string | null } | null
 }
 
+export type AgendaSource = 'lead' | 'task' | 'milestone' | 'project' | 'proposal' | 'event'
+export type AgendaLink = { type: 'lead' | 'project' | 'proposal' | 'event' | 'inbox' | 'health'; id: string; tab: 'tasks' | 'milestones' | null }
+
+/** A dated item derived from the record that owns it (or a manual Calendar event). */
+export type AgendaItem = {
+  id: string
+  source: AgendaSource
+  title: string
+  context: string
+  /** Local calendar day (YYYY-MM-DD). */
+  date: string
+  endDate: string | null
+  /** Start instant for timed items; null for all-day items. */
+  at: string | null
+  endAt: string | null
+  allDay: boolean
+  done: boolean
+  status: string
+  link: AgendaLink
+}
+
+export type AttentionUrgency = 'overdue' | 'issue' | 'today' | 'new' | 'soon'
+export type AttentionItem = Omit<AgendaItem, 'source'> & { source: AgendaSource | 'inbox' | 'health'; urgency: AttentionUrgency }
+
+export type CalendarEventCategory = '' | 'meeting' | 'call' | 'deadline' | 'reminder' | 'other'
+export type CalendarEvent = { id: string; title: string; start: string; end: string | null; allDay: boolean; notes: string; category: CalendarEventCategory; createdAt: string; updatedAt: string }
+export type CalendarEventInput = Pick<CalendarEvent, 'title' | 'start' | 'end' | 'allDay' | 'notes' | 'category'>
+
+export type Money = Partial<Record<Currency, number>>
+
 export type DashboardSummary = {
-  totals: {
-    leads: number
-    new: number
+  today: string
+  totals: { leads: number; importedThisWeek: number }
+  kpis: {
+    activeProjects: number
+    pipelineValue: Money
+    proposalsAwaiting: number
+    proposalsAwaitingValue: Money
     followUpsDue: number
-    contacted: number
-    interested: number
-    won: number
-    lost: number
-    importedThisWeek: number
+    overdueTasks: number
+    unreadInbox: number
+    inboxFailed: number
   }
-  byStatus: Record<LeadStatus, number>
-  topCities: { label: string; count: number }[]
-  topCategories: { label: string; count: number }[]
-  recentActivity: Activity[]
-  upcomingFollowUps: { id: string; companyName: string; followUpAt: string; nextAction: string; status: LeadStatus; overdue: boolean }[]
+  attention: { items: AttentionItem[]; counts: Record<AttentionUrgency, number>; total: number }
+  upcoming: AgendaItem[]
+  pipeline: {
+    leads: Record<LeadStatus, number>
+    proposals: Record<ProposalStatus, { count: number; value: Money }>
+    projects: Record<ProjectStage, number>
+  }
   pendingDuplicates: number
-  ops: {
-    inbox: { new: number; failedDelivery: number; latest: InboxSummary[] }
-    projects: {
-      active: number
-      dueSoon: number
-      overdue: number
-      awaitingProposal: number
-      inDevelopment: number
-      inQa: number
-      recentlyDelivered: number
-      value: Partial<Record<Currency, number>>
-      due: { id: string; name: string; clientName: string; targetDate: string; due: 'soon' | 'overdue'; stage: ProjectStage }[]
-    }
-    proposals: { draft: number; sent: number; accepted: number; acceptedThisMonth: number; sentValue: Partial<Record<Currency, number>>; awaiting: ProposalSummary[] }
-  } | null
+  monitors: number | null
   feed: { id: string; entity: 'lead' | 'inbox' | 'project' | 'proposal'; entityId: string; message: string; at: string; label: string | null }[] | null
-  health: { counts: Record<MonitorState, number>; total: number; attention: { id: string; name: string; state: MonitorState; detail: string }[] } | null
   analytics: { totals: AnalyticsSummary['totals']; series: { date: string; pageViews: number }[] } | null
 }
 

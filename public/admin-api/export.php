@@ -19,7 +19,7 @@ api_run([
             $leads = array_values(array_filter($state['leads'], fn ($l) => ($l['sourceBatchId'] ?? null) === $batchId));
             $name = 'batch';
         } else {
-            $leads = filter_leads($state['leads'], parse_lead_filters(is_array($body['filters'] ?? null) ? $body['filters'] : []));
+            $leads = filter_leads($state['leads'], parse_lead_filters(is_array($body['filters'] ?? null) ? $body['filters'] : []), tz_offset_param($body['tzOffset'] ?? 0));
             $name = 'leads';
         }
         $csv = leads_to_csv($leads, tag_name_map($state), batch_label_map($state));

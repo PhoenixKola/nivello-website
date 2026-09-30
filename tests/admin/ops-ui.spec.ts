@@ -16,7 +16,7 @@ const nav = (page: Page) => page.getByRole('navigation', { name: 'Admin' })
 
 test('sidebar groups product areas; local tabs stay inside each area', async ({ page }) => {
   await login(page)
-  for (const area of ['Overview', 'Lead Forge', 'Analytics', 'Inbox', 'Projects', 'Proposals', 'Site Health', 'Settings']) {
+  for (const area of ['Overview', 'Lead Forge', 'Analytics', 'Inbox', 'Calendar', 'Projects', 'Proposals', 'Site Health', 'Settings']) {
     await expect(nav(page).getByRole('link', { name: new RegExp(`^${area}`) })).toBeVisible()
   }
   // Lead Forge sub-pages are not in the sidebar.
@@ -234,6 +234,17 @@ test('realistic Preventivo output and responsive preview retain the template str
 
   await page.getByRole('tab', { name: 'Preview' }).click()
   await expect(page.getByRole('heading', { name: 'Piattaforma operativa Alba Energia', level: 1 })).toBeVisible()
+  // Same template structure as the DOCX/PDF: metadata block, parties, section bars, tables, summary, payments, acceptance.
+  const sheet = page.getByRole('article', { name: /^Preventivo NIV-AE-/ })
+  for (const text of ['PREVENTIVO', 'FORNITORE', 'CLIENTE', 'Alba Energia S.r.l.', 'SEZIONE A — ANALISI E PROGETTAZIONE', 'SEZIONE B — SVILUPPO PIATTAFORMA', 'Voce / descrizione', 'Subtotale Sezione A', 'RIEPILOGO', 'PIANO DEI PAGAMENTI', 'ACCETTAZIONE DEL PREVENTIVO', 'Firma del cliente', 'Nivello · Soluzioni digitali']) {
+    await expect(sheet.getByText(text, { exact: true }).first(), text).toBeVisible()
+  }
+  await expect(sheet.getByText('A1) Workshop operativo')).toBeVisible()
+  await expect(sheet.getByText('2 giorni')).toBeVisible()
+  await expect(sheet.getByText(/Validità subordinata/)).toBeVisible()
+  await expect(sheet.locator('[data-preview-page]')).toHaveCount(2)
+  await expect(sheet.locator('img[src*="action=logo"]')).toBeVisible()
+  await expect(page.getByText('Prepared for')).toHaveCount(0)
   for (const width of [360, 390, 768, 1366, 1920]) {
     await page.setViewportSize({ width, height: width < 768 ? 844 : 1000 })
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), `preview overflow at ${width}px`).toBe(true)
@@ -252,6 +263,17 @@ test('realistic Preventivo output and responsive preview retain the template str
   const [pdfDownload] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'PDF' }).click()])
   await pdfDownload.saveAs(pdfPath)
 
+  // English labels follow the proposal language.
+  await page.getByRole('tab', { name: 'Edit' }).click()
+  await page.getByRole('button', { name: /^Language:/ }).click()
+  await page.getByRole('option', { name: 'English' }).click()
+  await page.getByRole('tab', { name: 'Preview' }).click()
+  const english = page.getByRole('article', { name: /^Proposal NIV-AE-/ })
+  for (const text of ['PROPOSAL', 'SUPPLIER', 'CLIENT', 'SECTION A — ANALISI E PROGETTAZIONE', 'Item / description', 'SUMMARY', 'PAYMENT PLAN', 'PROPOSAL ACCEPTANCE', 'Client signature']) {
+    await expect(english.getByText(text, { exact: true }).first(), text).toBeVisible()
+  }
+  await expect(english.getByText('2 days')).toBeVisible()
+
   const archive = await JSZip.loadAsync(readFileSync(docxPath))
   const documentXml = await archive.file('word/document.xml')!.async('text')
   expect(documentXml).toContain('Piattaforma operativa Alba Energia')
@@ -269,12 +291,72 @@ test('realistic Preventivo output and responsive preview retain the template str
   expect(pdf.length).toBeGreaterThan(15_000)
 })
 
-test('overview shows the operations command center', async ({ page }) => {
+test('overview command center: attention with deep links, upcoming, pipeline and quick actions', async ({ page }) => {
   await login(page)
-  for (const heading of ['Today', 'Business', 'Growth · last 7 days']) {
-    await expect(page.getByRole('heading', { name: heading })).toBeVisible()
+  for (const heading of ['Today', 'Needs attention', 'Upcoming', 'Pipeline', 'Recent activity']) {
+    await expect(page.getByRole('heading', { name: heading, exact: true }).first()).toBeVisible()
   }
-  await expect(page.getByText('Proposals awaiting reply').first()).toBeVisible()
-  await page.getByRole('button', { name: /New inquiries/ }).first().click()
-  await expect(page.getByRole('heading', { name: 'Inbox', level: 1 })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Business snapshot' }).getByText('Overdue tasks')).toBeVisible()
+  // The overdue task created by the API suite opens its project on the Tasks tab.
+  const overdue = page.getByRole('region', { name: 'Overdue' })
+  const row = overdue.getByRole('listitem').filter({ hasText: 'Overview Project — Deploy production' })
+  await expect(row).toHaveCount(1)
+  await row.getByRole('button', { name: 'Open project' }).click()
+  await expect(page).toHaveURL(/#\/projects\?project=prj_[a-f0-9]{16}&tab=tasks/)
+  await expect(page.getByRole('dialog', { name: 'Project Overview Project' }).getByRole('tab', { name: /^Tasks/, selected: true })).toBeVisible()
+
+  await page.goto('/admin/#/dashboard')
+  await page.getByRole('group', { name: 'Quick actions' }).getByRole('button', { name: 'New event' }).click()
+  await expect(page.getByRole('dialog', { name: 'New event' })).toBeVisible()
+
+  for (const width of [360, 390, 768, 1366, 1920]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/admin/#/dashboard')
+    await expect(page.getByRole('heading', { name: 'Needs attention' })).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), `overview overflow at ${width}px`).toBe(true)
+  }
+})
+
+test('calendar: manual event CRUD, source filters, linked items and responsive views', async ({ page }) => {
+  await login(page)
+  await nav(page).getByRole('link', { name: /^Calendar/ }).click()
+  await expect(page.getByRole('heading', { name: 'Calendar', level: 1 })).toBeVisible()
+  await expect(page.getByRole('tablist', { name: 'Calendar views' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'New event' }).click()
+  const editor = page.getByRole('dialog', { name: 'New event' })
+  await editor.getByLabel('Title').fill('Team offsite')
+  await editor.getByRole('button', { name: 'Add event' }).click()
+  await expect(page.getByText('Event added')).toBeVisible()
+  await expect(page.getByRole('button', { name: /Team offsite/ }).first()).toBeVisible()
+
+  // Linked follow-up from the API suite opens the lead drawer, not a copy.
+  await page.getByRole('tab', { name: 'Agenda' }).click()
+  await page.getByRole('button', { name: /Calendar Lead Co/ }).first().click()
+  await expect(page.getByRole('dialog', { name: 'Lead details' }).getByRole('heading', { name: 'Calendar Lead Co' })).toBeVisible()
+  await page.keyboard.press('Escape')
+
+  await page.getByRole('button', { name: 'Manual', pressed: true }).click()
+  await expect(page.getByRole('button', { name: /Team offsite/ })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Manual', pressed: false }).click()
+
+  await page.getByRole('button', { name: /Team offsite/ }).first().click()
+  const edit = page.getByRole('dialog', { name: 'Edit event' })
+  await edit.getByLabel('Title').fill('Team offsite (moved)')
+  await edit.getByRole('button', { name: 'Save event' }).click()
+  await expect(page.getByRole('button', { name: /Team offsite \(moved\)/ }).first()).toBeVisible()
+  await page.getByRole('button', { name: /Team offsite \(moved\)/ }).first().click()
+  await page.getByRole('dialog', { name: 'Edit event' }).getByRole('button', { name: 'Delete' }).click()
+  await page.getByRole('dialog', { name: /^Delete “Team offsite/ }).getByRole('button', { name: 'Delete event' }).click()
+  await expect(page.getByText('Event deleted')).toBeVisible()
+
+  for (const view of ['Month', 'Week', 'Agenda']) {
+    await page.getByRole('tab', { name: view }).click()
+    for (const width of [360, 768, 1366]) {
+      await page.setViewportSize({ width, height: 900 })
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), `${view} overflow at ${width}px`).toBe(true)
+    }
+  }
+  await page.reload()
+  await expect(page.getByRole('tab', { name: 'Agenda', selected: true })).toBeVisible()
 })
