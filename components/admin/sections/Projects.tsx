@@ -18,6 +18,7 @@ import { ConfirmDialog, Drawer, Modal } from '../ui/Overlay'
 import { useToast } from '../ui/Toast'
 import { cx, focusRing } from '../ui/styles'
 import { ActivityTimeline, DrawerHeader, EntityPicker, RecordLink } from './ops/shared'
+import { ProjectMilestones, ProjectProgressCard, ProjectTasks } from './projects/ProjectWork'
 
 type View = 'pipeline' | 'all' | 'due' | 'archived'
 const BOARD_STAGES = PROJECT_STAGES.filter(s => s.value !== 'archived')
@@ -394,8 +395,10 @@ function ProjectDrawer({ id, onClose, onChanged }: { id: string; onClose: () => 
   const [form, setForm] = useState<FormState | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
   const [picker, setPicker] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [tab, setTab] = useState<'overview' | 'tasks' | 'milestones' | 'activity'>('overview')
 
   const apply = useCallback((detail: ProjectDetail) => {
     setData(detail)
@@ -414,11 +417,16 @@ function ProjectDrawer({ id, onClose, onChanged }: { id: string; onClose: () => 
   }, [id, apply])
 
   const dirty = !!data && !!form && JSON.stringify(fromForm(form)) !== JSON.stringify(fromForm(toForm(data.project)))
+  const applyWork = (detail: ProjectDetail) => {
+    apply(detail)
+    onChanged()
+  }
 
   const save = async (changes: Partial<Project> | Record<string, unknown>) => {
     setSaving(true)
     try {
       apply(await api.updateProject(id, changes as Partial<Project>))
+      setSaved(true)
       toast.success('Project saved')
       onChanged()
     } catch (err) {
@@ -441,7 +449,21 @@ function ProjectDrawer({ id, onClose, onChanged }: { id: string; onClose: () => 
       <div className="min-h-0 flex-1 overflow-y-auto">
         {error && !data && <EmptyState icon={<AlertCircle className="h-5 w-5" />} title="Project unavailable" description={error} />}
         {p && data && form && (
-          <div className="grid grid-cols-1 gap-4 px-5 py-5 lg:grid-cols-[1fr_18rem]">
+          <>
+          <div className="px-5 pt-4">
+            <Tabs
+              label="Project details"
+              value={tab}
+              onChange={setTab}
+              tabs={[
+                { value: 'overview', label: 'Overview' },
+                { value: 'tasks', label: 'Tasks', count: p.progress.taskCount },
+                { value: 'milestones', label: 'Milestones', count: p.progress.milestoneCount },
+                { value: 'activity', label: 'Activity' }
+              ]}
+            />
+          </div>
+          {tab === 'overview' && <div className="grid grid-cols-1 gap-4 px-5 py-5 lg:grid-cols-[1fr_18rem]">
             <form
               onSubmit={e => {
                 e.preventDefault()
@@ -450,8 +472,13 @@ function ProjectDrawer({ id, onClose, onChanged }: { id: string; onClose: () => 
               noValidate
               className="min-w-0 space-y-4"
             >
-              <ProjectFields form={form} setForm={update => setForm(f => (f ? update(f) : f))} />
+              <ProjectProgressCard detail={data} />
+              <ProjectFields form={form} setForm={update => {
+                setSaved(false)
+                setForm(f => (f ? update(f) : f))
+              }} />
               <div className="sticky bottom-0 -mx-1 flex justify-end gap-2 bg-stone-50/95 px-1 py-3 backdrop-blur dark:bg-slate-950/95">
+                <p role="status" className="mr-auto self-center text-xs font-medium text-emerald-700 dark:text-emerald-400">{saved ? 'Details updated' : ''}</p>
                 <Button variant="ghost" disabled={!dirty || saving} onClick={() => setForm(toForm(p))}>
                   Discard
                 </Button>
@@ -518,15 +545,15 @@ function ProjectDrawer({ id, onClose, onChanged }: { id: string; onClose: () => 
                   )}
                 </div>
               </Card>
-              <Card>
-                <CardHeader title="Activity" />
-                <ActivityTimeline activities={data.activities} />
-              </Card>
               <Button variant="ghost" size="sm" icon={<Trash2 className="h-3.5 w-3.5" />} className="text-red-600 dark:text-red-400" onClick={() => setConfirmDelete(true)}>
                 Delete project
               </Button>
             </div>
-          </div>
+          </div>}
+          {tab === 'tasks' && <div className="px-5 py-5"><ProjectTasks detail={data} onChange={applyWork} /></div>}
+          {tab === 'milestones' && <div className="px-5 py-5"><ProjectMilestones detail={data} onChange={applyWork} /></div>}
+          {tab === 'activity' && <div className="px-5 py-5"><Card><CardHeader title="Activity" /><ActivityTimeline activities={data.activities} /></Card></div>}
+          </>
         )}
       </div>
       <EntityPicker kind="lead" open={picker} onClose={() => setPicker(false)} onPick={leadId => save({ leadId })} />

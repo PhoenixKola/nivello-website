@@ -1,7 +1,8 @@
 import type { Proposal, ProposalUnit } from '@/lib/admin/types'
 
 /** Editable proposal state: money as decimal strings, exactly what the user typed. */
-export type DraftItem = { key: string; description: string; details: string; quantity: string; unit: ProposalUnit; unitPrice: string; optional: boolean }
+export type DraftItem = { key: string; id?: string; sectionKey: string; description: string; details: string; quantity: string; unit: ProposalUnit; unitPrice: string; optional: boolean }
+export type DraftSection = { key: string; id?: string; title: string; note: string }
 export type DraftMilestone = { key: string; label: string; due: string; percent: string }
 
 export type Draft = {
@@ -10,9 +11,14 @@ export type Draft = {
   currency: Proposal['currency']
   leadId: string | null
   projectId: string | null
+  inboxId: string | null
+  clientCode: string
   clientName: string
   clientCompany: string
   clientEmail: string
+  clientSector: string
+  clientAddress: string
+  clientPhone: string
   issueDate: string
   validUntil: string
   intro: string
@@ -20,12 +26,15 @@ export type Draft = {
   assumptions: string
   terms: string
   notes: string
+  sections: DraftSection[]
   items: DraftItem[]
   discountType: 'none' | 'percent' | 'amount'
   discountValue: string
   taxLabel: string
   taxRate: string
   milestones: DraftMilestone[]
+  acceptancePlace: string
+  acceptanceDate: string
 }
 
 let keySeq = 0
@@ -37,15 +46,22 @@ const decimal = (value: string) => {
 const amount = (cents: number) => String(cents / 100)
 
 export function toDraft(p: Proposal): Draft {
+  const sections = p.sections.length ? p.sections : [{ id: undefined, title: p.language === 'it' ? 'Servizi' : 'Services', note: '', items: p.items }]
+  const draftSections = sections.map(section => ({ key: newKey(), id: section.id, title: section.title, note: section.note }))
   return {
     title: p.title,
     language: p.language,
     currency: p.currency,
     leadId: p.leadId,
     projectId: p.projectId,
+    inboxId: p.inboxId,
+    clientCode: p.clientCode,
     clientName: p.clientName,
     clientCompany: p.clientCompany,
     clientEmail: p.clientEmail,
+    clientSector: p.clientSector,
+    clientAddress: p.clientAddress,
+    clientPhone: p.clientPhone,
     issueDate: p.issueDate,
     validUntil: p.validUntil ?? '',
     intro: p.intro,
@@ -53,12 +69,15 @@ export function toDraft(p: Proposal): Draft {
     assumptions: p.assumptions,
     terms: p.terms,
     notes: p.notes,
-    items: p.items.map(i => ({ key: newKey(), description: i.description, details: i.details, quantity: String(i.quantity), unit: i.unit, unitPrice: amount(i.unitPrice), optional: i.optional })),
+    sections: draftSections,
+    items: sections.flatMap((section, sectionIndex) => section.items.map(i => ({ key: newKey(), id: i.id, sectionKey: draftSections[sectionIndex].key, description: i.title || i.description, details: i.description || i.details, quantity: String(i.quantity), unit: i.unit, unitPrice: amount(i.unitPrice), optional: i.optional }))),
     discountType: p.discount.type,
     discountValue: p.discount.type === 'none' ? '' : String(p.discount.value),
     taxLabel: p.tax.label,
     taxRate: p.tax.rate ? String(p.tax.rate) : '',
-    milestones: p.milestones.map(m => ({ key: newKey(), label: m.label, due: m.due, percent: String(m.percent) }))
+    milestones: p.milestones.map(m => ({ key: newKey(), label: m.label, due: m.due, percent: String(m.percent) })),
+    acceptancePlace: p.acceptance.place,
+    acceptanceDate: p.acceptance.date ?? ''
   }
 }
 
@@ -69,9 +88,14 @@ export function fromDraft(d: Draft) {
     currency: d.currency,
     leadId: d.leadId,
     projectId: d.projectId,
+    inboxId: d.inboxId,
+    clientCode: d.clientCode,
     clientName: d.clientName,
     clientCompany: d.clientCompany,
     clientEmail: d.clientEmail,
+    clientSector: d.clientSector,
+    clientAddress: d.clientAddress,
+    clientPhone: d.clientPhone,
     issueDate: d.issueDate,
     validUntil: d.validUntil || null,
     intro: d.intro,
@@ -79,10 +103,16 @@ export function fromDraft(d: Draft) {
     assumptions: d.assumptions,
     terms: d.terms,
     notes: d.notes,
-    items: d.items.map(i => ({ description: i.description, details: i.details, quantity: decimal(i.quantity), unit: i.unit, unitPrice: decimal(i.unitPrice), optional: i.optional })),
+    sections: d.sections.map(section => ({
+      id: section.id,
+      title: section.title,
+      note: section.note,
+      items: d.items.filter(item => item.sectionKey === section.key).map(i => ({ id: i.id, title: i.description, description: i.details, quantity: decimal(i.quantity), unit: i.unit, unitPrice: decimal(i.unitPrice), optional: i.optional }))
+    })),
     discount: { type: d.discountType, value: d.discountType === 'none' ? 0 : decimal(d.discountValue) },
     tax: { label: d.taxLabel, rate: decimal(d.taxRate) },
-    milestones: d.milestones.map(m => ({ label: m.label, due: m.due, percent: decimal(m.percent) }))
+    milestones: d.milestones.map(m => ({ label: m.label, due: m.due, percent: decimal(m.percent) })),
+    acceptance: { place: d.acceptancePlace, date: d.acceptanceDate || null }
   }
 }
 
@@ -138,7 +168,7 @@ export const DOC_COPY = {
     units: { fixed: 'fixed', hour: 'hour', day: 'day', month: 'month', item: 'item', page: 'page' } as Record<ProposalUnit, string>
   },
   it: {
-    proposal: 'Proposta',
+    proposal: 'Preventivo',
     preparedFor: 'Preparata per',
     issueDate: 'Data',
     validUntil: 'Valida fino al',
@@ -180,4 +210,15 @@ export function docDate(date: string | null, language: 'en' | 'it') {
 
 export function formatQuantity(q: number, language: 'en' | 'it') {
   return new Intl.NumberFormat(docLocale(language), { maximumFractionDigits: 2 }).format(q)
+}
+
+export function proposalUnitLabel(unit: ProposalUnit, quantity: number, language: 'en' | 'it') {
+  if (quantity === 1) return DOC_COPY[language].units[unit]
+
+  const plurals: Record<'en' | 'it', Record<ProposalUnit, string>> = {
+    en: { fixed: 'fixed', hour: 'hours', day: 'days', month: 'months', item: 'items', page: 'pages' },
+    it: { fixed: 'forfait', hour: 'ore', day: 'giorni', month: 'mesi', item: 'pezzi', page: 'pagine' }
+  }
+
+  return plurals[language][unit]
 }

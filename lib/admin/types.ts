@@ -387,6 +387,55 @@ export type InboxDetail = { item: InboxItem; lead: LeadBrief | null; project: { 
 
 export type ProjectStage = 'lead' | 'discovery' | 'proposal' | 'approved' | 'design' | 'development' | 'qa' | 'delivered' | 'maintenance' | 'archived'
 export type Currency = 'EUR' | 'USD' | 'GBP' | 'CHF'
+export type ProjectMilestoneStatus = 'not_started' | 'in_progress' | 'completed' | 'blocked'
+export type ProjectTaskStatus = 'todo' | 'in_progress' | 'blocked' | 'done'
+export type ProjectTaskPriority = 'low' | 'normal' | 'high' | 'urgent'
+
+export type ProjectMilestone = {
+  id: string
+  projectId: string
+  title: string
+  description: string
+  status: ProjectMilestoneStatus
+  dueDate: string | null
+  order: number
+  createdAt: string
+  updatedAt: string
+  completedAt: string | null
+  taskCount: number
+  completedTaskCount: number
+}
+
+export type ProjectTask = {
+  id: string
+  projectId: string
+  milestoneId: string | null
+  proposalItemId: string | null
+  title: string
+  description: string
+  status: ProjectTaskStatus
+  priority: ProjectTaskPriority
+  dueDate: string | null
+  assignee: string
+  order: number
+  createdAt: string
+  updatedAt: string
+  completedAt: string | null
+  overdue: boolean
+}
+
+export type ProjectProgress = {
+  hasTasks: boolean
+  taskPercent: number | null
+  milestonePercent: number | null
+  completedTasks: number
+  taskCount: number
+  completedMilestones: number
+  milestoneCount: number
+  overdueTasks: number
+  nextTask: ProjectTask | null
+  nextMilestone: ProjectMilestone | null
+}
 
 export type Project = {
   id: string
@@ -412,6 +461,9 @@ export type Project = {
   due: 'soon' | 'overdue' | null
   lead: LeadBrief | null
   proposalCount: number
+  milestones: ProjectMilestone[]
+  tasks: ProjectTask[]
+  progress: ProjectProgress
 }
 
 export type ProjectList = {
@@ -444,8 +496,10 @@ export type ProposalSummary = {
 
 export type ProjectDetail = { project: Project; inquiry: InboxSummary | null; proposals: ProposalSummary[]; activities: OpsActivity[] }
 
-export type ProposalItem = { description: string; details: string; quantity: number; unit: ProposalUnit; unitPrice: number; optional: boolean; total: number }
+export type ProposalItem = { id: string; title: string; description: string; details: string; quantity: number; unit: ProposalUnit; unitPrice: number; optional: boolean; total: number; code?: string }
+export type ProposalSection = { id: string; title: string; note: string; order: number; subtotal: number; items: ProposalItem[] }
 export type ProposalMilestone = { label: string; due: string; percent: number; amount: number }
+export type ProposalVersion = { revision: number; createdAt: string; number: string; files: { docx: boolean; pdf: boolean } }
 
 export type Proposal = {
   id: string
@@ -455,9 +509,15 @@ export type Proposal = {
   language: 'en' | 'it'
   leadId: string | null
   projectId: string | null
+  inboxId: string | null
+  clientCode: string
   clientName: string
   clientCompany: string
   clientEmail: string
+  clientSector: string
+  clientAddress: string
+  clientPhone: string
+  clientLogo: { mime: string; size: number } | null
   currency: Currency
   issueDate: string
   validUntil: string | null
@@ -467,6 +527,7 @@ export type Proposal = {
   terms: string
   notes: string
   items: ProposalItem[]
+  sections: ProposalSection[]
   discount: { type: 'none' | 'percent' | 'amount'; value: number }
   tax: { label: string; rate: number }
   milestones: ProposalMilestone[]
@@ -476,9 +537,12 @@ export type Proposal = {
   sentAt: string | null
   acceptedAt: string | null
   rejectedAt: string | null
+  expiredAt: string | null
+  acceptance: { place: string; date: string | null }
+  versions: ProposalVersion[]
 }
 
-export type ProposalDetail = { proposal: Proposal; lead: LeadBrief | null; project: { id: string; name: string; stage: ProjectStage } | null; activities: OpsActivity[] }
+export type ProposalDetail = { proposal: Proposal; lead: LeadBrief | null; inquiry: InboxSummary | null; project: { id: string; name: string; stage: ProjectStage } | null; activities: OpsActivity[] }
 
 export type LeadRelated = {
   inbox: InboxSummary[]

@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import Image from 'next/image'
 import { AlertCircle, ArrowDown, ArrowLeft, ArrowUp, Copy, Download, Eye, FilePlus2, FileText, Link2, Plus, Printer, Send, Trash2, X } from 'lucide-react'
 import { api, type ProposalInput } from '@/lib/admin/api'
 import { CURRENCIES, PROPOSAL_STATUSES, PROPOSAL_STATUS_META, PROPOSAL_UNITS, STAGE_LABEL, STATUS_LABEL } from '@/lib/admin/constants'
@@ -47,6 +48,7 @@ const DEFAULT_TERMS = {
 function NewProposalModal({ open, onClose, onCreated, prefill }: { open: boolean; onClose: () => void; onCreated: (id: string) => void; prefill: { leadId?: string; projectId?: string } }) {
   const toast = useToast()
   const [title, setTitle] = useState('')
+  const [clientCode, setClientCode] = useState('')
   const [language, setLanguage] = useState<'en' | 'it'>('en')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -57,6 +59,7 @@ function NewProposalModal({ open, onClose, onCreated, prefill }: { open: boolean
     try {
       const created = await api.createProposal({
         title,
+        clientCode,
         language,
         terms: DEFAULT_TERMS[language],
         leadId: prefill.leadId ?? null,
@@ -76,6 +79,7 @@ function NewProposalModal({ open, onClose, onCreated, prefill }: { open: boolean
       })
       toast.success('Draft created', created.proposal.number)
       setTitle('')
+      setClientCode('')
       onCreated(created.proposal.id)
     } catch (err) {
       setError((err as Error).message)
@@ -102,6 +106,7 @@ function NewProposalModal({ open, onClose, onCreated, prefill }: { open: boolean
     >
       <form id="new-proposal" onSubmit={submit} className="space-y-4" noValidate>
         <TextField label="Title" value={title} maxLength={160} onChange={e => setTitle(e.target.value)} placeholder="e.g. New bilingual website" autoFocus />
+        <TextField label="Client code" value={clientCode} maxLength={12} onChange={e => setClientCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} placeholder="e.g. PG (used in the preventivo number)" />
         <div>
           <p className="mb-1.5 text-xs font-medium text-slate-600 dark:text-slate-300">Document language</p>
           <Tabs
@@ -124,8 +129,9 @@ function NewProposalModal({ open, onClose, onCreated, prefill }: { open: boolean
   )
 }
 
-function AcceptDialog({ open, hasProject, onClose, onConfirm }: { open: boolean; hasProject: boolean; onClose: () => void; onConfirm: (mode: 'none' | 'create' | 'update') => Promise<void> }) {
+function AcceptDialog({ open, hasProject, onClose, onConfirm }: { open: boolean; hasProject: boolean; onClose: () => void; onConfirm: (mode: 'none' | 'create' | 'update', createTasks: boolean) => Promise<void> }) {
   const [mode, setMode] = useState<'none' | 'create' | 'update'>(hasProject ? 'update' : 'create')
+  const [createTasks, setCreateTasks] = useState(true)
   return (
     <ConfirmDialog
       open={open}
@@ -133,7 +139,7 @@ function AcceptDialog({ open, hasProject, onClose, onConfirm }: { open: boolean;
       title="Mark as accepted?"
       description="Accepted proposals are kept exactly as sent. The linked lead is marked as won."
       confirmLabel="Mark accepted"
-      onConfirm={() => onConfirm(mode)}
+      onConfirm={() => onConfirm(mode, createTasks)}
     >
       <fieldset className="space-y-2 text-sm">
         <legend className="mb-2 text-xs font-medium text-slate-600 dark:text-slate-300">Project</legend>
@@ -152,6 +158,10 @@ function AcceptDialog({ open, hasProject, onClose, onConfirm }: { open: boolean;
             {label}
           </label>
         ))}
+        <label className="mt-4 flex cursor-pointer items-start gap-2 border-t border-slate-100 pt-4 dark:border-white/[0.07]">
+          <input type="checkbox" checked={createTasks} disabled={mode === 'none'} onChange={event => setCreateTasks(event.target.checked)} className="mt-0.5 accent-[var(--brand-blue)]" />
+          <span><span className="block font-medium">Create milestones and tasks</span><span className="mt-0.5 block text-xs text-slate-500">Each section becomes a milestone and each quoted item becomes a task.</span></span>
+        </label>
       </fieldset>
     </ConfirmDialog>
   )
@@ -174,6 +184,8 @@ function Editor({ id, onBack, onChanged }: { id: string; onBack: () => void; onC
   const [accepting, setAccepting] = useState(false)
   const [confirm, setConfirm] = useState<null | 'delete' | 'reject'>(null)
   const [pdfBusy, setPdfBusy] = useState(false)
+  const [docxBusy, setDocxBusy] = useState(false)
+  const [logoBusy, setLogoBusy] = useState(false)
 
   const apply = useCallback((d: ProposalDetail) => {
     setDetail(d)
@@ -203,17 +215,32 @@ function Editor({ id, onBack, onChanged }: { id: string; onBack: () => void; onC
     return () => window.removeEventListener('beforeunload', warn)
   }, [dirty])
 
+  const archiveLatestRevision = async (next: ProposalDetail) => {
+    const version = next.proposal.versions.at(-1)
+    if (!version || (version.files.docx && version.files.pdf)) return next
+    const [{ buildProposalDocx }, { buildProposalPdf }] = await Promise.all([import('./proposals/docx'), import('./proposals/pdf')])
+    const [docx, pdfDocument] = await Promise.all([buildProposalDocx(next.proposal), buildProposalPdf(next.proposal)])
+    return api.archiveProposalFiles(id, version.revision, docx, pdfDocument.output('blob'))
+  }
+
   const save = async (extra?: Partial<ProposalInput>) => {
     if (!draft) return false
     setSaving(true)
     setSaveError(null)
     try {
-      apply(
-        await api.updateProposal(id, {
-          ...(fromDraft(draft) as ProposalInput),
-          ...extra
-        })
-      )
+      let next = await api.updateProposal(id, {
+        ...(fromDraft(draft) as ProposalInput),
+        ...extra
+      })
+      apply(next)
+      if (next.proposal.status === 'sent') {
+        try {
+          next = await archiveLatestRevision(next)
+          apply(next)
+        } catch (err) {
+          toast.error('Changes saved, but the revision files could not be archived', (err as Error).message)
+        }
+      }
       onChanged()
       return true
     } catch (err) {
@@ -237,7 +264,18 @@ function Editor({ id, onBack, onChanged }: { id: string; onBack: () => void; onC
 
   const setStatus = async (status: ProposalStatus) => {
     if (dirty && !(await save())) return
-    await act(() => api.proposalStatus(id, status), `Proposal ${PROPOSAL_STATUS_META[status].label.toLowerCase()}`)
+    try {
+      let next = await api.proposalStatus(id, status)
+      if (status === 'sent') {
+        apply(next)
+        next = await archiveLatestRevision(next)
+      }
+      apply(next)
+      toast.success(`Proposal ${PROPOSAL_STATUS_META[status].label.toLowerCase()}`)
+      onChanged()
+    } catch (err) {
+      toast.error('Action failed', (err as Error).message)
+    }
   }
 
   if (error && !detail) return <EmptyState icon={<AlertCircle className="h-5 w-5" />} title="Proposal unavailable" description={error} action={<Button onClick={onBack}>Back to proposals</Button>} />
@@ -254,14 +292,28 @@ function Editor({ id, onBack, onChanged }: { id: string; onBack: () => void; onC
           }
         : d
     )
-  const moveItem = (index: number, delta: number) =>
+  const moveItem = (sectionKey: string, key: string, delta: number) =>
     setDraft(d => {
       if (!d) return d
       const items = [...d.items]
-      const [item] = items.splice(index, 1)
-      items.splice(index + delta, 0, item)
+      const sectionItems = items.filter(item => item.sectionKey === sectionKey)
+      const position = sectionItems.findIndex(item => item.key === key)
+      const target = sectionItems[position + delta]
+      if (!target) return d
+      const from = items.findIndex(item => item.key === key)
+      const to = items.findIndex(item => item.key === target.key)
+      const [item] = items.splice(from, 1)
+      items.splice(to, 0, item)
       return { ...d, items }
     })
+  const setSection = (key: string, patch: Partial<Draft['sections'][number]>) => setDraft(d => d ? { ...d, sections: d.sections.map(section => section.key === key ? { ...section, ...patch } : section) } : d)
+  const moveSection = (index: number, delta: number) => setDraft(d => {
+    if (!d) return d
+    const sections = [...d.sections]
+    const [section] = sections.splice(index, 1)
+    sections.splice(index + delta, 0, section)
+    return { ...d, sections }
+  })
   const setMilestone = (key: string, patch: Partial<Draft['milestones'][number]>) =>
     setDraft(d =>
       d
@@ -350,6 +402,24 @@ function Editor({ id, onBack, onChanged }: { id: string; onBack: () => void; onC
         </Button>
         <Button
           size="sm"
+          icon={<FileText className="h-3.5 w-3.5" />}
+          loading={docxBusy}
+          onClick={async () => {
+            setDocxBusy(true)
+            try {
+              const { downloadProposalDocx } = await import('./proposals/docx')
+              await downloadProposalDocx(preview)
+            } catch (err) {
+              toast.error('DOCX could not be created', (err as Error).message)
+            } finally {
+              setDocxBusy(false)
+            }
+          }}
+        >
+          DOCX
+        </Button>
+        <Button
+          size="sm"
           variant="ghost"
           icon={<Printer className="h-3.5 w-3.5" />}
           onClick={() => {
@@ -428,134 +498,80 @@ function Editor({ id, onBack, onChanged }: { id: string; onBack: () => void; onC
 
             <Card>
               <CardHeader title="Client" />
-              <div className="grid grid-cols-1 gap-3 px-5 pb-5 pt-3 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 px-5 pb-5 pt-3 sm:grid-cols-2 xl:grid-cols-3">
                 <TextField label="Company" value={draft.clientCompany} maxLength={160} onChange={e => set('clientCompany', e.target.value)} />
                 <TextField label="Contact name" value={draft.clientName} maxLength={120} onChange={e => set('clientName', e.target.value)} />
                 <TextField label="Email" type="email" value={draft.clientEmail} maxLength={200} onChange={e => set('clientEmail', e.target.value)} />
+                <TextField label="Client code" value={draft.clientCode} maxLength={12} onChange={e => set('clientCode', e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} placeholder="e.g. PG" />
+                <TextField label="Sector" value={draft.clientSector} maxLength={160} onChange={e => set('clientSector', e.target.value)} />
+                <TextField label="Phone" value={draft.clientPhone} maxLength={80} onChange={e => set('clientPhone', e.target.value)} />
+                <div className="sm:col-span-2"><TextArea label="Address" value={draft.clientAddress} maxLength={500} onChange={e => set('clientAddress', e.target.value)} /></div>
+                <div className="sm:col-span-2 xl:col-span-1">
+                  <p className="mb-1.5 text-xs font-medium text-slate-600 dark:text-slate-300">Client logo</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {p.clientLogo && <span className="flex h-14 w-28 items-center justify-center rounded-lg border border-slate-200 bg-white p-2 dark:border-white/10"><Image src={`/admin-api/proposal-file.php?action=logo&id=${p.id}`} alt={`${p.clientCompany || p.clientName || 'Client'} logo`} width={112} height={48} unoptimized className="max-h-10 w-auto object-contain" /></span>}
+                    <label className={cx('inline-flex h-9 cursor-pointer items-center rounded-lg border border-slate-200 px-3 text-sm font-medium hover:bg-slate-50 dark:border-white/10 dark:hover:bg-white/[0.05]', focusRing)}>
+                      {logoBusy ? 'Uploading…' : p.clientLogo ? 'Replace logo' : 'Upload logo'}
+                      <input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" disabled={!editable || logoBusy} onChange={async event => { const file = event.target.files?.[0]; event.currentTarget.value = ''; if (!file) return; setLogoBusy(true); try { if (dirty && !(await save())) return; apply(await api.uploadProposalLogo(id, file)); toast.success('Client logo uploaded') } catch (err) { toast.error('Logo not uploaded', (err as Error).message) } finally { setLogoBusy(false) } }} />
+                    </label>
+                    {p.clientLogo && <Button size="sm" variant="ghost" onClick={async () => { try { if (dirty && !(await save())) return; apply(await api.removeProposalLogo(id)); toast.success('Client logo removed') } catch (err) { toast.error('Logo not removed', (err as Error).message) } }}>Remove</Button>}
+                  </div>
+                  <p className="mt-1 text-xs text-slate-400">PNG, JPG or WebP, up to 2 MB. Stored privately.</p>
+                </div>
               </div>
             </Card>
 
             <Card>
-              <CardHeader title="Line items" description="Totals are recalculated on the server when you save." />
-              <div className="space-y-3 px-5 pb-5 pt-3">
-                {draft.items.map((item, index) => (
-                  <div key={item.key} className="rounded-xl border border-slate-200 p-3 dark:border-white/[0.08]">
-                    <div className="flex items-start gap-2">
-                      <div className="min-w-0 flex-1 space-y-2">
-                        <input
-                          aria-label={`Line ${index + 1} description`}
-                          value={item.description}
-                          maxLength={300}
-                          placeholder="Description"
-                          onChange={e => setItem(item.key, { description: e.target.value })}
-                          className={cx(fieldBase, 'h-9 font-medium')}
-                        />
-                        <textarea
-                          aria-label={`Line ${index + 1} details`}
-                          value={item.details}
-                          maxLength={1000}
-                          rows={2}
-                          placeholder="Details (optional)"
-                          onChange={e => setItem(item.key, { details: e.target.value })}
-                          className={cx(fieldBase, 'resize-y py-2 text-sm')}
-                        />
+              <CardHeader title="Sections and line items" description="Build the preventivo in sections. Codes and totals are recalculated on the server." />
+              <div className="space-y-5 px-5 pb-5 pt-3">
+                {draft.sections.map((section, sectionIndex) => {
+                  const sectionItems = draft.items.filter(item => item.sectionKey === section.key)
+                  return (
+                    <section key={section.key} className="overflow-hidden rounded-2xl border border-slate-200 dark:border-white/[0.08]">
+                      <div className="flex flex-wrap items-start gap-2 bg-slate-50/80 p-3 dark:bg-white/[0.03]">
+                        <span className="mt-2 font-mono text-xs font-semibold text-[#0b6fc0] dark:text-[var(--brand-gold)]">{String.fromCharCode(65 + sectionIndex)}</span>
+                        <div className="min-w-44 flex-1 space-y-2">
+                          <input aria-label={`Section ${sectionIndex + 1} title`} value={section.title} maxLength={160} placeholder="Section title" onChange={event => setSection(section.key, { title: event.target.value })} className={cx(fieldBase, 'h-9 font-semibold')} />
+                          <input aria-label={`Section ${sectionIndex + 1} note`} value={section.note} maxLength={500} placeholder="Section note (optional)" onChange={event => setSection(section.key, { note: event.target.value })} className={cx(fieldBase, 'h-9 text-sm')} />
+                        </div>
+                        <div className="flex gap-1">
+                          <button type="button" aria-label="Move section up" disabled={sectionIndex === 0} onClick={() => moveSection(sectionIndex, -1)} className={cx('flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 disabled:opacity-25', focusRing)}><ArrowUp className="h-3.5 w-3.5" /></button>
+                          <button type="button" aria-label="Move section down" disabled={sectionIndex === draft.sections.length - 1} onClick={() => moveSection(sectionIndex, 1)} className={cx('flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 disabled:opacity-25', focusRing)}><ArrowDown className="h-3.5 w-3.5" /></button>
+                          <button type="button" aria-label="Remove section" disabled={draft.sections.length === 1} onClick={() => setDraft(current => current ? { ...current, sections: current.sections.filter(value => value.key !== section.key), items: current.items.filter(value => value.sectionKey !== section.key) } : current)} className={cx('flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:text-red-600 disabled:opacity-25', focusRing)}><Trash2 className="h-3.5 w-3.5" /></button>
+                        </div>
                       </div>
-                      <div className="flex flex-col gap-1">
-                        <button
-                          type="button"
-                          aria-label="Move up"
-                          disabled={index === 0}
-                          onClick={() => moveItem(index, -1)}
-                          className={cx(
-                            'flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 disabled:cursor-default disabled:opacity-30 dark:hover:bg-white/[0.07]',
-                            focusRing
-                          )}
-                        >
-                          <ArrowUp className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          aria-label="Move down"
-                          disabled={index === draft.items.length - 1}
-                          onClick={() => moveItem(index, 1)}
-                          className={cx(
-                            'flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 disabled:cursor-default disabled:opacity-30 dark:hover:bg-white/[0.07]',
-                            focusRing
-                          )}
-                        >
-                          <ArrowDown className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          aria-label="Remove line"
-                          onClick={() =>
-                            set(
-                              'items',
-                              draft.items.filter(i => i.key !== item.key)
-                            )
-                          }
-                          className={cx('flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-400/10', focusRing)}
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
+                      <div className="space-y-3 p-3">
+                        {sectionItems.map((item, itemIndex) => {
+                          const index = draft.items.findIndex(value => value.key === item.key)
+                          return (
+                            <div key={item.key} className="rounded-xl border border-slate-200 p-3 dark:border-white/[0.08]">
+                              <div className="flex items-start gap-2">
+                                <span className="mt-2 w-7 shrink-0 font-mono text-xs text-slate-400">{String.fromCharCode(65 + sectionIndex)}{itemIndex + 1}</span>
+                                <div className="min-w-0 flex-1 space-y-2">
+                                  <input aria-label={`Line ${index + 1} description`} value={item.description} maxLength={300} placeholder="Item title" onChange={event => setItem(item.key, { description: event.target.value })} className={cx(fieldBase, 'h-9 font-medium')} />
+                                  <textarea aria-label={`Line ${index + 1} details`} value={item.details} maxLength={2000} rows={2} placeholder="Description (optional)" onChange={event => setItem(item.key, { details: event.target.value })} className={cx(fieldBase, 'resize-y py-2 text-sm')} />
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                  <button type="button" aria-label="Move line up" disabled={itemIndex === 0} onClick={() => moveItem(section.key, item.key, -1)} className={cx('flex h-7 w-7 items-center justify-center rounded-md text-slate-400 disabled:opacity-25', focusRing)}><ArrowUp className="h-3.5 w-3.5" /></button>
+                                  <button type="button" aria-label="Move line down" disabled={itemIndex === sectionItems.length - 1} onClick={() => moveItem(section.key, item.key, 1)} className={cx('flex h-7 w-7 items-center justify-center rounded-md text-slate-400 disabled:opacity-25', focusRing)}><ArrowDown className="h-3.5 w-3.5" /></button>
+                                  <button type="button" aria-label="Remove line" onClick={() => set('items', draft.items.filter(value => value.key !== item.key))} className={cx('flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:text-red-600', focusRing)}><X className="h-3.5 w-3.5" /></button>
+                                </div>
+                              </div>
+                              <div className="mt-2 grid grid-cols-2 items-center gap-2 sm:grid-cols-[7rem_5rem_8rem_1fr]">
+                                <Select label={`Line ${index + 1} unit`} size="sm" value={item.unit} onChange={unit => setItem(item.key, { unit, quantity: unit === 'fixed' ? '1' : item.quantity })} options={PROPOSAL_UNITS} disabled={!editable} />
+                                <input aria-label={`Line ${index + 1} quantity`} inputMode="decimal" value={item.quantity} disabled={item.unit === 'fixed'} onChange={event => setItem(item.key, { quantity: event.target.value })} className={cx(fieldBase, 'h-9 text-right tabular-nums disabled:opacity-50')} />
+                                <MoneyInput label={`Line ${index + 1} price`} value={item.unitPrice} onChange={unitPrice => setItem(item.key, { unitPrice })} />
+                                <div className="flex items-center justify-end gap-3"><label className="flex cursor-pointer items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300"><input type="checkbox" checked={item.optional} onChange={event => setItem(item.key, { optional: event.target.checked })} className="accent-[var(--brand-blue)]" />Optional</label><span className="min-w-20 text-right text-sm font-semibold tabular-nums text-slate-900 dark:text-white">{money(totals.items[index] ?? 0)}</span></div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                        {editable && sectionItems.length < 60 && <Button size="sm" variant="ghost" icon={<Plus className="h-3.5 w-3.5" />} onClick={() => set('items', [...draft.items, { key: newKey(), sectionKey: section.key, description: '', details: '', quantity: '1', unit: 'fixed', unitPrice: '', optional: false }])}>Add line</Button>}
                       </div>
-                    </div>
-                    <div className="mt-2 grid grid-cols-2 items-center gap-2 sm:grid-cols-[7rem_5rem_8rem_1fr]">
-                      <Select
-                        label={`Line ${index + 1} unit`}
-                        size="sm"
-                        value={item.unit}
-                        onChange={unit =>
-                          setItem(item.key, {
-                            unit,
-                            quantity: unit === 'fixed' ? '1' : item.quantity
-                          })
-                        }
-                        options={PROPOSAL_UNITS}
-                        disabled={!editable}
-                      />
-                      <input
-                        aria-label={`Line ${index + 1} quantity`}
-                        inputMode="decimal"
-                        value={item.quantity}
-                        disabled={item.unit === 'fixed'}
-                        onChange={e => setItem(item.key, { quantity: e.target.value })}
-                        className={cx(fieldBase, 'h-9 text-right tabular-nums disabled:opacity-50')}
-                      />
-                      <MoneyInput label={`Line ${index + 1} price`} value={item.unitPrice} onChange={unitPrice => setItem(item.key, { unitPrice })} />
-                      <div className="flex items-center justify-end gap-3">
-                        <label className="flex cursor-pointer items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
-                          <input type="checkbox" checked={item.optional} onChange={e => setItem(item.key, { optional: e.target.checked })} className="accent-[var(--brand-blue)]" />
-                          Optional
-                        </label>
-                        <span className="min-w-20 text-right text-sm font-semibold tabular-nums text-slate-900 dark:text-white">{money(totals.items[index] ?? 0)}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {editable && draft.items.length < 60 && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    icon={<Plus className="h-3.5 w-3.5" />}
-                    onClick={() =>
-                      set('items', [
-                        ...draft.items,
-                        {
-                          key: newKey(),
-                          description: '',
-                          details: '',
-                          quantity: '1',
-                          unit: 'fixed',
-                          unitPrice: '',
-                          optional: false
-                        }
-                      ])
-                    }
-                  >
-                    Add line
-                  </Button>
-                )}
+                    </section>
+                  )
+                })}
+                {editable && draft.sections.length < 26 && <Button size="sm" variant="ghost" icon={<Plus className="h-3.5 w-3.5" />} onClick={() => set('sections', [...draft.sections, { key: newKey(), title: '', note: '' }])}>Add section</Button>}
               </div>
             </Card>
 
@@ -700,6 +716,10 @@ function Editor({ id, onBack, onChanged }: { id: string; onBack: () => void; onC
                 <TextArea label="Scope of work" value={draft.scope} maxLength={8000} onChange={e => set('scope', e.target.value)} className="min-h-[140px]" />
                 <TextArea label="Assumptions" value={draft.assumptions} maxLength={4000} onChange={e => set('assumptions', e.target.value)} />
                 <TextArea label="Terms" value={draft.terms} maxLength={6000} onChange={e => set('terms', e.target.value)} />
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <TextField label="Acceptance place" value={draft.acceptancePlace} maxLength={120} onChange={e => set('acceptancePlace', e.target.value)} />
+                  <TextField label="Acceptance date" type="date" value={draft.acceptanceDate} onChange={e => set('acceptanceDate', e.target.value)} />
+                </div>
                 <TextArea label="Internal notes (not in the document)" value={draft.notes} maxLength={4000} onChange={e => set('notes', e.target.value)} />
               </div>
             </Card>
@@ -777,8 +797,13 @@ function Editor({ id, onBack, onChanged }: { id: string; onBack: () => void; onC
                     <p className="text-slate-400">None</p>
                   )}
                 </div>
+                {detail.inquiry && <div><p className="mb-1 text-xs text-slate-500 dark:text-slate-400">Original inquiry</p><RecordLink onClick={() => navigate('inbox', { inquiry: detail.inquiry!.id })}>{detail.inquiry.name}</RecordLink></div>}
               </div>
             </Card>
+            {p.versions.length > 0 && <Card>
+              <CardHeader title="Sent versions" description="Immutable document snapshots." />
+              <ul className="divide-y divide-slate-100 px-5 pb-3 dark:divide-white/[0.06]">{p.versions.map(version => <li key={version.revision} className="flex flex-wrap items-center gap-2 py-3 text-sm"><span className="min-w-0 flex-1"><span className="font-medium">Revision {version.revision}</span><span className="block text-xs text-slate-500">{formatDay(version.createdAt.slice(0, 10))}</span></span>{version.files.docx && <Button size="sm" variant="ghost" onClick={() => api.downloadProposalFile(id, version.revision, 'docx')}>DOCX</Button>}{version.files.pdf && <Button size="sm" variant="ghost" onClick={() => api.downloadProposalFile(id, version.revision, 'pdf')}>PDF</Button>}</li>)}</ul>
+            </Card>}
             <Card>
               <CardHeader title="Activity" />
               <ActivityTimeline activities={detail.activities} />
@@ -802,8 +827,8 @@ function Editor({ id, onBack, onChanged }: { id: string; onBack: () => void; onC
           open
           hasProject={!!p.projectId}
           onClose={() => setAccepting(false)}
-          onConfirm={async mode => {
-            await act(() => api.proposalStatus(id, 'accepted', mode), 'Proposal accepted')
+          onConfirm={async (mode, createTasks) => {
+            await act(() => api.proposalStatus(id, 'accepted', mode, createTasks), 'Proposal accepted')
             setAccepting(false)
           }}
         />

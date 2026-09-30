@@ -1,14 +1,16 @@
 import type { Proposal } from '@/lib/admin/types'
-import { DOC_COPY, NIVELLO, docDate, docMoney, formatQuantity } from './model'
+import { DOC_COPY, NIVELLO, docDate, docMoney, formatQuantity, proposalUnitLabel } from './model'
 
 const BLUE: [number, number, number] = [11, 111, 192]
 const INK: [number, number, number] = [15, 23, 42]
 const MUTED: [number, number, number] = [100, 116, 139]
 const LINE: [number, number, number] = [226, 232, 240]
 
-async function logoDataUrl(): Promise<string | null> {
+async function logoDataUrl(url = '/nivello-icon.png'): Promise<string | null> {
   try {
-    const blob = await (await fetch('/nivello-icon.png')).blob()
+    const response = await fetch(url, { credentials: 'same-origin' })
+    if (!response.ok) return null
+    const blob = await response.blob()
     return await new Promise(resolve => {
       const reader = new FileReader()
       reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : null)
@@ -90,16 +92,24 @@ export async function buildProposalPdf(p: Proposal) {
   // Meta
   const col = width / 3
   const meta: [string, string[]][] = [
-    [t.preparedFor, [p.clientCompany || p.clientName || '-', p.clientCompany && p.clientName ? p.clientName : '', p.clientEmail].filter(Boolean)],
+    [t.preparedFor, [p.clientCompany || p.clientName || '-', p.clientCompany && p.clientName ? p.clientName : '', p.clientSector, p.clientAddress, p.clientPhone, p.clientEmail].filter(Boolean)],
     [t.issueDate, [docDate(p.issueDate, p.language)]],
     [t.validUntil, [docDate(p.validUntil, p.language)]]
   ]
+  const clientLogo = p.clientLogo ? await logoDataUrl(`/admin-api/proposal-file.php?action=logo&id=${p.id}`) : null
   let metaBottom = y
   meta.forEach(([label, lines], i) => {
     const x = margin + col * i
     doc.setFont('helvetica', 'normal').setFontSize(7.5).setTextColor(...MUTED)
     doc.text(safe(label.toUpperCase()), x, y, { charSpace: 0.3 })
     let ly = y + 5
+    if (i === 0 && clientLogo) {
+      const format = clientLogo.startsWith('data:image/png') ? 'PNG' : clientLogo.startsWith('data:image/webp') ? 'WEBP' : 'JPEG'
+      try {
+        doc.addImage(clientLogo, format, x, ly - 1, 32, 12, undefined, 'FAST')
+        ly += 15
+      } catch { /* Keep the preventivo usable if a browser cannot decode the uploaded image. */ }
+    }
     lines.forEach((line, n) => {
       doc.setFont('helvetica', n === 0 ? 'bold' : 'normal').setFontSize(9.5).setTextColor(...INK)
       for (const wrapped of doc.splitTextToSize(safe(line), col - 4) as string[]) {
@@ -117,8 +127,8 @@ export async function buildProposalPdf(p: Proposal) {
   // Line items
   const rows = (items: Proposal['items']) =>
     items.map(item => [
-      { content: safe(item.description + (item.details ? `\n${item.details}` : '')) },
-      item.unit === 'fixed' ? '1' : safe(`${formatQuantity(item.quantity, p.language)} ${t.units[item.unit]}`),
+      { content: safe(`${item.code ? `${item.code}) ` : ''}${item.title}${item.optional ? ` (${p.language === 'it' ? 'opzionale' : 'optional'})` : ''}${item.description ? `\n${item.description}` : ''}`) },
+      item.unit === 'fixed' ? '1' : safe(`${formatQuantity(item.quantity, p.language)} ${proposalUnitLabel(item.unit, item.quantity, p.language)}`),
       item.unit === 'fixed' ? '-' : money(item.unitPrice),
       money(item.total)
     ])
@@ -141,8 +151,23 @@ export async function buildProposalPdf(p: Proposal) {
   const head = [[t.description.toUpperCase(), t.qty.toUpperCase(), t.unitPrice.toUpperCase(), t.total.toUpperCase()]]
   y += 6
   heading(t.investment)
-  autoTable(doc, { ...tableOptions, startY: y, head, body: rows(p.items.filter(i => !i.optional)) })
-  y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 5
+  for (let index = 0; index < p.sections.length; index++) {
+    const section = p.sections[index]
+    const firstItem = section.items[0]
+    const firstItemText = firstItem ? `${firstItem.code ? `${firstItem.code}) ` : ''}${firstItem.title}${firstItem.description ? `\n${firstItem.description}` : ''}` : ''
+    const firstItemLines = firstItemText ? (doc.splitTextToSize(safe(firstItemText), width - 88) as string[]).length : 1
+    const noteLines = section.note ? (doc.splitTextToSize(safe(section.note), width) as string[]).length : 0
+    ensure(18 + firstItemLines * 4.5 + noteLines * 4)
+    doc.setFont('helvetica', 'bold').setFontSize(10).setTextColor(...INK)
+    doc.text(safe(`${p.language === 'it' ? 'Sezione' : 'Section'} ${String.fromCharCode(65 + index)} — ${section.title}`), margin, y)
+    y += 4
+    if (section.note) { doc.setFont('helvetica', 'italic').setFontSize(8.5).setTextColor(...MUTED); doc.text(doc.splitTextToSize(safe(section.note), width), margin, y); y += 6 }
+    autoTable(doc, { ...tableOptions, startY: y, head, body: rows(section.items) })
+    y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 3
+    doc.setFont('helvetica', 'bold').setFontSize(9).setTextColor(...INK)
+    doc.text(`${p.language === 'it' ? 'Subtotale sezione' : 'Section subtotal'} ${String.fromCharCode(65 + index)}: ${money(section.subtotal)}`, pageW - margin, y, { align: 'right' })
+    y += 7
+  }
 
   // Totals
   const totals: [string, string, boolean][] = [[t.subtotal, money(p.totals.subtotal), false]]
@@ -162,17 +187,6 @@ export async function buildProposalPdf(p: Proposal) {
     y += strong ? 7 : 5.5
   }
 
-  const optional = p.items.filter(i => i.optional)
-  if (optional.length) {
-    y += 4
-    ensure(16)
-    doc.setFont('helvetica', 'bold').setFontSize(9).setTextColor(71, 85, 105)
-    doc.text(safe(t.optionalItems), margin, y)
-    y += 2
-    autoTable(doc, { ...tableOptions, startY: y, head, body: rows(optional) })
-    y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 2
-  }
-
   if (p.milestones.length) {
     y += 6
     heading(t.payments)
@@ -187,6 +201,15 @@ export async function buildProposalPdf(p: Proposal) {
 
   block(t.assumptions, p.assumptions)
   block(t.terms, p.terms)
+
+  ensure(42)
+  y += 8
+  heading(p.language === 'it' ? 'Accettazione del preventivo' : 'Proposal acceptance')
+  doc.setFont('helvetica', 'normal').setFontSize(9).setTextColor(...MUTED)
+  doc.text(safe(`${p.language === 'it' ? 'Luogo e data' : 'Place and date'}${p.acceptance.place ? `: ${p.acceptance.place}` : ''}${p.acceptance.date ? ` · ${docDate(p.acceptance.date, p.language)}` : ''}`), margin, y)
+  doc.text(p.language === 'it' ? 'Firma del cliente' : 'Client signature', margin + width / 2, y)
+  y += 18
+  doc.setDrawColor(...LINE).line(margin, y, margin + width * 0.42, y).line(margin + width / 2, y, pageW - margin, y)
 
   // Footer on every page
   const pages = doc.getNumberOfPages()

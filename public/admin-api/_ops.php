@@ -25,6 +25,9 @@ const PROJECT_STAGE_LABELS = [
 /** Stages where work is still ahead (used for "active", "due soon" and "overdue"). */
 const PROJECT_OPEN_STAGES = ['lead', 'discovery', 'proposal', 'approved', 'design', 'development', 'qa'];
 const PROJECT_PRIORITIES = ['low', 'normal', 'high', 'urgent'];
+const PROJECT_MILESTONE_STATUSES = ['not_started', 'in_progress', 'completed', 'blocked'];
+const PROJECT_TASK_STATUSES = ['todo', 'in_progress', 'blocked', 'done'];
+const PROJECT_TASK_PRIORITIES = ['low', 'normal', 'high', 'urgent'];
 const PROJECT_LIMIT = 2000;
 const CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF'];
 const PROPOSAL_STATUSES = ['draft', 'sent', 'accepted', 'rejected', 'expired'];
@@ -286,6 +289,8 @@ function blank_project(): array
         'notes' => '',
         'links' => [],
         'tags' => [],
+        'milestones' => [],
+        'tasks' => [],
         'stageChangedAt' => $now,
         'createdAt' => $now,
         'updatedAt' => $now,
@@ -374,6 +379,39 @@ function project_due_state(array $project, string $today): ?string
 function project_view(array $state, array $project, string $today): array
 {
     $lead = ops_find($state, 'leads', $project['leadId']);
+    $project['milestones'] = array_values($project['milestones'] ?? []);
+    $project['tasks'] = array_values($project['tasks'] ?? []);
+    usort($project['milestones'], fn ($a, $b) => ($a['order'] ?? 0) <=> ($b['order'] ?? 0));
+    usort($project['tasks'], fn ($a, $b) => ($a['order'] ?? 0) <=> ($b['order'] ?? 0));
+    foreach ($project['tasks'] as &$task) {
+        $task['proposalItemId'] ??= null;
+        $task['overdue'] = $task['status'] !== 'done' && $task['dueDate'] !== null && $task['dueDate'] < $today;
+    }
+    unset($task);
+    foreach ($project['milestones'] as &$milestone) {
+        $linked = array_values(array_filter($project['tasks'], fn ($task) => $task['milestoneId'] === $milestone['id']));
+        $milestone['taskCount'] = count($linked);
+        $milestone['completedTaskCount'] = count(array_filter($linked, fn ($task) => $task['status'] === 'done'));
+    }
+    unset($milestone);
+    $completedTasks = count(array_filter($project['tasks'], fn ($task) => $task['status'] === 'done'));
+    $completedMilestones = count(array_filter($project['milestones'], fn ($milestone) => $milestone['status'] === 'completed'));
+    $openTasks = array_values(array_filter($project['tasks'], fn ($task) => $task['status'] !== 'done' && $task['dueDate'] !== null));
+    usort($openTasks, fn ($a, $b) => strcmp($a['dueDate'], $b['dueDate']));
+    $openMilestones = array_values(array_filter($project['milestones'], fn ($milestone) => $milestone['status'] !== 'completed' && $milestone['dueDate'] !== null));
+    usort($openMilestones, fn ($a, $b) => strcmp($a['dueDate'], $b['dueDate']));
+    $project['progress'] = [
+        'hasTasks' => count($project['tasks']) > 0,
+        'taskPercent' => count($project['tasks']) ? (int) round($completedTasks * 100 / count($project['tasks'])) : null,
+        'milestonePercent' => count($project['milestones']) ? (int) round($completedMilestones * 100 / count($project['milestones'])) : null,
+        'completedTasks' => $completedTasks,
+        'taskCount' => count($project['tasks']),
+        'completedMilestones' => $completedMilestones,
+        'milestoneCount' => count($project['milestones']),
+        'overdueTasks' => count(array_filter($project['tasks'], fn ($task) => $task['overdue'])),
+        'nextTask' => $openTasks[0] ?? null,
+        'nextMilestone' => $openMilestones[0] ?? null,
+    ];
     return $project + [
         'due' => project_due_state($project, $today),
         'lead' => lead_brief($lead),
@@ -383,10 +421,12 @@ function project_view(array $state, array $project, string $today): array
 
 // ── Proposals ───────────────────────────────────────────────────────────────
 
-function next_proposal_number(array &$state, ?int $year = null): string
+function next_proposal_number(array &$state, string $clientCode = '', ?int $year = null): string
 {
     $year ??= (int) gmdate('Y');
-    $key = "proposal-$year";
+    $clientCode = strtoupper(preg_replace('/[^A-Z0-9]/i', '', $clientCode) ?? '');
+    $clientCode = substr($clientCode, 0, 6);
+    $key = 'proposal-' . ($clientCode !== '' ? "$clientCode-" : '') . $year;
     $used = [];
     foreach ($state['proposals'] as $proposal) {
         $used[$proposal['number']] = true;
@@ -394,18 +434,84 @@ function next_proposal_number(array &$state, ?int $year = null): string
     $n = (int) ($state['counters'][$key] ?? 0);
     do {
         $n++;
-        $number = sprintf('NIV-%d-%03d', $year, $n);
+        $number = $clientCode !== '' ? sprintf('NIV-%s-%d-%03d', $clientCode, $year, $n) : sprintf('NIV-%d-%03d', $year, $n);
     } while (isset($used[$number]));
     $state['counters'][$key] = $n;
     return $number;
 }
 
+/** Computes dynamic Preventivo sections while preserving the legacy flat item list for compatibility. */
+function proposal_sections_compute(array $in): array
+{
+    $rawSections = $in['sections'] ?? [];
+    if (!is_array($rawSections) || count($rawSections) < 1 || count($rawSections) > 26) {
+        throw new ApiError('VALIDATION_ERROR', 'Use between 1 and 26 sections.', 422);
+    }
+    $legacy = [];
+    $shape = [];
+    foreach (array_values($rawSections) as $sectionIndex => $rawSection) {
+        if (!is_array($rawSection)) throw new ApiError('VALIDATION_ERROR', 'Invalid section.', 422);
+        $rawItems = $rawSection['items'] ?? [];
+        if (!is_array($rawItems) || count($rawItems) > 60) throw new ApiError('VALIDATION_ERROR', 'Use at most 60 rows per section.', 422);
+        $sectionId = isset($rawSection['id']) && preg_match('/^psec_[a-f0-9]{16}$/', (string) $rawSection['id']) ? $rawSection['id'] : new_id('psec');
+        $section = [
+            'id' => $sectionId,
+            'title' => v_string($rawSection['title'] ?? '', 'Section title', 180, true),
+            'note' => v_string($rawSection['note'] ?? '', 'Section note', 2000),
+            'order' => $sectionIndex,
+            'items' => [],
+        ];
+        foreach (array_values($rawItems) as $itemIndex => $raw) {
+            if (!is_array($raw)) throw new ApiError('VALIDATION_ERROR', 'Invalid line item.', 422);
+            $itemId = isset($raw['id']) && preg_match('/^pitem_[a-f0-9]{16}$/', (string) $raw['id']) ? $raw['id'] : new_id('pitem');
+            $title = v_string($raw['title'] ?? ($raw['description'] ?? ''), 'Line title', 300, true);
+            $description = v_string($raw['description'] ?? ($raw['details'] ?? ''), 'Line description', 1600);
+            $legacy[] = [
+                'description' => $title,
+                'details' => $description,
+                'quantity' => $raw['quantity'] ?? 1,
+                'unit' => $raw['unit'] ?? 'fixed',
+                'unitPrice' => $raw['unitPrice'] ?? 0,
+                'optional' => $raw['optional'] ?? false,
+            ];
+            $section['items'][] = ['id' => $itemId, 'title' => $title, 'description' => $description, 'flatIndex' => count($legacy) - 1, 'itemIndex' => $itemIndex];
+        }
+        $shape[] = $section;
+    }
+    $computed = proposal_compute([
+        'items' => $legacy,
+        'discount' => $in['discount'] ?? [],
+        'tax' => $in['tax'] ?? [],
+        'milestones' => $in['milestones'] ?? [],
+    ], 26 * 60);
+    $flat = [];
+    foreach ($shape as $sectionIndex => &$section) {
+        $subtotal = 0;
+        foreach ($section['items'] as &$item) {
+            $money = $computed['items'][$item['flatIndex']];
+            $itemCode = chr(65 + $sectionIndex) . ($item['itemIndex'] + 1);
+            unset($item['flatIndex'], $item['itemIndex']);
+            $item += $money;
+            $item['details'] = $item['description'];
+            $item['code'] = $itemCode;
+            if (!$item['optional']) $subtotal += $item['total'];
+            $flat[] = $item;
+        }
+        unset($item);
+        $section['subtotal'] = $subtotal;
+    }
+    unset($section);
+    $computed['sections'] = $shape;
+    $computed['items'] = $flat;
+    return $computed;
+}
+
 /** Validates line items, discount, tax and milestones and computes authoritative totals (cents). */
-function proposal_compute(array $in): array
+function proposal_compute(array $in, int $maxItems = 60): array
 {
     $rawItems = $in['items'] ?? [];
-    if (!is_array($rawItems) || count($rawItems) > 60) {
-        throw new ApiError('VALIDATION_ERROR', 'Use at most 60 line items.', 422);
+    if (!is_array($rawItems) || count($rawItems) > $maxItems) {
+        throw new ApiError('VALIDATION_ERROR', "Use at most $maxItems line items.", 422);
     }
     $items = [];
     $subtotal = 0;
@@ -429,7 +535,7 @@ function proposal_compute(array $in): array
         $optional = v_bool($raw['optional'] ?? false);
         $items[] = [
             'description' => $description,
-            'details' => v_string($raw['details'] ?? '', "$label details", 1000),
+            'details' => v_string($raw['details'] ?? '', "$label details", 1600),
             'quantity' => $quantity,
             'unit' => v_enum($raw['unit'] ?? 'fixed', "$label unit", PROPOSAL_UNITS),
             'unitPrice' => $unitPrice,
@@ -522,9 +628,15 @@ function blank_proposal(): array
         'language' => 'en',
         'leadId' => null,
         'projectId' => null,
+        'inboxId' => null,
+        'clientCode' => '',
         'clientName' => '',
         'clientCompany' => '',
         'clientEmail' => '',
+        'clientSector' => '',
+        'clientAddress' => '',
+        'clientPhone' => '',
+        'clientLogo' => null,
         'currency' => 'EUR',
         'issueDate' => gmdate('Y-m-d'),
         'validUntil' => gmdate('Y-m-d', time() + 30 * 86400),
@@ -534,6 +646,7 @@ function blank_proposal(): array
         'terms' => '',
         'notes' => '',
         'items' => [],
+        'sections' => [],
         'discount' => ['type' => 'none', 'value' => 0],
         'tax' => ['label' => 'VAT', 'rate' => 0],
         'milestones' => [],
@@ -543,15 +656,19 @@ function blank_proposal(): array
         'sentAt' => null,
         'acceptedAt' => null,
         'rejectedAt' => null,
+        'expiredAt' => null,
+        'acceptance' => ['place' => '', 'date' => null],
+        'versions' => [],
     ];
 }
 
 function apply_proposal_fields(array $state, array &$proposal, array $in): void
 {
-    $text = ['title' => [160, true], 'clientName' => [120, false], 'clientCompany' => [160, false], 'intro' => [4000, false], 'scope' => [8000, false], 'assumptions' => [4000, false], 'terms' => [6000, false], 'notes' => [4000, false]];
+    $text = ['title' => [160, true], 'clientCode' => [6, false], 'clientName' => [120, false], 'clientCompany' => [160, false], 'clientSector' => [160, false], 'clientAddress' => [500, false], 'clientPhone' => [80, false], 'intro' => [4000, false], 'scope' => [8000, false], 'assumptions' => [4000, false], 'terms' => [6000, false], 'notes' => [4000, false]];
     foreach ($text as $field => [$max, $required]) {
         if (array_key_exists($field, $in)) {
             $proposal[$field] = v_string($in[$field], ucfirst($field), $max, $required);
+            if ($field === 'clientCode') $proposal[$field] = strtoupper(preg_replace('/[^A-Z0-9]/i', '', $proposal[$field]) ?? '');
         }
     }
     if (array_key_exists('clientEmail', $in)) {
@@ -575,7 +692,22 @@ function apply_proposal_fields(array $state, array &$proposal, array $in): void
     if (array_key_exists('projectId', $in)) {
         $proposal['projectId'] = v_ref($state, $in['projectId'], 'projects', 'prj', 'Project');
     }
-    if (array_key_exists('items', $in) || array_key_exists('discount', $in) || array_key_exists('tax', $in) || array_key_exists('milestones', $in)) {
+    if (array_key_exists('inboxId', $in)) {
+        $proposal['inboxId'] = v_ref($state, $in['inboxId'], 'inbox', 'inq', 'Inquiry');
+    }
+    if (array_key_exists('acceptance', $in)) {
+        $acceptance = is_array($in['acceptance']) ? $in['acceptance'] : [];
+        $proposal['acceptance'] = ['place' => v_string($acceptance['place'] ?? '', 'Acceptance place', 120), 'date' => v_date($acceptance['date'] ?? null, 'Acceptance date')];
+    }
+    if (array_key_exists('sections', $in)) {
+        $computed = proposal_sections_compute([
+            'sections' => $in['sections'],
+            'discount' => $in['discount'] ?? $proposal['discount'],
+            'tax' => $in['tax'] ?? $proposal['tax'],
+            'milestones' => $in['milestones'] ?? $proposal['milestones'],
+        ]);
+        foreach ($computed as $key => $value) $proposal[$key] = $value;
+    } elseif (array_key_exists('items', $in) || array_key_exists('discount', $in) || array_key_exists('tax', $in) || array_key_exists('milestones', $in)) {
         $computed = proposal_compute([
             'items' => $in['items'] ?? $proposal['items'],
             'discount' => $in['discount'] ?? $proposal['discount'],

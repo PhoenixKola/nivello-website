@@ -12,6 +12,7 @@
     "serve:admin": "node scripts/serve-admin-test.mjs"
   },
   "dependencies": {
+    "docx": "^9.8.1",
     "framer-motion": "^12.23.24",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
@@ -30,6 +31,7 @@
     "baseline-browser-mapping": "^2.10.40",
     "eslint": "^9",
     "eslint-config-next": "^16.2.9",
+    "jszip": "^3.10.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

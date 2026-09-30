@@ -1,10 +1,19 @@
+/* eslint-disable @next/next/no-img-element */
 import type { Proposal } from '@/lib/admin/types'
-import { DOC_COPY, NIVELLO, computeDraft, docDate, docMoney, formatQuantity, type Draft } from './model'
+import { DOC_COPY, NIVELLO, computeDraft, docDate, docMoney, formatQuantity, proposalUnitLabel, type Draft } from './model'
 
 /** A Proposal-shaped snapshot of an unsaved draft, with totals computed like the server does. */
 export function draftToProposal(d: Draft, base: Proposal): Proposal {
   const c = computeDraft(d)
   const num = (v: string) => Number(v.replace(',', '.')) || 0
+  const items = d.items.map((i, n) => ({ id: i.id ?? i.key, title: i.description, description: i.details, details: i.details, quantity: num(i.quantity), unit: i.unit, unitPrice: Math.round(num(i.unitPrice) * 100), optional: i.optional, total: c.items[n] }))
+  const sections = d.sections.map((section, sectionIndex) => {
+    const sectionItems = d.items
+      .map((item, index) => ({ item, index }))
+      .filter(({ item }) => item.sectionKey === section.key)
+      .map(({ index }, itemIndex) => ({ ...items[index], code: `${String.fromCharCode(65 + sectionIndex)}${itemIndex + 1}` }))
+    return { id: section.id ?? section.key, title: section.title, note: section.note, order: sectionIndex, items: sectionItems, subtotal: sectionItems.filter(item => !item.optional).reduce((sum, item) => sum + item.total, 0) }
+  })
   return {
     ...base,
     title: d.title,
@@ -13,17 +22,24 @@ export function draftToProposal(d: Draft, base: Proposal): Proposal {
     clientName: d.clientName,
     clientCompany: d.clientCompany,
     clientEmail: d.clientEmail,
+    clientCode: d.clientCode,
+    clientSector: d.clientSector,
+    clientAddress: d.clientAddress,
+    clientPhone: d.clientPhone,
+    inboxId: d.inboxId,
     issueDate: d.issueDate,
     validUntil: d.validUntil || null,
     intro: d.intro,
     scope: d.scope,
     assumptions: d.assumptions,
     terms: d.terms,
-    items: d.items.map((i, n) => ({ description: i.description, details: i.details, quantity: num(i.quantity), unit: i.unit, unitPrice: Math.round(num(i.unitPrice) * 100), optional: i.optional, total: c.items[n] })),
+    items,
+    sections,
     discount: { type: d.discountType, value: num(d.discountValue) },
     tax: { label: d.taxLabel || 'VAT', rate: num(d.taxRate) },
     milestones: d.milestones.map((m, n) => ({ label: m.label, due: m.due, percent: num(m.percent), amount: c.milestones[n] })),
-    totals: { subtotal: c.subtotal, discount: c.discount, tax: c.tax, total: c.total, optional: c.optional }
+    totals: { subtotal: c.subtotal, discount: c.discount, tax: c.tax, total: c.total, optional: c.optional },
+    acceptance: { place: d.acceptancePlace, date: d.acceptanceDate || null }
   }
 }
 
@@ -41,9 +57,7 @@ function Section({ title, text }: { title: string; text: string }) {
 export default function ProposalDocument({ proposal: p }: { proposal: Proposal }) {
   const t = DOC_COPY[p.language]
   const money = (cents: number) => docMoney(cents, p.currency, p.language)
-  const included = p.items.filter(i => !i.optional)
-  const optional = p.items.filter(i => i.optional)
-  const unitLabel = (unit: Proposal['items'][number]['unit']) => t.units[unit]
+  const unitLabel = (unit: Proposal['items'][number]['unit'], quantity: number) => proposalUnitLabel(unit, quantity, p.language)
 
   const table = (items: Proposal['items']) => (
     <table className="w-full border-collapse text-[12.5px]">
@@ -59,10 +73,10 @@ export default function ProposalDocument({ proposal: p }: { proposal: Proposal }
         {items.map((item, n) => (
           <tr key={n} className="break-inside-avoid border-b border-slate-200 align-top">
             <td className="py-2.5 pr-3">
-              <p className="font-medium text-slate-900">{item.description || '—'}</p>
-              {item.details && <p className="mt-0.5 whitespace-pre-line text-[11.5px] text-slate-500">{item.details}</p>}
+              <p className="font-medium text-slate-900">{item.code ? `${item.code}) ` : ''}{item.title || '—'}{item.optional ? ` (${p.language === 'it' ? 'opzionale' : 'optional'})` : ''}</p>
+              {item.description && <p className="mt-0.5 whitespace-pre-line text-[11.5px] text-slate-500">{item.description}</p>}
             </td>
-            <td className="py-2.5 pr-3 text-right tabular-nums text-slate-700">{item.unit === 'fixed' ? '1' : `${formatQuantity(item.quantity, p.language)} ${unitLabel(item.unit)}`}</td>
+            <td className="py-2.5 pr-3 text-right tabular-nums text-slate-700">{item.unit === 'fixed' ? '1' : `${formatQuantity(item.quantity, p.language)} ${unitLabel(item.unit, item.quantity)}`}</td>
             <td className="py-2.5 pr-3 text-right tabular-nums text-slate-700">{item.unit === 'fixed' ? '—' : money(item.unitPrice)}</td>
             <td className="py-2.5 text-right font-medium tabular-nums text-slate-900">{money(item.total)}</td>
           </tr>
@@ -75,7 +89,6 @@ export default function ProposalDocument({ proposal: p }: { proposal: Proposal }
     <article className="mx-auto w-full max-w-[210mm] bg-white px-[14mm] py-[16mm] text-slate-900 shadow-[0_2px_24px_rgba(15,23,42,0.12)] print:max-w-none print:px-0 print:py-0 print:shadow-none" style={{ colorScheme: 'light' }}>
       <header className="flex flex-wrap items-start justify-between gap-6 border-b border-slate-200 pb-6">
         <div>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/nivello-logo-text-light.svg" alt="Nivello" width={150} height={43} className="h-auto w-[140px]" />
           <p className="mt-2 text-[11px] text-slate-500">
             {NIVELLO.web} · {NIVELLO.email}
@@ -89,12 +102,18 @@ export default function ProposalDocument({ proposal: p }: { proposal: Proposal }
 
       <h1 className="mt-8 text-[26px] font-bold leading-tight tracking-tight">{p.title || '—'}</h1>
 
-      <dl className="mt-6 grid grid-cols-1 gap-4 text-[12.5px] sm:grid-cols-3">
+      <dl className="mt-6 grid grid-cols-1 gap-4 text-[12.5px] sm:grid-cols-[1.4fr_1fr_1fr]">
         <div>
           <dt className="text-[11px] uppercase tracking-wide text-slate-500">{t.preparedFor}</dt>
+          {p.clientLogo && (
+            <img src={`/admin-api/proposal-file.php?action=logo&id=${p.id}`} alt="" className="mt-2 max-h-12 max-w-36 object-contain object-left" />
+          )}
           <dd className="mt-1 font-medium">{p.clientCompany || p.clientName || '—'}</dd>
           {p.clientCompany && p.clientName && <dd className="text-slate-600">{p.clientName}</dd>}
           {p.clientEmail && <dd className="text-slate-600">{p.clientEmail}</dd>}
+          {p.clientSector && <dd className="text-slate-600">{p.clientSector}</dd>}
+          {p.clientAddress && <dd className="text-slate-600">{p.clientAddress}</dd>}
+          {p.clientPhone && <dd className="text-slate-600">{p.clientPhone}</dd>}
         </div>
         <div>
           <dt className="text-[11px] uppercase tracking-wide text-slate-500">{t.issueDate}</dt>
@@ -111,7 +130,20 @@ export default function ProposalDocument({ proposal: p }: { proposal: Proposal }
 
       <section className="mt-8">
         <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0b6fc0]">{t.investment}</h2>
-        {table(included)}
+        <div className="space-y-7">
+          {p.sections.map((section, sectionIndex) => (
+            <section key={section.id} className="break-inside-avoid-page">
+              <div className="mb-2 flex items-end justify-between gap-4 border-b-2 border-slate-900 pb-2">
+                <div>
+                  <h3 className="text-[12px] font-bold uppercase tracking-[0.08em]">{p.language === 'it' ? 'Sezione' : 'Section'} {String.fromCharCode(65 + sectionIndex)} — {section.title}</h3>
+                  {section.note && <p className="mt-1 text-[11px] text-slate-500">{section.note}</p>}
+                </div>
+                <span className="shrink-0 text-[11px] font-semibold tabular-nums">{money(section.subtotal)}</span>
+              </div>
+              {table(section.items)}
+            </section>
+          ))}
+        </div>
         <div className="ml-auto mt-3 w-full max-w-72 space-y-1 text-[12.5px] break-inside-avoid">
           <div className="flex justify-between">
             <span className="text-slate-600">{t.subtotal}</span>
@@ -139,12 +171,6 @@ export default function ProposalDocument({ proposal: p }: { proposal: Proposal }
             <span className="tabular-nums">{money(p.totals.total)}</span>
           </div>
         </div>
-        {optional.length > 0 && (
-          <div className="mt-6 break-inside-avoid">
-            <p className="mb-1 text-[11.5px] font-medium text-slate-600">{t.optionalItems}</p>
-            {table(optional)}
-          </div>
-        )}
       </section>
 
       {p.milestones.length > 0 && (
@@ -167,6 +193,14 @@ export default function ProposalDocument({ proposal: p }: { proposal: Proposal }
 
       <Section title={t.assumptions} text={p.assumptions} />
       <Section title={t.terms} text={p.terms} />
+
+      <section className="mt-10 break-inside-avoid border-t-2 border-slate-900 pt-5">
+        <h2 className="text-[12px] font-bold uppercase tracking-[0.12em]">{p.language === 'it' ? 'Accettazione del preventivo' : 'Proposal acceptance'}</h2>
+        <div className="mt-7 grid grid-cols-2 gap-10 text-[11px] text-slate-500">
+          <div><p>{p.language === 'it' ? 'Luogo e data' : 'Place and date'}{p.acceptance.place ? ` · ${p.acceptance.place}` : ''}</p><div className="mt-8 border-b border-slate-500" /></div>
+          <div><p>{p.language === 'it' ? 'Firma del cliente' : 'Client signature'}</p><div className="mt-8 border-b border-slate-500" /></div>
+        </div>
+      </section>
 
       <footer className="mt-10 border-t border-slate-200 pt-4 text-[10.5px] text-slate-400">
         {NIVELLO.name} · {NIVELLO.web} · {NIVELLO.email} · {p.number}

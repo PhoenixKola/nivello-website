@@ -16,6 +16,8 @@ import type {
   Project,
   ProjectDetail,
   ProjectList,
+  ProjectMilestone,
+  ProjectTask,
   Incident,
   Monitor,
   MonitorInput,
@@ -31,8 +33,9 @@ import type {
 } from './types'
 
 /** Proposal fields as the API accepts them: money as decimal amounts (the server converts to cents). */
-export type ProposalInput = Omit<Proposal, 'id' | 'number' | 'status' | 'items' | 'milestones' | 'totals' | 'createdAt' | 'updatedAt' | 'sentAt' | 'acceptedAt' | 'rejectedAt'> & {
-  items: { description: string; details: string; quantity: number; unit: string; unitPrice: number; optional: boolean }[]
+export type ProposalInput = Omit<Proposal, 'id' | 'number' | 'status' | 'items' | 'sections' | 'milestones' | 'totals' | 'clientLogo' | 'versions' | 'createdAt' | 'updatedAt' | 'sentAt' | 'acceptedAt' | 'rejectedAt' | 'expiredAt'> & {
+  items?: { description: string; details: string; quantity: number; unit: string; unitPrice: number; optional: boolean }[]
+  sections: { id?: string; title: string; note: string; items: { id?: string; title: string; description: string; quantity: number; unit: string; unitPrice: number; optional: boolean }[] }[]
   milestones: { label: string; due: string; percent: number }[]
 }
 
@@ -136,6 +139,20 @@ async function downloadCsv(body: unknown, fallbackName: string) {
   return Number(response.headers.get('X-Row-Count') ?? 0)
 }
 
+async function downloadResponse(response: Response, fallbackName: string) {
+  const blob = await response.blob()
+  const disposition = response.headers.get('Content-Disposition') ?? ''
+  const name = /filename="([^"]+)"/.exec(disposition)?.[1] ?? fallbackName
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = name
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
 export const api = {
   session: () => request<{ authenticated: boolean; expired: boolean; csrfToken: string | null }>('auth', 'session'),
   login: (code: string) => post<{ authenticated: boolean; csrfToken: string }>('auth', 'login', { code }),
@@ -208,14 +225,40 @@ export const api = {
   createProject: (project: Partial<Project>) => post<ProjectDetail>('projects', 'create', { project }),
   updateProject: (id: string, changes: Partial<Project>) => post<ProjectDetail>('projects', 'update', { id, changes }),
   deleteProject: (id: string) => post<{ deleted: boolean }>('projects', 'delete', { id }),
+  createProjectMilestone: (projectId: string, milestone: Partial<ProjectMilestone>) => post<ProjectDetail>('projects', 'milestone-create', { projectId, milestone }),
+  updateProjectMilestone: (projectId: string, id: string, changes: Partial<ProjectMilestone>) => post<ProjectDetail>('projects', 'milestone-update', { projectId, id, changes }),
+  reorderProjectMilestones: (projectId: string, ids: string[]) => post<ProjectDetail>('projects', 'milestone-reorder', { projectId, ids }),
+  deleteProjectMilestone: (projectId: string, id: string) => post<ProjectDetail>('projects', 'milestone-delete', { projectId, id }),
+  createProjectTask: (projectId: string, task: Partial<ProjectTask>) => post<ProjectDetail>('projects', 'task-create', { projectId, task }),
+  updateProjectTask: (projectId: string, id: string, changes: Partial<ProjectTask>) => post<ProjectDetail>('projects', 'task-update', { projectId, id, changes }),
+  deleteProjectTask: (projectId: string, id: string) => post<ProjectDetail>('projects', 'task-delete', { projectId, id }),
 
   proposals: (status: ProposalStatus | 'all', q = '') => request<{ proposals: ProposalSummary[]; counts: Record<ProposalStatus, number> }>('proposals', 'list', { status, q }),
   proposal: (id: string) => request<ProposalDetail>('proposals', 'get', { id }),
   createProposal: (proposal: Partial<ProposalInput>) => post<ProposalDetail>('proposals', 'create', { proposal }),
   updateProposal: (id: string, proposal: Partial<ProposalInput>) => post<ProposalDetail>('proposals', 'update', { id, proposal }),
-  proposalStatus: (id: string, status: ProposalStatus, project: 'none' | 'create' | 'update' = 'none') => post<ProposalDetail>('proposals', 'status', { id, status, project }),
+  proposalStatus: (id: string, status: ProposalStatus, project: 'none' | 'create' | 'update' = 'none', createTasks = false) => post<ProposalDetail>('proposals', 'status', { id, status, project, createTasks }),
   duplicateProposal: (id: string) => post<ProposalDetail>('proposals', 'duplicate', { id }),
   deleteProposal: (id: string) => post<{ deleted: boolean }>('proposals', 'delete', { id }),
+  uploadProposalLogo: (id: string, file: File) => {
+    const form = new FormData()
+    form.append('id', id)
+    form.append('logo', file)
+    return request<ProposalDetail>('proposals', 'upload-logo', {}, { method: 'POST', form })
+  },
+  removeProposalLogo: (id: string) => post<ProposalDetail>('proposals', 'remove-logo', { id }),
+  archiveProposalFiles: (id: string, revision: number, docx: Blob, pdf: Blob) => {
+    const form = new FormData()
+    form.append('id', id)
+    form.append('revision', String(revision))
+    form.append('docx', docx, 'preventivo.docx')
+    form.append('pdf', pdf, 'preventivo.pdf')
+    return request<ProposalDetail>('proposals', 'archive-files', {}, { method: 'POST', form })
+  },
+  downloadProposalFile: async (id: string, revision: number, format: 'docx' | 'pdf') => {
+    const response = await request<Response>('proposal-file', 'file', { id, revision: String(revision), format }, { raw: true })
+    await downloadResponse(response, `preventivo.${format}`)
+  },
 
   tags: () => request<{ tags: Tag[] }>('tags', 'list'),
   createTag: (name: string, color: string) => post<{ tag: Tag; tags: Tag[] }>('tags', 'create', { name, color }),
