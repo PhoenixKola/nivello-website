@@ -1,151 +1,288 @@
 import type { Proposal } from '@/lib/admin/types'
-import { docDate, docMoney, formatQuantity, NIVELLO, proposalUnitLabel } from './model'
+import {
+  acceptanceLabel,
+  clientDetails,
+  clientLogoPng,
+  fit,
+  itemQuantity,
+  itemTitle,
+  milestoneLabel,
+  sectionFill,
+  sectionLetter,
+  summaryAdjustments,
+  TEMPLATE_LABELS,
+  templateBytes,
+  textBlocks,
+  tDate,
+  tMoney
+} from './template'
 
-const BLUE = '0B6FC0'
-const INK = '0F172A'
-const MUTED = '64748B'
-const LINE = 'CBD5E1'
+/*
+ * Fills the original Nivello Word template instead of generating a new document: every table, row,
+ * paragraph and image comes from the template itself (cloned where more are needed), so fonts,
+ * colours, borders, widths, spacing, footer and page setup stay exactly as designed.
+ *
+ * Template body (by position): 0 header · 1 title · 2 supplier/client · 3 spacer · 4 section A header ·
+ * 5 spacer · 6 section A items · 7 page break · 8 continuation header · 9 spacer · 10 section B header ·
+ * 11 spacer · 12 section B items · 13 spacer · 14 summary · 15 acceptance heading · 16 signatures · 17 spacer.
+ */
 
-async function imageBytes(url: string): Promise<{ data: Uint8Array; type: 'png' | 'jpg' } | null> {
-  const response = await fetch(url, { credentials: 'same-origin' })
-  if (!response.ok) return null
-  const blob = await response.blob()
-  if (blob.type === 'image/png') return { data: new Uint8Array(await blob.arrayBuffer()), type: 'png' }
-  if (blob.type === 'image/jpeg') return { data: new Uint8Array(await blob.arrayBuffer()), type: 'jpg' }
-  const bitmap = await createImageBitmap(blob)
-  const canvas = document.createElement('canvas')
-  canvas.width = bitmap.width
-  canvas.height = bitmap.height
-  canvas.getContext('2d')?.drawImage(bitmap, 0, 0)
-  bitmap.close()
-  const png = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'))
-  return png ? { data: new Uint8Array(await png.arrayBuffer()), type: 'png' } : null
+const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
+const REL_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
+const PKG_NS = 'http://schemas.openxmlformats.org/package/2006/relationships'
+const XML_NS = 'http://www.w3.org/XML/1998/namespace'
+const EMU_PER_MM = 36000
+const CLIENT_LOGO_REL = 'rIdNivelloClientLogo'
+
+const elements = (node: Node) => Array.from(node.childNodes).filter((child): child is Element => child.nodeType === 1)
+const wChildren = (node: Node, name: string) => elements(node).filter(child => child.namespaceURI === W && child.localName === name)
+const wAll = (node: Element | Document, name: string) => Array.from(node.getElementsByTagNameNS(W, name))
+const anyAll = (node: Element, name: string) => Array.from(node.getElementsByTagName('*')).filter(child => child.localName === name)
+const clone = <T extends Node>(node: T) => node.cloneNode(true) as T
+const remove = (node: Node) => node.parentNode?.removeChild(node)
+
+function setText(t: Element, value: string) {
+  t.textContent = value
+  t.setAttributeNS(XML_NS, 'xml:space', 'preserve')
+}
+
+/** Replaces `find` inside the nth w:t that contains it. */
+function replaceText(scope: Element, find: string, value: string, occurrence = 0) {
+  let seen = 0
+  for (const t of wAll(scope, 't')) {
+    const text = t.textContent ?? ''
+    if (!text.includes(find)) continue
+    if (seen++ === occurrence) {
+      setText(t, text.replace(find, value))
+      return true
+    }
+  }
+  return false
+}
+
+/** Rewrites a run's text, keeping its formatting; newlines become Word line breaks. */
+function writeRun(run: Element, text: string) {
+  const doc = run.ownerDocument
+  for (const child of elements(run)) if (child.localName !== 'rPr') remove(child)
+  text.split('\n').forEach((line, index) => {
+    if (index > 0) run.appendChild(doc.createElementNS(W, 'w:br'))
+    const t = doc.createElementNS(W, 'w:t')
+    setText(t, line)
+    run.appendChild(t)
+  })
+}
+
+/** Writes a cell's value into its first text run (keeping that run's formatting) and clears the rest. */
+function setCell(cell: Element, value: string) {
+  const [first, ...rest] = wAll(cell, 't')
+  if (!first) throw new Error('Template cell has no text run.')
+  setText(first, value)
+  for (const t of rest) setText(t, '')
+}
+
+/** The run holding a given placeholder text. */
+function runWith(scope: Element, find: string) {
+  const t = wAll(scope, 't').find(node => (node.textContent ?? '').includes(find))
+  if (!t) throw new Error(`Template placeholder not found: ${find}`)
+  return t.parentNode as Element
+}
+
+function paragraphOf(node: Node) {
+  let current: Node | null = node
+  while (current && !(current.nodeType === 1 && (current as Element).localName === 'p')) current = current.parentNode
+  return current as Element
 }
 
 export async function buildProposalDocx(p: Proposal) {
-  const {
-    AlignmentType,
-    BorderStyle,
-    Document,
-    Footer,
-    ImageRun,
-    PageBreak,
-    Packer,
-    Paragraph,
-    Table,
-    TableCell,
-    TableRow,
-    TextRun,
-    WidthType
-  } = await import('docx')
-  const money = (value: number) => docMoney(value, p.currency, p.language)
-  const label = (en: string, it: string) => (p.language === 'it' ? it : en)
-  const border = { style: BorderStyle.SINGLE, size: 4, color: LINE }
-  const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }
-  const cell = (content: string, options: { bold?: boolean; align?: (typeof AlignmentType)[keyof typeof AlignmentType]; color?: string } = {}) =>
-    new TableCell({
-      borders: { top: border, bottom: border, left: noBorder, right: noBorder },
-      margins: { top: 120, bottom: 120, left: 100, right: 100 },
-      children: [new Paragraph({ alignment: options.align, children: [new TextRun({ text: content, bold: options.bold, color: options.color ?? INK, size: 18 })] })]
+  const { default: JSZip } = await import('jszip')
+  const labels = TEMPLATE_LABELS[p.language]
+  const money = (cents: number) => tMoney(cents, p.currency, p.language)
+  const zip = await JSZip.loadAsync(await templateBytes())
+  const parser = new DOMParser()
+  const serializer = new XMLSerializer()
+  const documentXml = parser.parseFromString(await zip.file('word/document.xml')!.async('string'), 'application/xml')
+  const body = wAll(documentXml, 'body')[0]
+  const nodes = elements(body)
+  const sectPr = nodes[nodes.length - 1]
+  if (nodes.length < 19 || sectPr.localName !== 'sectPr' || [0, 2, 4, 6, 8, 10, 12, 14, 16].some(i => nodes[i].localName !== 'tbl')) {
+    throw new Error('The Preventivo template does not have the expected structure.')
+  }
+  const [header, title, parties, spacerAfterParties, headerA, spacerInSection, itemsA, pageBreak, continuation, spacerAfterContinuation, headerB, , , spacerBeforeSummary, summary, acceptanceHeading, signatures, closingSpacer] = nodes
+
+  // Pristine prototypes, taken before anything is filled in.
+  const proto = {
+    sectionHeader: [clone(headerA), clone(headerB)],
+    spacer: clone(spacerInSection),
+    items: clone(itemsA),
+    summary: clone(summary),
+    heading: clone(acceptanceHeading),
+    body: paragraphOf(runWith(parties, '[SETTORE')).cloneNode(true) as Element
+  }
+
+  // Header: logo stays; metadata box gets the proposal values.
+  replaceText(header, 'PREVENTIVO', labels.caps)
+  replaceText(header, 'Numero', labels.number)
+  replaceText(header, 'NIV-[CLI]-[AAAA]-[001]', p.number)
+  replaceText(header, 'Valido fino al', labels.validUntil)
+  replaceText(header, 'Data', labels.date)
+  replaceText(header, '[GG/MM/AAAA]', tDate(p.issueDate))
+  replaceText(header, '[GG/MM/AAAA]', tDate(p.validUntil))
+  if (wAll(header, 't').some(t => (t.textContent ?? '').includes('['))) throw new Error('Template header placeholders were not all filled.')
+
+  // Centered title.
+  replaceText(title, 'Preventivo', labels.word)
+  replaceText(title, '[TITOLO DEL PROGETTO / SERVIZIO]', p.title)
+
+  // Supplier / client block.
+  replaceText(parties, 'FORNITORE', labels.supplier)
+  const clientTable = wAll(wChildren(wChildren(parties, 'tr')[0], 'tc')[1], 'tbl')[0]
+  const [logoCell, clientCell] = wChildren(wChildren(clientTable, 'tr')[0], 'tc')
+  const logoParagraph = wChildren(logoCell, 'p')[0]
+  for (const run of wChildren(logoParagraph, 'r')) remove(run)
+  const client = clientDetails(p)
+  const [labelParagraph, nameParagraph, sectorParagraph, addressParagraph, contactParagraph] = wChildren(clientCell, 'p')
+  replaceText(labelParagraph, 'CLIENTE', labels.client)
+  replaceText(nameParagraph, '[NOME CLIENTE / AZIENDA]', client.name)
+  for (const [paragraph, value] of [[sectorParagraph, client.sector], [addressParagraph, client.address], [contactParagraph, client.contact]] as const) {
+    if (value) writeRun(wChildren(paragraph, 'r')[0], value)
+    else remove(paragraph)
+  }
+
+  const logo = await clientLogoPng(p)
+  if (logo) {
+    const logoRun = clone(wAll(header, 'drawing')[0].parentNode as Element)
+    const size = fit(logo.width, logo.height, 30 * EMU_PER_MM, 16 * EMU_PER_MM)
+    const cx = String(Math.round(size.width))
+    const cy = String(Math.round(size.height))
+    for (const extent of [...anyAll(logoRun, 'extent'), ...anyAll(logoRun, 'ext')]) {
+      if (extent.hasAttribute('cx')) {
+        extent.setAttribute('cx', cx)
+        extent.setAttribute('cy', cy)
+      }
+    }
+    for (const docPr of anyAll(logoRun, 'docPr')) {
+      docPr.setAttribute('id', '9001')
+      docPr.setAttribute('name', 'Client logo')
+    }
+    for (const blip of anyAll(logoRun, 'blip')) blip.setAttributeNS(REL_NS, 'r:embed', CLIENT_LOGO_REL)
+    logoParagraph.appendChild(logoRun)
+    zip.file('word/media/nivello-client-logo.png', logo.data)
+    const rels = parser.parseFromString(await zip.file('word/_rels/document.xml.rels')!.async('string'), 'application/xml')
+    const relationship = rels.createElementNS(PKG_NS, 'Relationship')
+    relationship.setAttribute('Id', CLIENT_LOGO_REL)
+    relationship.setAttribute('Type', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image')
+    relationship.setAttribute('Target', 'media/nivello-client-logo.png')
+    rels.documentElement.appendChild(relationship)
+    zip.file('word/_rels/document.xml.rels', serializer.serializeToString(rels))
+    const types = await zip.file('[Content_Types].xml')!.async('string')
+    if (!/Extension="png"/i.test(types)) zip.file('[Content_Types].xml', types.replace('</Types>', '<Default Extension="png" ContentType="image/png"/></Types>'))
+  }
+
+  // Building blocks cloned from the template.
+  const heading = (text: string) => {
+    const paragraph = clone(proto.heading)
+    replaceText(paragraph, 'ACCETTAZIONE DEL PREVENTIVO', text)
+    return paragraph
+  }
+  const bodyText = (text: string) => {
+    const paragraph = clone(proto.body)
+    writeRun(wChildren(paragraph, 'r')[0], text)
+    return paragraph
+  }
+  const sectionHeader = (index: number, sectionTitle: string, subtotal: number) => {
+    const table = clone(proto.sectionHeader[index % 2])
+    const [titleCell, subtotalCell] = wChildren(wChildren(table, 'tr')[0], 'tc')
+    setCell(titleCell, `${labels.section} ${sectionLetter(index)} — ${sectionTitle.toUpperCase()}`)
+    setCell(subtotalCell, `${labels.subtotal} ${money(subtotal)}`)
+    for (const shd of wAll(table, 'shd')) shd.setAttributeNS(W, 'w:fill', sectionFill(index))
+    return table
+  }
+  const itemsTable = (section: Proposal['sections'][number], index: number) => {
+    const letter = sectionLetter(index)
+    const table = clone(proto.items)
+    const rows = wChildren(table, 'tr')
+    const [head, odd, even, subtotal] = [rows[0], rows[1], rows[2], rows[rows.length - 1]]
+    rows.forEach(remove)
+    wChildren(head, 'tc').forEach((cell, n) => setCell(cell, [labels.item, labels.quantity, labels.price, labels.total][n]))
+    table.appendChild(head)
+    section.items.forEach((item, itemIndex) => {
+      const row = clone(itemIndex % 2 === 0 ? odd : even)
+      const [descriptionCell, quantityCell, priceCell, totalCell] = wChildren(row, 'tc')
+      writeRun(runWith(descriptionCell, '[TITOLO VOCE]'), itemTitle(p, item, letter, itemIndex))
+      const descriptionRun = runWith(descriptionCell, '[Descrizione sintetica')
+      if (item.description) writeRun(descriptionRun, item.description)
+      else remove(paragraphOf(descriptionRun))
+      setCell(quantityCell, itemQuantity(p, item))
+      setCell(priceCell, money(item.unitPrice))
+      setCell(totalCell, money(item.total))
+      table.appendChild(row)
     })
-  const heading = (text: string) => new Paragraph({ spacing: { before: 260, after: 100 }, children: [new TextRun({ text: text.toUpperCase(), bold: true, color: BLUE, size: 18, characterSpacing: 20 })] })
-  const logo = await imageBytes('/nivello-icon.png')
-  const clientLogo = p.clientLogo ? await imageBytes(`/admin-api/proposal-file.php?action=logo&id=${p.id}`) : null
-  const children: Array<InstanceType<typeof Paragraph> | InstanceType<typeof Table>> = []
-
-  children.push(
-    new Table({
-      width: { size: 100, type: WidthType.PERCENTAGE },
-      borders: { top: noBorder, bottom: border, left: noBorder, right: noBorder, insideHorizontal: noBorder, insideVertical: noBorder },
-      rows: [new TableRow({ children: [
-        new TableCell({ borders: { top: noBorder, bottom: border, left: noBorder, right: noBorder }, children: [new Paragraph({ children: [
-          ...(logo ? [new ImageRun({ data: logo.data, transformation: { width: 34, height: 34 }, type: logo.type })] : []),
-          new TextRun({ text: `  ${NIVELLO.name}`, bold: true, size: 30, color: INK }),
-          new TextRun({ text: `\n${NIVELLO.email}  ${NIVELLO.web}`, size: 16, color: MUTED })
-        ] })] }),
-        new TableCell({ borders: { top: noBorder, bottom: border, left: noBorder, right: noBorder }, children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: 'PREVENTIVO', bold: true, color: BLUE, size: 18 }), new TextRun({ text: `\n${p.number}`, font: 'Courier New', size: 20, color: INK })] })] })
-      ] })]
-    }),
-    new Paragraph({ spacing: { before: 360, after: 200 }, children: [new TextRun({ text: p.title, bold: true, size: 38, color: INK })] })
-  )
-
-  const clientLines = [p.clientCompany || p.clientName, p.clientCompany && p.clientName ? p.clientName : '', p.clientSector, p.clientAddress, p.clientPhone, p.clientEmail].filter(Boolean)
-  children.push(new Table({
-    width: { size: 100, type: WidthType.PERCENTAGE },
-    borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder, insideHorizontal: noBorder, insideVertical: noBorder },
-    rows: [new TableRow({ children: [
-      new TableCell({ width: { size: 50, type: WidthType.PERCENTAGE }, borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder }, children: [
-        new Paragraph({ children: [new TextRun({ text: label('CLIENT', 'CLIENTE'), bold: true, color: BLUE, size: 16 })] }),
-        ...(clientLogo ? [new Paragraph({ spacing: { before: 80, after: 80 }, children: [new ImageRun({ data: clientLogo.data, transformation: { width: 120, height: 48 }, type: clientLogo.type })] })] : []),
-        ...clientLines.map((line, index) => new Paragraph({ children: [new TextRun({ text: line, bold: index === 0, size: 19, color: index === 0 ? INK : MUTED })] }))
-      ] }),
-      new TableCell({ borders: { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder }, children: [
-        new Paragraph({ children: [new TextRun({ text: label('DATE', 'DATA'), bold: true, color: BLUE, size: 16 }), new TextRun({ text: `\n${docDate(p.issueDate, p.language)}`, size: 19 })] }),
-        new Paragraph({ spacing: { before: 120 }, children: [new TextRun({ text: label('VALID UNTIL', 'VALIDO FINO AL'), bold: true, color: BLUE, size: 16 }), new TextRun({ text: `\n${docDate(p.validUntil, p.language)}`, size: 19 })] })
-      ] })
-    ] })]
-  }))
-
-  for (const [title, text] of [[label('Introduction', 'Introduzione'), p.intro], [label('Scope of work', 'Ambito del lavoro'), p.scope]] as const) {
-    if (text.trim()) children.push(heading(title), new Paragraph({ spacing: { after: 120 }, children: [new TextRun({ text, size: 19, color: MUTED })] }))
+    const [subtotalLabel, subtotalValue] = wChildren(subtotal, 'tc')
+    setCell(subtotalLabel, `${labels.sectionSubtotal} ${letter}`)
+    setCell(subtotalValue, money(section.subtotal))
+    table.appendChild(subtotal)
+    return table
+  }
+  const boxTable = (title: string, rows: { label: string; value: number }[], total: { label: string; value: number }) => {
+    const table = clone(proto.summary)
+    const [head, row, , totalRow] = wChildren(table, 'tr')
+    wChildren(table, 'tr').forEach(remove)
+    setCell(wChildren(head, 'tc')[0], title)
+    table.appendChild(head)
+    for (const entry of rows) {
+      const line = clone(row)
+      const [labelCell, valueCell] = wChildren(line, 'tc')
+      setCell(labelCell, entry.label)
+      setCell(valueCell, money(entry.value))
+      table.appendChild(line)
+    }
+    const [totalLabel, totalValue] = wChildren(totalRow, 'tc')
+    setCell(totalLabel, total.label)
+    setCell(totalValue, money(total.value))
+    table.appendChild(totalRow)
+    return table
   }
 
-  p.sections.forEach((section, sectionIndex) => {
-    const letter = String.fromCharCode(65 + sectionIndex)
-    children.push(heading(`${label('Section', 'Sezione')} ${letter} — ${section.title}`))
-    if (section.note) children.push(new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: section.note, italics: true, color: MUTED, size: 18 })] }))
-    children.push(new Table({
-      width: { size: 100, type: WidthType.PERCENTAGE },
-      rows: [
-        new TableRow({ tableHeader: true, children: [cell(label('Item / description', 'Voce / descrizione'), { bold: true }), cell(label('Qty', 'Quantità'), { bold: true, align: AlignmentType.RIGHT }), cell(label('Price', 'Prezzo'), { bold: true, align: AlignmentType.RIGHT }), cell(label('Total', 'Totale'), { bold: true, align: AlignmentType.RIGHT })] }),
-        ...section.items.map(item => new TableRow({ cantSplit: true, children: [
-          new TableCell({ borders: { top: border, bottom: border, left: noBorder, right: noBorder }, margins: { top: 120, bottom: 120, left: 100, right: 100 }, children: [new Paragraph({ children: [new TextRun({ text: `${item.code}) ${item.title}${item.optional ? ` (${label('optional', 'opzionale')})` : ''}`, bold: true, size: 18 }), ...(item.description ? [new TextRun({ text: `\n${item.description}`, color: MUTED, size: 17 })] : [])] })] }),
-          cell(item.unit === 'fixed' ? '1' : `${formatQuantity(item.quantity, p.language)} ${proposalUnitLabel(item.unit, item.quantity, p.language)}`, { align: AlignmentType.RIGHT }),
-          cell(item.unit === 'fixed' ? '—' : money(item.unitPrice), { align: AlignmentType.RIGHT }),
-          cell(money(item.total), { bold: true, align: AlignmentType.RIGHT })
-        ] })),
-        new TableRow({ children: [new TableCell({ columnSpan: 3, borders: { top: border, bottom: border, left: noBorder, right: noBorder }, children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: `${label('Section subtotal', 'Subtotale sezione')} ${letter}`, bold: true, size: 18 })] })] }), cell(money(section.subtotal), { bold: true, align: AlignmentType.RIGHT })] })
-      ]
-    }))
-  })
+  // Continuation header before Sezione B, as in the template.
+  replaceText(continuation, 'NIV-[CLI]-[AAAA]-[001]', p.number)
+  writeRun(runWith(continuation, '[NOME CLIENTE]'), `${client.name} · ${labels.word}`)
 
-  children.push(heading(label('Summary', 'Riepilogo')))
-  const summaryRows = p.sections.map((section, index) => new TableRow({ children: [cell(`${String.fromCharCode(65 + index)} — ${section.title}`), cell(money(section.subtotal), { align: AlignmentType.RIGHT })] }))
-  if (p.totals.discount > 0) summaryRows.push(new TableRow({ children: [cell(`${label('Discount', 'Sconto')}${p.discount.type === 'percent' ? ` (${formatQuantity(p.discount.value, p.language)}%)` : ''}`), cell(`-${money(p.totals.discount)}`, { align: AlignmentType.RIGHT })] }))
-  if (p.totals.tax > 0) summaryRows.push(new TableRow({ children: [cell(`${p.tax.label} (${formatQuantity(p.tax.rate, p.language)}%)`), cell(money(p.totals.tax), { align: AlignmentType.RIGHT })] }))
-  summaryRows.push(new TableRow({ children: [cell(label('TOTAL', 'TOTALE'), { bold: true }), cell(money(p.totals.total), { bold: true, align: AlignmentType.RIGHT })] }))
-  children.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: summaryRows }))
+  const blocks = textBlocks(p)
+  const out: Element[] = [header, title, parties, spacerAfterParties]
+  for (const block of blocks.before) out.push(heading(block.title), bodyText(block.text))
+  if (blocks.before.length) out.push(clone(proto.spacer))
+  p.sections.forEach((section, index) => {
+    if (index === 1) out.push(pageBreak, continuation, spacerAfterContinuation)
+    else if (index > 1) out.push(clone(proto.spacer))
+    out.push(sectionHeader(index, section.title, section.subtotal), clone(proto.spacer))
+    if (section.note) out.push(bodyText(section.note))
+    out.push(itemsTable(section, index))
+  })
+  out.push(spacerBeforeSummary)
+  out.push(boxTable(labels.summary, [...p.sections.map(section => ({ label: section.title, value: section.subtotal })), ...summaryAdjustments(p)], { label: labels.grandTotal, value: p.totals.total }))
   if (p.milestones.length) {
-    children.push(
-      heading(label('Payment plan', 'Piano dei pagamenti')),
-      new Table({
-        width: { size: 100, type: WidthType.PERCENTAGE },
-        rows: p.milestones.map(milestone => new TableRow({
-          children: [
-            cell(milestone.label, { bold: true }),
-            cell(milestone.due, { color: MUTED }),
-            cell(`${formatQuantity(milestone.percent, p.language)}%`, { align: AlignmentType.RIGHT }),
-            cell(money(milestone.amount), { align: AlignmentType.RIGHT })
-          ]
-        }))
-      })
-    )
+    out.push(clone(proto.spacer), boxTable(labels.payments, p.milestones.map(milestone => ({ label: milestoneLabel(p, milestone), value: milestone.amount })), { label: labels.grandTotal, value: p.totals.total }))
   }
-  if (p.assumptions) children.push(heading(label('Assumptions', 'Premesse')), new Paragraph({ children: [new TextRun({ text: p.assumptions, size: 18, color: MUTED })] }))
-  if (p.terms) children.push(heading(label('Terms', 'Condizioni')), new Paragraph({ children: [new TextRun({ text: p.terms, size: 18, color: MUTED })] }))
-  const acceptance = [p.acceptance.place, p.acceptance.date ? docDate(p.acceptance.date, p.language) : ''].filter(Boolean).join(' · ')
-  children.push(new Paragraph({ children: [new PageBreak()] }), heading(label('Proposal acceptance', 'Accettazione del preventivo')), new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [new TableRow({ children: [cell(`${label('Place and date', 'Luogo e data')}${acceptance ? `\n${acceptance}` : '\n\n'}`), cell(`${label('Client signature', 'Firma del cliente')}\n\n`)] })] }))
+  for (const block of blocks.after) out.push(heading(block.title), bodyText(block.text))
 
-  const doc = new Document({
-    creator: NIVELLO.name,
-    title: `${p.number} ${p.title}`,
-    sections: [{
-      properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 900, right: 900, bottom: 1000, left: 900 } } },
-      children,
-      footers: { default: new Footer({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${NIVELLO.name} · ${NIVELLO.web} · ${NIVELLO.email} · ${p.number}`, color: MUTED, size: 15 })] })] }) }
-    }]
-  })
-  return Packer.toBlob(doc)
+  // Acceptance and signatures.
+  replaceText(acceptanceHeading, 'ACCETTAZIONE DEL PREVENTIVO', labels.acceptance)
+  replaceText(signatures, 'Luogo e data', acceptanceLabel(p))
+  replaceText(signatures, 'Firma del cliente', labels.signature)
+  out.push(acceptanceHeading, signatures, closingSpacer)
+
+  for (const node of elements(body)) remove(node)
+  for (const node of out) body.appendChild(node)
+  body.appendChild(sectPr)
+  zip.file('word/document.xml', serializer.serializeToString(documentXml))
+
+  if (p.language === 'en') {
+    let footer = await zip.file('word/footer1.xml')!.async('string')
+    footer = footer.replace('>Pagina <', `>${labels.page} <`).replace('> di <', `> ${labels.of} <`)
+    zip.file('word/footer1.xml', footer)
+  }
+
+  return zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', compression: 'DEFLATE' })
 }
 
 export async function downloadProposalDocx(p: Proposal) {

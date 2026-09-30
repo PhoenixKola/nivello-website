@@ -21,7 +21,6 @@ import { ActivityTimeline, DrawerHeader, EntityPicker, RecordLink } from './ops/
 import { ProjectMilestones, ProjectProgressCard, ProjectTasks } from './projects/ProjectWork'
 
 type View = 'pipeline' | 'all' | 'due' | 'archived'
-const BOARD_STAGES = PROJECT_STAGES.filter(s => s.value !== 'archived')
 const stageOptions = PROJECT_STAGES.map(s => ({
   value: s.value,
   label: s.label
@@ -39,11 +38,28 @@ function DueBadge({ project }: { project: Project }) {
   )
 }
 
-const PRIORITY_DOT: Record<LeadPriority, string> = {
-  low: 'bg-slate-300',
-  normal: 'bg-sky-400',
-  high: 'bg-orange-500',
-  urgent: 'bg-red-500'
+/** Visual board groups only; every project keeps its exact stage. */
+const WORKFLOW_GROUPS: { id: string; label: string; stages: ProjectStage[] }[] = [
+  { id: 'sales', label: 'Sales', stages: ['lead', 'discovery', 'proposal', 'approved'] },
+  { id: 'delivery', label: 'Delivery', stages: ['design', 'development', 'qa'] },
+  { id: 'completed', label: 'Completed', stages: ['delivered'] },
+  { id: 'aftercare', label: 'Aftercare', stages: ['maintenance', 'archived'] }
+]
+const STAGE_DOT = Object.fromEntries(PROJECT_STAGES.map(s => [s.value, s.dot])) as Record<ProjectStage, string>
+
+function StageChip({ stage }: { stage: ProjectStage }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-white/[0.08] dark:text-slate-200">
+      <span className={cx('h-1.5 w-1.5 rounded-full', STAGE_DOT[stage])} aria-hidden="true" />
+      {STAGE_LABEL[stage]}
+    </span>
+  )
+}
+
+function PriorityLabel({ priority }: { priority: LeadPriority }) {
+  if (priority === 'urgent') return <Badge tone="red">Urgent</Badge>
+  if (priority === 'high') return <Badge tone="amber">High</Badge>
+  return <span className="text-[11px] text-slate-500 dark:text-slate-400">{PRIORITY_LABEL[priority]}</span>
 }
 
 function ProjectCard({ project, onOpen, onMove, draggable }: { project: Project; onOpen: () => void; onMove: (stage: ProjectStage) => void; draggable?: boolean }) {
@@ -55,19 +71,15 @@ function ProjectCard({ project, onOpen, onMove, draggable }: { project: Project;
         event.dataTransfer.effectAllowed = 'move'
       }}
       className={cx(
-        'group rounded-xl border border-slate-200/80 bg-white p-3 shadow-sm transition-shadow hover:shadow-md dark:border-white/[0.08] dark:bg-slate-900',
+        'group rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm transition-shadow hover:shadow-md dark:border-white/[0.08] dark:bg-slate-900',
         draggable && 'cursor-grab active:cursor-grabbing'
       )}
     >
       <div className="flex items-start gap-2">
         {draggable && <GripVertical aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-slate-300 dark:text-slate-600" />}
         <button type="button" onClick={onOpen} className={cx('min-w-0 flex-1 cursor-pointer text-left', focusRing)}>
-          <span className="flex items-center gap-1.5">
-            <span className={cx('h-1.5 w-1.5 shrink-0 rounded-full', PRIORITY_DOT[project.priority])} title={`${PRIORITY_LABEL[project.priority]} priority`} aria-hidden="true" />
-            <span className="truncate text-sm font-medium text-slate-900 dark:text-white">{project.name}</span>
-          </span>
+          <span className="line-clamp-2 text-sm font-semibold leading-snug text-slate-900 dark:text-white">{project.name}</span>
           {project.clientName && <span className="mt-0.5 block truncate text-xs text-slate-500 dark:text-slate-400">{project.clientName}</span>}
-          {project.nextAction && <span className="mt-1.5 block truncate text-xs text-slate-600 dark:text-slate-300">Next: {project.nextAction}</span>}
         </button>
         <Menu
           label={`Move ${project.name}`}
@@ -95,92 +107,113 @@ function ProjectCard({ project, onOpen, onMove, draggable }: { project: Project;
           )}
         />
       </div>
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        {project.value !== null && <span className="text-xs font-medium tabular-nums text-slate-700 dark:text-slate-200">{formatMoney(project.value, project.currency)}</span>}
-        <DueBadge project={project} />
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <StageChip stage={project.stage} />
+        <PriorityLabel priority={project.priority} />
       </div>
+      {project.nextAction && <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-slate-600 dark:text-slate-300">Next: {project.nextAction}</p>}
+      {(project.value !== null || project.targetDate) && (
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 dark:border-white/[0.06]">
+          <span className="text-xs font-semibold tabular-nums text-slate-800 dark:text-slate-100">{project.value !== null ? formatMoney(project.value, project.currency) : ''}</span>
+          <DueBadge project={project} />
+        </div>
+      )}
     </div>
   )
 }
 
-function Board({ projects, onOpen, onMove }: { projects: Project[]; onOpen: (id: string) => void; onMove: (id: string, stage: ProjectStage) => void }) {
-  const [over, setOver] = useState<ProjectStage | null>(null)
-  const drop = (event: DragEvent, stage: ProjectStage) => {
+/** Four workflow groups; a drop into a group with several stages asks which exact stage to use. */
+function Board({ projects, onOpen, onMove, draggable }: { projects: Project[]; onOpen: (id: string) => void; onMove: (id: string, stage: ProjectStage) => void; draggable: boolean }) {
+  const [over, setOver] = useState<string | null>(null)
+  const [pending, setPending] = useState<{ groupId: string; projectId: string } | null>(null)
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+  const drop = (event: DragEvent, group: (typeof WORKFLOW_GROUPS)[number]) => {
     event.preventDefault()
     setOver(null)
     const id = event.dataTransfer.getData('text/nivello-project')
-    if (id) onMove(id, stage)
+    if (!id) return
+    if (group.stages.length === 1) onMove(id, group.stages[0])
+    else setPending({ groupId: group.id, projectId: id })
   }
   return (
-    <div className="relative -mx-1 overflow-x-auto px-1 pb-3" role="region" aria-label="Project pipeline board" tabIndex={0}>
-      <div className="flex w-max gap-3">
-        {BOARD_STAGES.map(stage => {
-          const items = projects.filter(p => p.stage === stage.value)
-          return (
-            <section
-              key={stage.value}
-              aria-label={`${stage.label} (${items.length})`}
-              onDragOver={event => {
-                if (event.dataTransfer.types.includes('text/nivello-project')) {
-                  event.preventDefault()
-                  setOver(stage.value)
-                }
-              }}
-              onDragLeave={() => setOver(o => (o === stage.value ? null : o))}
-              onDrop={event => drop(event, stage.value)}
-              className={cx(
-                'flex w-64 shrink-0 flex-col rounded-2xl border bg-slate-100/60 p-2 transition-colors dark:bg-white/[0.03]',
-                over === stage.value ? 'border-[var(--brand-blue)] bg-sky-50 dark:border-[var(--brand-gold)] dark:bg-white/[0.06]' : 'border-transparent'
-              )}
-            >
-              <h3 className="flex items-center gap-2 px-2 pb-2 pt-1 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                <span className={cx('h-2 w-2 rounded-full', stage.dot)} aria-hidden="true" />
-                {stage.label}
-                <span className="ml-auto rounded-full bg-white px-1.5 text-[10px] tabular-nums text-slate-500 dark:bg-white/10 dark:text-slate-300">{items.length}</span>
-              </h3>
-              <div className="flex min-h-24 flex-col gap-2">
-                {items.map(project => (
-                  <ProjectCard key={project.id} project={project} draggable onOpen={() => onOpen(project.id)} onMove={s => onMove(project.id, s)} />
-                ))}
-                {!items.length && <p className="rounded-xl border border-dashed border-slate-300 px-3 py-4 text-center text-xs text-slate-400 dark:border-white/10">Drop a project here</p>}
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4" role="region" aria-label="Project pipeline board">
+      {WORKFLOW_GROUPS.map(group => {
+        const items = projects.filter(p => group.stages.includes(p.stage))
+        const isCollapsed = collapsed[group.id] ?? false
+        const choosing = pending?.groupId === group.id ? projects.find(p => p.id === pending.projectId) : null
+        return (
+          <section
+            key={group.id}
+            aria-label={`${group.label} (${items.length})`}
+            onDragOver={event => {
+              if (event.dataTransfer.types.includes('text/nivello-project')) {
+                event.preventDefault()
+                setOver(group.id)
+              }
+            }}
+            onDragLeave={() => setOver(o => (o === group.id ? null : o))}
+            onDrop={event => drop(event, group)}
+            className={cx(
+              'flex min-w-0 flex-col rounded-2xl border bg-slate-100/60 p-3 transition-colors dark:bg-white/[0.03]',
+              over === group.id ? 'border-[var(--brand-blue)] bg-sky-50 dark:border-[var(--brand-gold)] dark:bg-white/[0.06]' : 'border-transparent'
+            )}
+          >
+            <h3>
+              <button
+                type="button"
+                aria-expanded={!isCollapsed}
+                onClick={() => setCollapsed(c => ({ ...c, [group.id]: !isCollapsed }))}
+                className={cx('block w-full cursor-pointer rounded-lg px-1 pb-2.5 pt-0.5 text-left', focusRing)}
+              >
+                <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <span>{group.label}</span>
+                  <span aria-hidden="true">·</span>
+                  <span className="tabular-nums text-slate-700 dark:text-slate-200">{items.length}</span>
+                </span>
+                <span className="mt-0.5 block text-[11px] text-slate-400">{group.stages.map(stage => STAGE_LABEL[stage]).join(' · ')}</span>
+              </button>
+            </h3>
+            {choosing && (
+              <div role="group" aria-label={`Choose a stage for ${choosing.name}`} className="mb-3 rounded-xl border border-[var(--brand-blue)]/40 bg-white p-3 dark:border-[var(--brand-gold)]/40 dark:bg-slate-900">
+                <p className="text-xs text-slate-600 dark:text-slate-300">
+                  Move <span className="font-semibold text-slate-900 dark:text-white">{choosing.name}</span> to:
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {group.stages.map(stage => (
+                    <Button
+                      key={stage}
+                      size="sm"
+                      variant={stage === choosing.stage ? 'ghost' : 'secondary'}
+                      disabled={stage === choosing.stage}
+                      onClick={() => {
+                        setPending(null)
+                        onMove(choosing.id, stage)
+                      }}
+                    >
+                      {STAGE_LABEL[stage]}
+                    </Button>
+                  ))}
+                  <Button size="sm" variant="ghost" onClick={() => setPending(null)}>
+                    Cancel
+                  </Button>
+                </div>
               </div>
-            </section>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-function MobilePipeline({
-  projects,
-  counts,
-  onOpen,
-  onMove
-}: {
-  projects: Project[]
-  counts: Record<ProjectStage, number>
-  onOpen: (id: string) => void
-  onMove: (id: string, stage: ProjectStage) => void
-}) {
-  const [stage, setStage] = useState<ProjectStage>(() => BOARD_STAGES.find(s => counts[s.value] > 0)?.value ?? 'lead')
-  const items = projects.filter(p => p.stage === stage)
-  return (
-    <div className="space-y-3">
-      <Select
-        label="Stage"
-        value={stage}
-        onChange={setStage}
-        options={BOARD_STAGES.map(s => ({
-          value: s.value,
-          label: `${s.label} (${counts[s.value]})`
-        }))}
-      />
-      {items.length ? (
-        items.map(p => <ProjectCard key={p.id} project={p} onOpen={() => onOpen(p.id)} onMove={s => onMove(p.id, s)} />)
-      ) : (
-        <p className="py-8 text-center text-sm text-slate-400">No projects in {STAGE_LABEL[stage]}.</p>
-      )}
+            )}
+            {!isCollapsed && (
+              <div className="flex min-h-24 flex-col gap-3">
+                {items.map(project => (
+                  <ProjectCard key={project.id} project={project} draggable={draggable} onOpen={() => onOpen(project.id)} onMove={s => onMove(project.id, s)} />
+                ))}
+                {!items.length && (
+                  <p className="rounded-xl border border-dashed border-slate-300 px-3 py-6 text-center text-xs text-slate-400 dark:border-white/10">
+                    {draggable ? 'Drop a project here' : 'No projects'}
+                  </p>
+                )}
+              </div>
+            )}
+          </section>
+        )
+      })}
     </div>
   )
 }
@@ -748,11 +781,7 @@ export default function Projects() {
           />
         </Card>
       ) : view === 'pipeline' ? (
-        desktop ? (
-          <Board projects={active} onOpen={open} onMove={move} />
-        ) : (
-          <MobilePipeline projects={active} counts={data.counts} onOpen={open} onMove={move} />
-        )
+        <Board projects={projects} onOpen={open} onMove={move} draggable={desktop} />
       ) : (
         <Card>
           {view === 'all' && <ProjectTable projects={active} onOpen={open} empty="No projects match." />}

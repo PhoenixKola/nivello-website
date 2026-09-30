@@ -6,6 +6,16 @@ require __DIR__ . '/_bootstrap.php';
 require __DIR__ . '/_ops.php';
 
 api_run([
+    // The original Nivello Word template; the admin fills it in the browser (DOCX) and mirrors it (PDF).
+    'GET template' => function () {
+        $path = __DIR__ . '/_preventivo-template.docx';
+        if (!is_file($path)) throw new ApiError('NOT_FOUND', 'Preventivo template not found.', 404);
+        header('Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+        header('Content-Length: ' . filesize($path));
+        header('Cache-Control: private, no-store');
+        readfile($path);
+        exit;
+    },
     'GET logo' => function () {
         $id = v_id($_GET['id'] ?? '', 'prop', 'Proposal id');
         $state = Store::instance()->read();

@@ -1,227 +1,288 @@
+import type { jsPDF as JsPDF } from 'jspdf'
 import type { Proposal } from '@/lib/admin/types'
-import { DOC_COPY, NIVELLO, docDate, docMoney, formatQuantity, proposalUnitLabel } from './model'
+import {
+  acceptanceLabel,
+  clientDetails,
+  clientLogoPng,
+  fit,
+  itemQuantity,
+  itemTitle,
+  milestoneLabel,
+  sectionFill,
+  sectionLetter,
+  summaryAdjustments,
+  TEMPLATE_LABELS,
+  templateBytes,
+  textBlocks,
+  tDate,
+  tMoney
+} from './template'
 
-const BLUE: [number, number, number] = [11, 111, 192]
-const INK: [number, number, number] = [15, 23, 42]
-const MUTED: [number, number, number] = [100, 116, 139]
-const LINE: [number, number, number] = [226, 232, 240]
+/*
+ * PDF twin of the Nivello Word template. Positions, sizes and colours are taken from Word's own
+ * rendering of Template_Preventivo_Nivello_Clienti.docx (A4, Arial ≈ Helvetica), so the PDF and the
+ * DOCX are two representations of the same Preventivo. The Nivello logo is read from the template.
+ */
 
-async function logoDataUrl(url = '/nivello-icon.png'): Promise<string | null> {
+const LEFT = 14.5
+const RIGHT = 195.5
+const TOP = 11.8
+const BOTTOM = 283.5
+const COL = [14.5, 128.0, 146.5, 171.1, 195.5]
+const INK = '0F172A'
+const TEXT = '475569'
+const MUTED = '64748B'
+const FAINT = '94A3B8'
+const BLUE = '159BFF'
+const BORDER = 'D9E2EC'
+
+type Rgb = [number, number, number]
+const rgb = (hex: string): Rgb => [parseInt(hex.slice(0, 2), 16), parseInt(hex.slice(2, 4), 16), parseInt(hex.slice(4, 6), 16)]
+
+/** jsPDF's built-in fonts are WinAnsi; map the few characters they lack. */
+function safe(text: string) {
+  return text.replace(/−/g, '-').replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/…/g, '...').replace(/[  ]/g, ' ')
+}
+
+async function templateLogo(): Promise<string | null> {
   try {
-    const response = await fetch(url, { credentials: 'same-origin' })
-    if (!response.ok) return null
-    const blob = await response.blob()
-    return await new Promise(resolve => {
-      const reader = new FileReader()
-      reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : null)
-      reader.onerror = () => resolve(null)
-      reader.readAsDataURL(blob)
-    })
+    const { default: JSZip } = await import('jszip')
+    const zip = await JSZip.loadAsync(await templateBytes())
+    const file = zip.file('word/media/image1.png')
+    return file ? `data:image/png;base64,${await file.async('base64')}` : null
   } catch {
     return null
   }
 }
 
-/** jsPDF's built-in fonts are WinAnsi; map the few characters they lack so text never turns into garbage. */
-function safe(text: string) {
-  return text.replace(/−/g, '-').replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/…/g, '...').replace(/ | /g, ' ')
-}
-
-/** Builds the proposal PDF in the browser (admin only; loaded on demand). */
 export async function buildProposalPdf(p: Proposal) {
-  const [{ jsPDF }, { default: autoTable }] = await Promise.all([import('jspdf'), import('jspdf-autotable')])
-  const t = DOC_COPY[p.language]
-  const money = (cents: number) => safe(docMoney(cents, p.currency, p.language))
-  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
-  const pageW = doc.internal.pageSize.getWidth()
-  const pageH = doc.internal.pageSize.getHeight()
-  const margin = 18
-  const width = pageW - margin * 2
-  let y = margin
+  const { jsPDF } = await import('jspdf')
+  const labels = TEMPLATE_LABELS[p.language]
+  const money = (cents: number) => safe(tMoney(cents, p.currency, p.language))
+  const doc: JsPDF = new jsPDF({ unit: 'mm', format: 'a4' })
+  const [logo, clientLogo] = await Promise.all([templateLogo(), clientLogoPng(p)])
+  const client = clientDetails(p)
+  let y = TOP
 
-  const ensure = (needed: number) => {
-    if (y + needed > pageH - 22) {
-      doc.addPage()
-      y = margin
-    }
+  const text = (value: string, x: number, baseline: number, size: number, color: string, options: { bold?: boolean; align?: 'left' | 'right' | 'center' } = {}) => {
+    doc.setFont('helvetica', options.bold ? 'bold' : 'normal').setFontSize(size).setTextColor(...rgb(color))
+    doc.text(safe(value), x, baseline, { align: options.align ?? 'left' })
   }
-  const heading = (text: string) => {
-    ensure(14)
-    doc.setFont('helvetica', 'bold').setFontSize(8.5).setTextColor(...BLUE)
-    doc.text(safe(text.toUpperCase()), margin, y, { charSpace: 0.6 })
-    y += 5
+  const wrap = (value: string, size: number, width: number, bold = false) => {
+    doc.setFont('helvetica', bold ? 'bold' : 'normal').setFontSize(size)
+    return doc.splitTextToSize(safe(value), width) as string[]
   }
-  const paragraph = (text: string) => {
-    doc.setFont('helvetica', 'normal').setFontSize(10).setTextColor(51, 65, 85)
-    for (const line of doc.splitTextToSize(safe(text), width) as string[]) {
-      ensure(5.2)
-      doc.text(line, margin, y)
-      y += 5.2
-    }
+  const fill = (x: number, top: number, w: number, h: number, color: string) => {
+    doc.setFillColor(...rgb(color))
+    doc.rect(x, top, w, h, 'F')
   }
-  const block = (title: string, text: string) => {
-    if (!text.trim()) return
-    y += 6
-    heading(title)
-    paragraph(text)
+  const line = (x1: number, y1: number, x2: number, y2: number, color: string, width: number) => {
+    doc.setDrawColor(...rgb(color)).setLineWidth(width)
+    doc.line(x1, y1, x2, y2)
+  }
+  const box = (x: number, top: number, w: number, h: number, color: string, width: number) => {
+    doc.setDrawColor(...rgb(color)).setLineWidth(width)
+    doc.rect(x, top, w, h, 'S')
+  }
+  const newPage = () => {
+    doc.addPage()
+    y = TOP
+  }
+  const ensure = (height: number) => {
+    if (y + height > BOTTOM) newPage()
   }
 
-  // Header
-  const logo = await logoDataUrl()
-  if (logo) doc.addImage(logo, 'PNG', margin, y - 2, 11, 11)
-  doc.setFont('helvetica', 'bold').setFontSize(16).setTextColor(...INK)
-  doc.text(NIVELLO.name, margin + (logo ? 14 : 0), y + 6)
-  doc.setFont('helvetica', 'normal').setFontSize(8.5).setTextColor(...MUTED)
-  doc.text(`${NIVELLO.web} · ${NIVELLO.email}`, margin + (logo ? 14 : 0), y + 10.5)
-  doc.setFont('helvetica', 'bold').setFontSize(8.5).setTextColor(...BLUE)
-  doc.text(t.proposal.toUpperCase(), pageW - margin, y + 3, { align: 'right', charSpace: 0.6 })
-  doc.setFont('courier', 'normal').setFontSize(10).setTextColor(...INK)
-  doc.text(p.number, pageW - margin, y + 8.5, { align: 'right' })
-  y += 16
-  doc.setDrawColor(...LINE).setLineWidth(0.3).line(margin, y, pageW - margin, y)
-  y += 11
-
-  // Title
-  doc.setFont('helvetica', 'bold').setFontSize(20).setTextColor(...INK)
-  for (const line of doc.splitTextToSize(safe(p.title), width) as string[]) {
-    doc.text(line, margin, y)
-    y += 8.5
-  }
-  y += 2
-
-  // Meta
-  const col = width / 3
-  const meta: [string, string[]][] = [
-    [t.preparedFor, [p.clientCompany || p.clientName || '-', p.clientCompany && p.clientName ? p.clientName : '', p.clientSector, p.clientAddress, p.clientPhone, p.clientEmail].filter(Boolean)],
-    [t.issueDate, [docDate(p.issueDate, p.language)]],
-    [t.validUntil, [docDate(p.validUntil, p.language)]]
-  ]
-  const clientLogo = p.clientLogo ? await logoDataUrl(`/admin-api/proposal-file.php?action=logo&id=${p.id}`) : null
-  let metaBottom = y
-  meta.forEach(([label, lines], i) => {
-    const x = margin + col * i
-    doc.setFont('helvetica', 'normal').setFontSize(7.5).setTextColor(...MUTED)
-    doc.text(safe(label.toUpperCase()), x, y, { charSpace: 0.3 })
-    let ly = y + 5
-    if (i === 0 && clientLogo) {
-      const format = clientLogo.startsWith('data:image/png') ? 'PNG' : clientLogo.startsWith('data:image/webp') ? 'WEBP' : 'JPEG'
-      try {
-        doc.addImage(clientLogo, format, x, ly - 1, 32, 12, undefined, 'FAST')
-        ly += 15
-      } catch { /* Keep the preventivo usable if a browser cannot decode the uploaded image. */ }
-    }
-    lines.forEach((line, n) => {
-      doc.setFont('helvetica', n === 0 ? 'bold' : 'normal').setFontSize(9.5).setTextColor(...INK)
-      for (const wrapped of doc.splitTextToSize(safe(line), col - 4) as string[]) {
-        doc.text(wrapped, x, ly)
-        ly += 4.6
-      }
-    })
-    metaBottom = Math.max(metaBottom, ly)
+  // ── Header: Nivello logo and the metadata box ──
+  if (logo) doc.addImage(logo, 'PNG', 14.5, 17.1, 52.9, 15.1, undefined, 'FAST')
+  fill(122.4, 11.8, 73.3, 25.7, 'FFFFFF')
+  box(122.4, 11.8, 73.3, 25.7, 'CBD5E1', 0.3)
+  text(labels.caps, 193.1, 16.4, 7.6, 'FFBF43', { bold: true, align: 'right' })
+  ;([[labels.number, p.number, 19.6], [labels.date, tDate(p.issueDate), 27.0], [labels.validUntil, tDate(p.validUntil), 34.3]] as const).forEach(([label, value, baseline]) => {
+    text(label, 125.0, baseline, 7, FAINT)
+    text(value, 191.0, baseline + 0.2, 7.6, INK, { bold: true, align: 'right' })
   })
-  y = metaBottom
 
-  block(t.introduction, p.intro)
-  block(t.scope, p.scope)
+  // ── Centered title ──
+  text(labels.word, 105, 57.5, 26, INK, { bold: true, align: 'center' })
+  let baseline = 66.6
+  wrap(p.title, 19, 181, true).forEach((titleLine, index) => {
+    if (index > 0) baseline += 7.4
+    text(titleLine, 105, baseline, 19, INK, { bold: true, align: 'center' })
+  })
 
-  // Line items
-  const rows = (items: Proposal['items']) =>
-    items.map(item => [
-      { content: safe(`${item.code ? `${item.code}) ` : ''}${item.title}${item.optional ? ` (${p.language === 'it' ? 'opzionale' : 'optional'})` : ''}${item.description ? `\n${item.description}` : ''}`) },
-      item.unit === 'fixed' ? '1' : safe(`${formatQuantity(item.quantity, p.language)} ${proposalUnitLabel(item.unit, item.quantity, p.language)}`),
-      item.unit === 'fixed' ? '-' : money(item.unitPrice),
-      money(item.total)
-    ])
-  const tableOptions = {
-    margin: { left: margin, right: margin, bottom: 22 },
-    theme: 'plain' as const,
-    styles: { font: 'helvetica', fontSize: 9.5, textColor: INK, cellPadding: { top: 2.4, bottom: 2.4, left: 0, right: 3 }, overflow: 'linebreak' as const },
-    headStyles: { fontStyle: 'bold' as const, fontSize: 7.5, textColor: MUTED },
-    columnStyles: { 0: { cellWidth: 'auto' as const }, 1: { halign: 'right' as const, cellWidth: 26 }, 2: { halign: 'right' as const, cellWidth: 30 }, 3: { halign: 'right' as const, cellWidth: 30, fontStyle: 'bold' as const, cellPadding: { top: 2.4, bottom: 2.4, left: 0, right: 0 } } },
-    didParseCell: (data: { section: string; column: { index: number }; cell: { styles: { halign?: string } } }) => {
-      if (data.section === 'head' && data.column.index > 0) data.cell.styles.halign = 'right'
-    },
-    didDrawCell: (data:{ section: string; row: { index: number }; cell: { x: number; y: number; width: number; height: number } }) => {
-      if (data.section === 'body' || data.section === 'head') {
-        doc.setDrawColor(...(data.section === 'head' ? INK : LINE)).setLineWidth(data.section === 'head' ? 0.5 : 0.2)
-        doc.line(data.cell.x, data.cell.y + data.cell.height, data.cell.x + data.cell.width, data.cell.y + data.cell.height)
+  // ── Supplier / client ──
+  const partiesTop = baseline + 4.8
+  const nameLines = wrap(client.name, 10.6, 54, true)
+  const clientLines = [client.sector, client.address, client.contact].filter(Boolean).flatMap(value => wrap(value, 8, 54))
+  const clientHeight = 4.3 + (nameLines.length - 1) * 4.2 + clientLines.length * 3.4
+  const partiesHeight = Math.max(26.9, clientHeight + 12)
+  fill(16.3, partiesTop, 88.7, partiesHeight, 'F7F9FC')
+  fill(105.05, partiesTop, 88.7, partiesHeight, 'F7F9FC')
+  box(16.3, partiesTop, 88.7, partiesHeight, BORDER, 0.3)
+  box(105.05, partiesTop, 88.7, partiesHeight, BORDER, 0.3)
+  const supplierTop = partiesTop + (partiesHeight - 26.9) / 2
+  text(labels.supplier, 19.0, supplierTop + 6.7, 7, BLUE, { bold: true })
+  text('Nivello', 19.0, supplierTop + 11.4, 10.6, INK, { bold: true })
+  ;['Soluzioni digitali', 'office@nivello.it', 'www.nivello.it'].forEach((value, index) => text(value, 19.0, supplierTop + 15.1 + index * 3.4, 8, MUTED))
+  let clientBaseline = partiesTop + (partiesHeight - clientHeight) / 2 + 2.6
+  text(labels.client, 139.7, clientBaseline, 7, BLUE, { bold: true })
+  clientBaseline += 4.3
+  nameLines.forEach((nameLine, index) => text(nameLine, 139.7, clientBaseline + index * 4.2, 10.6, INK, { bold: true }))
+  clientBaseline += (nameLines.length - 1) * 4.2 + 3.8
+  clientLines.forEach((detail, index) => text(detail, 139.7, clientBaseline + index * 3.4, 8, MUTED))
+  if (clientLogo) {
+    const size = fit(clientLogo.width, clientLogo.height, 30, 16)
+    try {
+      doc.addImage(clientLogo.data, 'PNG', 123.7 - size.width / 2, partiesTop + partiesHeight / 2 - size.height / 2, size.width, size.height, undefined, 'FAST')
+    } catch {
+      // A logo the browser cannot decode must not block the Preventivo.
+    }
+  }
+  y = partiesTop + partiesHeight + 3.7
+
+  // ── Template building blocks ──
+  const heading = (title: string) => {
+    ensure(12)
+    text(title, LEFT, y + 7.6, 8, BLUE, { bold: true })
+    y += 9
+  }
+  const bodyText = (value: string) => {
+    for (const bodyLine of wrap(value, 8, 181)) {
+      ensure(3.4)
+      text(bodyLine, LEFT, y + 2.8, 8, MUTED)
+      y += 3.4
+    }
+    y += 1.4
+  }
+  const sectionHeader = (index: number, title: string, subtotal: number) => {
+    const titleLines = wrap(`${labels.section} ${sectionLetter(index)} — ${title.toUpperCase()}`, 9, 130, true)
+    const height = 7.37 + (titleLines.length - 1) * 3.8
+    ensure(height + 3.6 + 6.3 + 10)
+    fill(LEFT, y, RIGHT - LEFT, height, sectionFill(index))
+    titleLines.forEach((titleLine, n) => text(titleLine, 16.9, y + 4.8 + n * 3.8, 9, 'FFFFFF', { bold: true }))
+    text(`${labels.subtotal} ${money(subtotal)}`, 193.2, y + 4.8, 9, 'FFFFFF', { bold: true, align: 'right' })
+    y += height + 3.6
+  }
+  const tableHeader = () => {
+    const top = y
+    fill(LEFT, top, RIGHT - LEFT, 6.3, 'E9EEF5')
+    COL.forEach(x => line(x, top, x, top + 6.3, BORDER, 0.26))
+    line(LEFT, top, RIGHT, top, BORDER, 0.26)
+    line(LEFT, top + 6.3, RIGHT, top + 6.3, BORDER, 0.44)
+    text(labels.item, 16.2, top + 4.2, 7.6, TEXT, { bold: true })
+    text(labels.quantity, 129.7, top + 4.2, 7.6, TEXT, { bold: true })
+    text(labels.price, 169.4, top + 4.2, 7.6, TEXT, { bold: true, align: 'right' })
+    text(labels.total, 193.9, top + 4.2, 7.6, TEXT, { bold: true, align: 'right' })
+    y = top + 6.3
+  }
+  const itemsTable = (section: Proposal['sections'][number], index: number) => {
+    const letter = sectionLetter(index)
+    tableHeader()
+    section.items.forEach((item, itemIndex) => {
+      const titleLines = wrap(itemTitle(p, item, letter, itemIndex), 8.5, 110, true)
+      const descriptionLines = item.description ? wrap(item.description, 7.6, 110) : []
+      const last = 4.5 + (titleLines.length - 1) * 3.5 + (descriptionLines.length ? 3.4 + (descriptionLines.length - 1) * 2.9 : 0)
+      const height = Math.max(6.8, last + 2.2)
+      if (y + height > BOTTOM) {
+        newPage()
+        tableHeader()
       }
-    }
-  }
-  const head = [[t.description.toUpperCase(), t.qty.toUpperCase(), t.unitPrice.toUpperCase(), t.total.toUpperCase()]]
-  y += 6
-  heading(t.investment)
-  for (let index = 0; index < p.sections.length; index++) {
-    const section = p.sections[index]
-    const firstItem = section.items[0]
-    const firstItemText = firstItem ? `${firstItem.code ? `${firstItem.code}) ` : ''}${firstItem.title}${firstItem.description ? `\n${firstItem.description}` : ''}` : ''
-    const firstItemLines = firstItemText ? (doc.splitTextToSize(safe(firstItemText), width - 88) as string[]).length : 1
-    const noteLines = section.note ? (doc.splitTextToSize(safe(section.note), width) as string[]).length : 0
-    ensure(18 + firstItemLines * 4.5 + noteLines * 4)
-    doc.setFont('helvetica', 'bold').setFontSize(10).setTextColor(...INK)
-    doc.text(safe(`${p.language === 'it' ? 'Sezione' : 'Section'} ${String.fromCharCode(65 + index)} — ${section.title}`), margin, y)
-    y += 4
-    if (section.note) { doc.setFont('helvetica', 'italic').setFontSize(8.5).setTextColor(...MUTED); doc.text(doc.splitTextToSize(safe(section.note), width), margin, y); y += 6 }
-    autoTable(doc, { ...tableOptions, startY: y, head, body: rows(section.items) })
-    y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 3
-    doc.setFont('helvetica', 'bold').setFontSize(9).setTextColor(...INK)
-    doc.text(`${p.language === 'it' ? 'Subtotale sezione' : 'Section subtotal'} ${String.fromCharCode(65 + index)}: ${money(section.subtotal)}`, pageW - margin, y, { align: 'right' })
-    y += 7
-  }
-
-  // Totals
-  const totals: [string, string, boolean][] = [[t.subtotal, money(p.totals.subtotal), false]]
-  if (p.totals.discount > 0) totals.push([`${t.discount}${p.discount.type === 'percent' ? ` (${formatQuantity(p.discount.value, p.language)}%)` : ''}`, `-${money(p.totals.discount)}`, false])
-  if (p.tax.rate > 0) totals.push([`${p.tax.label} (${formatQuantity(p.tax.rate, p.language)}%)`, money(p.totals.tax), false])
-  totals.push([t.grandTotal, money(p.totals.total), true])
-  ensure(totals.length * 6 + 6)
-  const labelX = pageW - margin - 75
-  for (const [label, value, strong] of totals) {
-    if (strong) {
-      doc.setDrawColor(...INK).setLineWidth(0.5).line(labelX, y - 1, pageW - margin, y - 1)
-      y += 4
-    }
-    doc.setFont('helvetica', strong ? 'bold' : 'normal').setFontSize(strong ? 12 : 9.5).setTextColor(...(strong ? INK : ([71, 85, 105] as [number, number, number])))
-    doc.text(safe(label), labelX, y)
-    doc.text(value, pageW - margin, y, { align: 'right' })
-    y += strong ? 7 : 5.5
-  }
-
-  if (p.milestones.length) {
-    y += 6
-    heading(t.payments)
-    autoTable(doc, {
-      ...tableOptions,
-      startY: y,
-      body: p.milestones.map(m => [safe(m.label), safe(m.due), `${formatQuantity(m.percent, p.language)}%`, money(m.amount)]),
-      columnStyles: { 0: { fontStyle: 'bold' as const }, 1: { textColor: MUTED }, 2: { halign: 'right' as const, cellWidth: 20 }, 3: { halign: 'right' as const, cellWidth: 32, cellPadding: { top: 2.4, bottom: 2.4, left: 0, right: 0 } } }
+      const top = y
+      fill(LEFT, top, RIGHT - LEFT, height, itemIndex % 2 === 0 ? 'FFFFFF' : 'FAFBFD')
+      COL.forEach(x => line(x, top, x, top + height, BORDER, 0.21))
+      line(LEFT, top + height, RIGHT, top + height, 'E7ECF2', 0.25)
+      titleLines.forEach((titleLine, n) => text(titleLine, 16.2, top + 4.5 + n * 3.5, 8.5, INK, { bold: true }))
+      const descriptionTop = top + 4.5 + (titleLines.length - 1) * 3.5 + 3.4
+      descriptionLines.forEach((descriptionLine, n) => text(descriptionLine, 16.2, descriptionTop + n * 2.9, 7.6, MUTED))
+      text(itemQuantity(p, item), 137.25, top + 4.3, 8, TEXT, { align: 'center' })
+      text(money(item.unitPrice), 169.4, top + 4.3, 8, TEXT, { align: 'right' })
+      text(money(item.total), 193.9, top + 4.3, 8, INK, { bold: true, align: 'right' })
+      y = top + height
     })
-    y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY
+    ensure(7.3)
+    const top = y
+    fill(LEFT, top, RIGHT - LEFT, 7.0, 'EAF6FF')
+    ;[LEFT, 171.1, RIGHT].forEach(x => line(x, top, x, top + 7.0, BORDER, 0.21))
+    line(LEFT, top, RIGHT, top, BLUE, 0.42)
+    line(LEFT, top + 7.0, RIGHT, top + 7.0, BORDER, 0.3)
+    text(`${labels.sectionSubtotal} ${letter}`, 169.3, top + 4.9, 8.5, INK, { bold: true, align: 'right' })
+    text(money(section.subtotal), 193.8, top + 5.1, 9, INK, { bold: true, align: 'right' })
+    y = top + 7.0 + 4.0
+  }
+  const boxTable = (title: string, rows: { label: string; value: number }[], total: { label: string; value: number }) => {
+    const wrapped = rows.map(row => ({ ...row, lines: wrap(row.label, 8, 134) }))
+    const heights = wrapped.map(row => 5.9 + (row.lines.length - 1) * 3.3)
+    const height = 5.7 + heights.reduce((a, b) => a + b, 0) + 6.9
+    ensure(height)
+    const top = y
+    fill(LEFT, top, RIGHT - LEFT, height, 'F7F9FC')
+    text(title, 17.1, top + 4.4, 7.6, BLUE, { bold: true })
+    let rowTop = top + 5.7
+    wrapped.forEach((row, n) => {
+      line(LEFT, rowTop, RIGHT, rowTop, 'E2E8F0', 0.14)
+      row.lines.forEach((rowLine, k) => text(rowLine, 17.1, rowTop + 4.1 + k * 3.3, 8, INK))
+      text(money(row.value), 193.0, rowTop + 4.1, 8, INK, { bold: true, align: 'right' })
+      rowTop += heights[n]
+    })
+    fill(LEFT, rowTop, RIGHT - LEFT, 6.9, 'EEF7FD')
+    line(LEFT, rowTop, RIGHT, rowTop, BLUE, 0.42)
+    text(total.label, 17.1, rowTop + 5.0, 9, INK, { bold: true })
+    text(money(total.value), 193.0, rowTop + 5.1, 9.5, INK, { bold: true, align: 'right' })
+    box(LEFT, top, RIGHT - LEFT, height, BORDER, 0.25)
+    y = top + height + 4.0
   }
 
-  block(t.assumptions, p.assumptions)
-  block(t.terms, p.terms)
+  // ── Content, in the template's order ──
+  const blocks = textBlocks(p)
+  for (const block of blocks.before) {
+    heading(block.title)
+    bodyText(block.text)
+  }
+  if (blocks.before.length) y += 2
+  p.sections.forEach((section, index) => {
+    if (index === 1) {
+      // Continuation header before Sezione B, as in the template.
+      newPage()
+      if (logo) doc.addImage(logo, 'PNG', 14.5, 11.8, 36.9, 10.5, undefined, 'FAST')
+      text(p.number, 195.5, 14.4, 8, INK, { bold: true, align: 'right' })
+      text(`${client.name} · ${labels.word}`, 195.5, 17.4, 7, MUTED, { align: 'right' })
+      line(14.3, 23.8, RIGHT, 23.8, BORDER, 0.34)
+      y = 27.8
+    }
+    sectionHeader(index, section.title, section.subtotal)
+    if (section.note) bodyText(section.note)
+    itemsTable(section, index)
+  })
+  boxTable(labels.summary, [...p.sections.map(section => ({ label: section.title, value: section.subtotal })), ...summaryAdjustments(p)], { label: labels.grandTotal, value: p.totals.total })
+  if (p.milestones.length) {
+    boxTable(labels.payments, p.milestones.map(milestone => ({ label: milestoneLabel(p, milestone), value: milestone.amount })), { label: labels.grandTotal, value: p.totals.total })
+  }
+  for (const block of blocks.after) {
+    heading(block.title)
+    bodyText(block.text)
+  }
 
-  ensure(42)
-  y += 8
-  heading(p.language === 'it' ? 'Accettazione del preventivo' : 'Proposal acceptance')
-  doc.setFont('helvetica', 'normal').setFontSize(9).setTextColor(...MUTED)
-  doc.text(safe(`${p.language === 'it' ? 'Luogo e data' : 'Place and date'}${p.acceptance.place ? `: ${p.acceptance.place}` : ''}${p.acceptance.date ? ` · ${docDate(p.acceptance.date, p.language)}` : ''}`), margin, y)
-  doc.text(p.language === 'it' ? 'Firma del cliente' : 'Client signature', margin + width / 2, y)
-  y += 18
-  doc.setDrawColor(...LINE).line(margin, y, margin + width * 0.42, y).line(margin + width / 2, y, pageW - margin, y)
+  // ── Acceptance and signatures ──
+  ensure(22)
+  y -= 4.0
+  text(labels.acceptance, LEFT, y + 7.6, 8, BLUE, { bold: true })
+  text(acceptanceLabel(p), LEFT, y + 12.6, 7.6, MUTED)
+  text(labels.signature, 105.0, y + 12.6, 7.6, MUTED)
+  const underline = '_'.repeat(40)
+  text(underline, LEFT, y + 17.2, 9, TEXT)
+  text(underline, 105.0, y + 17.2, 9, TEXT)
 
-  // Footer on every page
+  // ── Footer on every page ──
   const pages = doc.getNumberOfPages()
-  for (let i = 1; i <= pages; i++) {
-    doc.setPage(i)
-    doc.setDrawColor(...LINE).setLineWidth(0.2).line(margin, pageH - 14, pageW - margin, pageH - 14)
-    doc.setFont('helvetica', 'normal').setFontSize(7.5).setTextColor(...MUTED)
-    doc.text(`${NIVELLO.name} · ${NIVELLO.web} · ${NIVELLO.email} · ${p.number}`, margin, pageH - 9)
-    doc.text(`${t.page} ${i} ${t.of} ${pages}`, pageW - margin, pageH - 9, { align: 'right' })
+  for (let page = 1; page <= pages; page++) {
+    doc.setPage(page)
+    line(LEFT, 287.7, RIGHT, 287.7, BORDER, 0.25)
+    text('Nivello · Soluzioni digitali', LEFT, 291.5, 7, INK, { bold: true })
+    text('office@nivello.it · www.nivello.it', 120.5, 291.5, 7, MUTED, { align: 'center' })
+    text(`${labels.page} ${page} ${labels.of} ${pages}`, RIGHT, 291.5, 7, MUTED, { align: 'right' })
   }
 
-  doc.setProperties({ title: `${p.number} ${safe(p.title)}`, author: NIVELLO.name, creator: 'Nivello Admin' })
+  doc.setProperties({ title: `${p.number} ${safe(p.title)}`, author: 'Nivello', creator: 'Nivello Admin' })
   return doc
 }
 

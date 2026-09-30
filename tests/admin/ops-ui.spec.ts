@@ -87,20 +87,24 @@ test('projects: create, move with the accessible menu, open details', async ({ p
   await expect(drawer.getByText('Details updated')).toBeVisible()
   await drawer.getByRole('button', { name: 'Close' }).first().click()
 
+  // Grouped board: the project keeps its exact stage (shown as a chip) inside its workflow group.
   const board = page.getByRole('region', { name: 'Project pipeline board' })
-  const lead = board.getByRole('region', { name: /^Lead \(/ })
-  await expect(lead.getByText('UI test project')).toBeVisible()
-  await lead.getByRole('button', { name: 'Move UI test project to another stage' }).click()
+  const sales = board.getByRole('region', { name: /^Sales \(/ })
+  await expect(sales.getByText('UI test project')).toBeVisible()
+  await sales.getByRole('button', { name: 'Move UI test project to another stage' }).click()
   await page.getByRole('menuitem', { name: 'Move to Design' }).click()
-  await expect(board.getByRole('region', { name: /^Design \(/ }).getByText('UI test project')).toBeVisible()
+  const delivery = board.getByRole('region', { name: /^Delivery \(/ })
+  await expect(delivery.getByText('UI test project')).toBeVisible()
+  await expect(delivery.getByText('Design', { exact: true })).toBeVisible()
 })
 
-test('projects on mobile use a stage selector instead of the board', async ({ page }) => {
+test('projects on mobile stack the workflow groups without horizontal overflow', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await login(page)
   await page.goto('/admin/#/projects')
-  await expect(page.getByRole('region', { name: 'Project pipeline board' })).toHaveCount(0)
-  await expect(page.getByRole('button', { name: /Stage/ }).or(page.getByLabel('Stage')).first()).toBeVisible()
+  const board = page.getByRole('region', { name: 'Project pipeline board' })
+  for (const group of ['Sales', 'Delivery', 'Completed', 'Aftercare']) await expect(board.getByRole('region', { name: new RegExp(`^${group} \\(`) })).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0)
 })
 
 test('project detail manages milestones and tasks in responsive local tabs', async ({ page }, testInfo) => {
