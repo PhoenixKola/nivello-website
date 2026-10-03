@@ -15,6 +15,7 @@ import { TextField } from '../ui/Inputs'
 import { ConfirmDialog, Modal } from '../ui/Overlay'
 import { useToast } from '../ui/Toast'
 import { cx, focusRing } from '../ui/styles'
+import MfaSettings from './MfaSettings'
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -297,6 +298,8 @@ export default function SettingsPage() {
         </Card>
 
         <TagManager />
+
+        <MfaSettings />
 
         <Card>
           <CardHeader title="Session" description="Sessions end after 12 hours of inactivity." />

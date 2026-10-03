@@ -1,7 +1,7 @@
 import { rmSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { expect, request, test } from '@playwright/test'
-import { accessCode, ADMIN_BASE, getBatch, loginApi, mockMode, mockState, resetMocks, signedCallback, stackEnv, startBatch, terminal, waitForBatch, type Api } from './helpers'
+import { accessCode, ADMIN_BASE, getBatch, loginApi, mockMode, mockState, resetMocks, signedCallback, stackEnv, startBatch, terminal, totp, waitForBatch, type Api } from './helpers'
 
 test.describe.configure({ mode: 'serial', timeout: 120_000 })
 
@@ -59,6 +59,53 @@ test.describe('auth', () => {
       expect(await res.text()).not.toContain('NivelloAdmin')
     }
     await anon.dispose()
+  })
+
+  test('TOTP enrollment adds a second login step and recovery codes are single-use', async () => {
+    expect((await api.get('auth.php?action=mfa-status')).body.data.enabled).toBe(false)
+
+    const stale = await request.newContext({ baseURL: ADMIN_BASE })
+    expect((await stale.post('/admin-api/auth.php?action=login', { data: { code: accessCode() } })).status()).toBe(200)
+
+    const start = await api.post('auth.php?action=mfa-enroll-start', { accessCode: accessCode() })
+    expect(start.status, JSON.stringify(start.body)).toBe(200)
+    expect(start.body.data.secret).toMatch(/^[A-Z2-7]{32}$/)
+    expect(start.body.data.provisioningUri).toContain('otpauth://totp/')
+
+    const confirm = await api.post('auth.php?action=mfa-enroll-confirm', { token: totp(start.body.data.secret) })
+    expect(confirm.status, JSON.stringify(confirm.body)).toBe(200)
+    expect(confirm.body.data.status.enabled).toBe(true)
+    expect(confirm.body.data.recoveryCodes).toHaveLength(10)
+    const recoveryCodes = confirm.body.data.recoveryCodes as string[]
+    expect((await stale.get('/admin-api/dashboard.php?action=summary')).status()).toBe(401)
+    await stale.dispose()
+
+    const second = await request.newContext({ baseURL: ADMIN_BASE })
+    const password = await second.post('/admin-api/auth.php?action=login', { data: { code: accessCode() } })
+    expect(password.status()).toBe(200)
+    expect((await password.json()).data).toMatchObject({ authenticated: false, mfaRequired: true, csrfToken: null })
+    expect((await (await second.get('/admin-api/auth.php?action=session')).json()).data.mfaRequired).toBe(true)
+
+    const verify = await second.post('/admin-api/auth.php?action=mfa-verify', { data: { token: recoveryCodes[0] } })
+    expect(verify.status()).toBe(200)
+    expect((await verify.json()).data).toMatchObject({ authenticated: true, mfaRequired: false, usedRecoveryCode: true })
+
+    await second.post('/admin-api/auth.php?action=logout', { data: {} })
+    const passwordAgain = await second.post('/admin-api/auth.php?action=login', { data: { code: accessCode() } })
+    expect(passwordAgain.status()).toBe(200)
+    const reused = await second.post('/admin-api/auth.php?action=mfa-verify', { data: { token: recoveryCodes[0] } })
+    expect(reused.status()).toBe(401)
+    expect((await reused.json()).error.code).toBe('INVALID_MFA_CODE')
+    await second.dispose()
+
+    const disable = await api.post('auth.php?action=mfa-disable', { accessCode: accessCode(), token: recoveryCodes[1] })
+    expect(disable.status, JSON.stringify(disable.body)).toBe(200)
+    expect(disable.body.data.enabled).toBe(false)
+
+    const direct = await request.newContext({ baseURL: ADMIN_BASE })
+    const directLogin = await direct.post('/admin-api/auth.php?action=login', { data: { code: accessCode() } })
+    expect((await directLogin.json()).data).toMatchObject({ authenticated: true, mfaRequired: false })
+    await direct.dispose()
   })
 })
 

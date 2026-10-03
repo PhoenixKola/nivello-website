@@ -134,6 +134,27 @@ check('an idle session expires and reports SESSION_EXPIRED', function () use ($t
     ob_end_clean();
 });
 
+check('TOTP matches RFC 6238 vectors and rejects replayed codes', function () {
+    $secret = mfa_base32_encode('12345678901234567890');
+    ensure($secret === 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ', 'base32 encoding');
+    ensure(mfa_totp_code($secret, 59, 8) === '94287082', 'RFC vector at 59 seconds');
+    ensure(mfa_totp_code($secret, 1111111109, 8) === '07081804', 'RFC vector at 1111111109 seconds');
+
+    $enabled = mfa_enable($secret, -1);
+    $current = mfa_totp_code($secret, time());
+    $verified = mfa_verify_factor($current);
+    ensure(($verified['kind'] ?? '') === 'totp', 'current code accepted');
+    ensure(mfa_verify_factor($current) === null, 'same time step cannot be reused');
+    ensure(count($enabled['recoveryCodes']) === 10, 'ten recovery codes generated');
+    $firstRecovery = $enabled['recoveryCodes'][0];
+    ensure((mfa_verify_factor($firstRecovery)['kind'] ?? '') === 'recovery', 'recovery code accepted');
+    ensure(mfa_verify_factor($firstRecovery) === null, 'recovery code is single use');
+    $stored = file_get_contents(ADMIN_DATA_DIR . '/auth/mfa.json');
+    ensure($stored !== false && !str_contains($stored, $firstRecovery), 'recovery codes are not stored in plaintext');
+    mfa_disable();
+    ensure(mfa_status()['enabled'] === false, 'MFA disabled cleanly');
+});
+
 // ── SSRF & Instagram ────────────────────────────────────────────────────────
 
 check('enrichment refuses private, loopback, link-local, CGNAT and non-web targets', function () {

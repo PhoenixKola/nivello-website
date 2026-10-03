@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds the lftp command list for a Nivello deploy without touching the server.
 #
-# Ownership model: the web root is shared with sibling apps (e.g. casco-bene/, demo/).
+# Ownership model: the web root is shared with sibling apps (e.g. auto-usate/, casco-bene/, demo/).
 # A deploy may only create, update, or delete top-level entries that Nivello itself shipped:
 #   - entries in the current build (out/) are uploaded; deletion happens only *inside* them
 #   - entries listed in the previous deploy's manifest but absent now are removed
@@ -16,7 +16,7 @@ REMOTE_ROOT=${3:?remote root}
 MANIFEST_NAME=.nivello-manifest
 
 # Sibling apps that must never be created, replaced, or removed by this site.
-PROTECTED_RE='^(casco-bene|demo)$'
+PROTECTED_RE='^(auto-usate|casco-bene|demo)$'
 # Next.js encodes route-group segments with '!' (e.g. __next.!KGVuKQ).
 SAFE_NAME_RE='^[A-Za-z0-9._!-]+$'
 

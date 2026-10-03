@@ -24,6 +24,7 @@ final class ApiError extends RuntimeException
 }
 
 require_once __DIR__ . '/_store.php';
+require_once __DIR__ . '/_mfa.php';
 require_once __DIR__ . '/_auth.php';
 
 // ── Time & ids ──────────────────────────────────────────────────────────────

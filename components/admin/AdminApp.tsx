@@ -9,7 +9,7 @@ import AdminShell from './AdminShell'
 import LoginScreen from './LoginScreen'
 import { ToastProvider } from './ui/Toast'
 
-type SessionState = { status: 'loading' } | { status: 'anonymous'; notice: string | null } | { status: 'authenticated' } | { status: 'error'; message: string }
+type SessionState = { status: 'loading' } | { status: 'anonymous'; notice: string | null; mfaRequired?: boolean } | { status: 'authenticated' } | { status: 'error'; message: string }
 
 export default function AdminApp() {
   const [session, setSession] = useState<SessionState>({ status: 'loading' })
@@ -31,7 +31,7 @@ export default function AdminApp() {
         setSession(
           result.authenticated
             ? { status: 'authenticated' }
-            : { status: 'anonymous', notice: result.expired ? 'Your session expired. Please sign in again.' : null }
+            : { status: 'anonymous', notice: result.expired ? 'Your session expired. Please sign in again.' : null, mfaRequired: result.mfaRequired }
         )
       })
       .catch(error => {
@@ -62,6 +62,7 @@ export default function AdminApp() {
       {session.status === 'anonymous' && (
         <LoginScreen
           notice={session.notice}
+          initialMfaRequired={session.mfaRequired}
           onSuccess={csrf => {
             setCsrfToken(csrf)
             setSession({ status: 'authenticated' })

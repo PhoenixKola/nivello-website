@@ -38,11 +38,17 @@ function current_session(): array
     admin_session_start();
     $now = time();
     $authenticated = !empty($_SESSION['auth']);
+    $mfaRequired = !empty($_SESSION['mfaPending']);
     $expired = false;
+    if ($mfaRequired && $now - (int) ($_SESSION['mfaPendingAt'] ?? 0) > MFA_PENDING_SECONDS) {
+        unset($_SESSION['mfaPending'], $_SESSION['mfaPendingAt'], $_SESSION['mfaAttempts']);
+        $mfaRequired = false;
+        $expired = true;
+    }
     if ($authenticated) {
         $idle = $now - (int) ($_SESSION['lastSeen'] ?? 0);
         $age = $now - (int) ($_SESSION['loginAt'] ?? 0);
-        if ($idle > SESSION_IDLE_SECONDS || $age > SESSION_MAX_SECONDS) {
+        if ($idle > SESSION_IDLE_SECONDS || $age > SESSION_MAX_SECONDS || !mfa_session_authorized($_SESSION)) {
             $_SESSION = [];
             session_regenerate_id(true);
             $authenticated = false;
@@ -54,7 +60,7 @@ function current_session(): array
     $csrf = $authenticated ? (string) ($_SESSION['csrf'] ?? '') : '';
     // Release the session lock so long-running requests (scraper polling) never block the UI.
     session_write_close();
-    return ['authenticated' => $authenticated, 'expired' => $expired, 'csrf' => $csrf];
+    return ['authenticated' => $authenticated, 'mfaRequired' => $mfaRequired, 'expired' => $expired, 'csrf' => $csrf];
 }
 
 function require_auth(): void
@@ -93,7 +99,25 @@ function access_code_matches(string $code): bool
     return strlen($plain) >= 8 && hash_equals($plain, $code);
 }
 
-function admin_login(string $code): string
+function admin_complete_login(string $mfaGeneration = ''): string
+{
+    admin_session_start();
+    session_regenerate_id(true);
+    $now = time();
+    $_SESSION = [
+        'auth' => true,
+        'loginAt' => $now,
+        'lastSeen' => $now,
+        'csrf' => bin2hex(random_bytes(32)),
+        'mfaGeneration' => $mfaGeneration,
+    ];
+    $csrf = $_SESSION['csrf'];
+    session_write_close();
+    return $csrf;
+}
+
+/** Verifies the access code and either finishes login or creates a short MFA-pending session. */
+function admin_login(string $code): array
 {
     if (!access_code_configured()) {
         throw new ApiError('ACCESS_NOT_CONFIGURED', 'The admin access code is not configured on the server. See docs/NIVELLO-ADMIN-DEPLOYMENT.md.', 503);
@@ -108,20 +132,152 @@ function admin_login(string $code): string
         usleep(400000);
         throw new ApiError('INVALID_CODE', 'That access code is not correct.', 401);
     }
+
+    $state = mfa_state();
+    if (!empty($state['enabled']) && is_string($state['secret'] ?? null) && $state['secret'] !== '') {
+        admin_session_start();
+        session_regenerate_id(true);
+        $_SESSION = [
+            'mfaPending' => true,
+            'mfaPendingAt' => time(),
+            'mfaAttempts' => 0,
+        ];
+        session_write_close();
+        return ['authenticated' => false, 'mfaRequired' => true, 'csrfToken' => null];
+    }
+
     $throttle->clear();
+    return ['authenticated' => true, 'mfaRequired' => false, 'csrfToken' => admin_complete_login()];
+}
+
+function admin_verify_mfa(string $token): array
+{
+    $throttle = new LoginThrottle();
+    $retryAfter = $throttle->retryAfter();
+    if ($retryAfter > 0) {
+        throw new ApiError('TOO_MANY_ATTEMPTS', "Too many failed attempts. Try again in {$retryAfter} seconds.", 429, ['retryAfter' => $retryAfter]);
+    }
 
     admin_session_start();
-    session_regenerate_id(true);
     $now = time();
-    $_SESSION = [
-        'auth' => true,
-        'loginAt' => $now,
-        'lastSeen' => $now,
-        'csrf' => bin2hex(random_bytes(32)),
-    ];
-    $csrf = $_SESSION['csrf'];
+    $pending = !empty($_SESSION['mfaPending']) && $now - (int) ($_SESSION['mfaPendingAt'] ?? 0) <= MFA_PENDING_SECONDS;
     session_write_close();
-    return $csrf;
+    if (!$pending) {
+        throw new ApiError('MFA_RESTART_REQUIRED', 'The verification window expired. Enter the access code again.', 401);
+    }
+
+    $verified = mfa_verify_factor($token);
+    if ($verified === null) {
+        $throttle->recordFailure();
+        admin_session_start();
+        $_SESSION['mfaAttempts'] = (int) ($_SESSION['mfaAttempts'] ?? 0) + 1;
+        $restart = $_SESSION['mfaAttempts'] >= LOGIN_MAX_FAILURES;
+        if ($restart) {
+            $_SESSION = [];
+        }
+        session_write_close();
+        usleep(400000);
+        throw new ApiError(
+            $restart ? 'MFA_RESTART_REQUIRED' : 'INVALID_MFA_CODE',
+            $restart ? 'Too many incorrect codes. Enter the access code again.' : 'That authenticator or recovery code is not correct.',
+            401
+        );
+    }
+
+    $throttle->clear();
+    return [
+        'authenticated' => true,
+        'mfaRequired' => false,
+        'csrfToken' => admin_complete_login((string) $verified['generation']),
+        'usedRecoveryCode' => $verified['kind'] === 'recovery',
+    ];
+}
+
+function admin_start_mfa_enrollment(string $accessCode): array
+{
+    $throttle = new LoginThrottle();
+    $retryAfter = $throttle->retryAfter();
+    if ($retryAfter > 0) {
+        throw new ApiError('TOO_MANY_ATTEMPTS', "Too many failed attempts. Try again in {$retryAfter} seconds.", 429, ['retryAfter' => $retryAfter]);
+    }
+    if (!access_code_matches($accessCode)) {
+        $throttle->recordFailure();
+        usleep(400000);
+        throw new ApiError('INVALID_CODE', 'That access code is not correct.', 401);
+    }
+    if (mfa_enabled()) {
+        throw new ApiError('MFA_ALREADY_ENABLED', 'Authenticator verification is already enabled.', 409);
+    }
+    $throttle->clear();
+    $secret = mfa_base32_encode(random_bytes(20));
+    admin_session_start();
+    $_SESSION['mfaEnrollment'] = ['secret' => $secret, 'createdAt' => time()];
+    session_write_close();
+    return [
+        'secret' => $secret,
+        'provisioningUri' => mfa_provisioning_uri($secret),
+        'expiresIn' => MFA_ENROLLMENT_SECONDS,
+    ];
+}
+
+function admin_confirm_mfa_enrollment(string $token): array
+{
+    $throttle = new LoginThrottle();
+    $retryAfter = $throttle->retryAfter();
+    if ($retryAfter > 0) {
+        throw new ApiError('TOO_MANY_ATTEMPTS', "Too many failed attempts. Try again in {$retryAfter} seconds.", 429, ['retryAfter' => $retryAfter]);
+    }
+    admin_session_start();
+    $enrollment = is_array($_SESSION['mfaEnrollment'] ?? null) ? $_SESSION['mfaEnrollment'] : null;
+    session_write_close();
+    if (!$enrollment || time() - (int) ($enrollment['createdAt'] ?? 0) > MFA_ENROLLMENT_SECONDS) {
+        throw new ApiError('MFA_ENROLLMENT_EXPIRED', 'Authenticator setup expired. Start again.', 409);
+    }
+    $secret = is_string($enrollment['secret'] ?? null) ? $enrollment['secret'] : '';
+    $step = mfa_matching_step($secret, $token);
+    if ($step === null) {
+        $throttle->recordFailure();
+        usleep(400000);
+        throw new ApiError('INVALID_MFA_CODE', 'That authenticator code is not correct.', 422);
+    }
+    $throttle->clear();
+    $enabled = mfa_enable($secret, $step);
+    admin_session_start();
+    $_SESSION['mfaGeneration'] = $enabled['generation'];
+    unset($_SESSION['mfaEnrollment']);
+    session_write_close();
+    return [
+        'status' => mfa_status(),
+        'recoveryCodes' => $enabled['recoveryCodes'],
+    ];
+}
+
+function admin_disable_mfa(string $accessCode, string $token): array
+{
+    $throttle = new LoginThrottle();
+    $retryAfter = $throttle->retryAfter();
+    if ($retryAfter > 0) {
+        throw new ApiError('TOO_MANY_ATTEMPTS', "Too many failed attempts. Try again in {$retryAfter} seconds.", 429, ['retryAfter' => $retryAfter]);
+    }
+    if (!access_code_matches($accessCode)) {
+        $throttle->recordFailure();
+        usleep(400000);
+        throw new ApiError('INVALID_CODE', 'That access code is not correct.', 401);
+    }
+    if (!mfa_enabled()) {
+        return mfa_status();
+    }
+    if (mfa_verify_factor($token) === null) {
+        $throttle->recordFailure();
+        usleep(400000);
+        throw new ApiError('INVALID_MFA_CODE', 'That authenticator or recovery code is not correct.', 401);
+    }
+    $throttle->clear();
+    mfa_disable();
+    admin_session_start();
+    $_SESSION['mfaGeneration'] = '';
+    session_write_close();
+    return mfa_status();
 }
 
 function admin_logout(): void

@@ -16,6 +16,30 @@ export function accessCode(): string {
   return stackEnv().accessCode
 }
 
+export function totp(secret: string, timestamp = Date.now()): string {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
+  let buffer = 0
+  let bits = 0
+  const bytes: number[] = []
+  for (const char of secret.replace(/[^A-Z2-7]/gi, '').toUpperCase()) {
+    buffer = (buffer << 5) | alphabet.indexOf(char)
+    bits += 5
+    if (bits >= 8) {
+      bits -= 8
+      bytes.push((buffer >> bits) & 0xff)
+      buffer &= bits ? (1 << bits) - 1 : 0
+    }
+  }
+  const counter = Math.floor(timestamp / 1000 / 30)
+  const message = Buffer.alloc(8)
+  message.writeUInt32BE(Math.floor(counter / 0x100000000), 0)
+  message.writeUInt32BE(counter % 0x100000000, 4)
+  const digest = createHmac('sha1', Buffer.from(bytes)).update(message).digest()
+  const offset = digest[19] & 0x0f
+  const binary = digest.readUInt32BE(offset) & 0x7fffffff
+  return String(binary % 1_000_000).padStart(6, '0')
+}
+
 export type Api = {
   ctx: APIRequestContext
   csrf: string

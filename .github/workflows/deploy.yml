@@ -101,7 +101,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y lftp
 
       # Deletion is limited to entries a Nivello build shipped (see scripts/deploy-plan.sh),
-      # so sibling apps in the shared web root (casco-bene/, demo/, future ones) are never touched.
+      # so sibling apps in the shared web root (auto-usate/, casco-bene/, demo/, future ones) are never touched.
       - name: Fetch previous deploy manifest
         run: |
           if lftp --env-password -u "$HETZNER_USER" -p "$HETZNER_PORT" "sftp://$HETZNER_HOST" \

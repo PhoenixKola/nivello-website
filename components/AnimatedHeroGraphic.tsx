@@ -1,128 +1,187 @@
 'use client'
 
 import Image from 'next/image'
-import { motion, useReducedMotion } from 'framer-motion'
+import { useRef, useState, type PointerEvent } from 'react'
+import { motion, useInView, useMotionValue, useReducedMotion, useSpring, useTransform } from 'framer-motion'
+import type { Locale } from '@/lib/site'
 
-const ease = 'easeInOut' as const
-
-const layers = [
-  {
-    src: '/hero-layer-08-mesh-glow.webp',
-    className: 'left-[50%] top-[32%] w-[34%] opacity-45',
-    animate: { x: [-4, 0, -4], y: [6, 0, 6], scale: [1, 0.94, 1], opacity: [0.55, 0.34, 0.55] },
-    transition: { duration: 12, repeat: Infinity, ease }
+const copy = {
+  en: {
+    website: 'Public website',
+    software: 'Business software',
+    layers: ['Structure', 'Interface', 'Media', 'Code']
   },
-  {
-    src: '/hero-layer-06-grid-cube-platform.webp',
-    className: 'left-[3%] top-[24%] w-[90%] opacity-78',
-    animate: { rotate: [0, 180, 360], scale: [1, 0.92, 1] },
-    transition: { duration: 26, repeat: Infinity, ease: 'linear' as const },
-    priority: true
-  },
-  {
-    src: '/hero-layer-07-orbit-rings.webp',
-    className: 'left-[15%] top-[54%] w-[68%]',
-    animate: { x: [0, 2, 0], y: [0, -6, 0], scale: [1, 0.94, 1] },
-    transition: { duration: 8.8, repeat: Infinity, ease }
-  },
-  {
-    src: '/hero-layer-02-analytics-card.webp',
-    className: 'left-[21%] top-[2%] w-[52%]',
-    animate: { x: [0, 12, 0], y: [0, 34, 0], rotate: [0.8, -1.4, 0.8], scale: [1, 0.82, 1] },
-    transition: { duration: 8.2, repeat: Infinity, ease }
-  },
-  {
-    src: '/hero-layer-03-back-glass-panel.webp',
-    className: 'left-[39%] top-[13%] w-[46%]',
-    animate: { x: [0, -15, 0], y: [-2, 25, -2], rotate: [-1, 1.2, -1], scale: [1, 0.88, 1] },
-    transition: { duration: 8.2, repeat: Infinity, ease }
-  },
-  {
-    src: '/hero-layer-01-n-logo.webp',
-    className: 'left-[19%] top-[25%] w-[64%] z-10',
-    animate: { x: [0, 1, 0], y: [-1, 2, -1], rotate: [0.2, 0, 0.2], scale: [1.02, 0.99, 1.02] },
-    transition: { duration: 8.2, repeat: Infinity, ease },
-    priority: true
-  },
-  {
-    src: '/hero-layer-04-wave-panel.webp',
-    className: 'left-[7%] top-[36%] w-[39%] z-20',
-    animate: { x: [-10, 28, 4, -10], y: [-16, 10, 14, -16], rotate: [-2.4, 2, -0.4, -2.4], scale: [1, 0.78, 0.9, 1] },
-    transition: { duration: 6.8, repeat: Infinity, ease }
-  },
-  {
-    src: '/hero-layer-05-code-card-cursor.webp',
-    className: 'left-[57%] top-[37%] w-[38%] z-20',
-    animate: { x: [11, -28, -4, 11], y: [-18, 11, 15, -18], rotate: [2.6, -2, 0.7, 2.6], scale: [1, 0.78, 0.9, 1] },
-    transition: { duration: 6.6, repeat: Infinity, ease }
+  it: {
+    website: 'Sito pubblico',
+    software: 'Software gestionale',
+    layers: ['Struttura', 'Interfaccia', 'Media', 'Codice']
   }
-]
+} satisfies Record<Locale, { website: string; software: string; layers: string[] }>
 
-const nodes = [
-  { className: 'left-[17%] top-[39%] bg-[var(--brand-gold)]', delay: 0 },
-  { className: 'left-[77%] top-[35%] bg-[var(--brand-blue)]', delay: 0.5 },
-  { className: 'left-[68%] top-[66%] bg-[var(--brand-purple)]', delay: 1 }
-]
+type Focus = 'website' | 'software' | null
 
-export default function AnimatedHeroGraphic() {
+export default function AnimatedHeroGraphic({ locale }: { locale: Locale }) {
+  const rootRef = useRef<HTMLDivElement>(null)
   const reducedMotion = useReducedMotion()
+  const isInView = useInView(rootRef, { amount: 0.15 })
+  const [focus, setFocus] = useState<Focus>(null)
+  const pointerX = useMotionValue(0)
+  const pointerY = useMotionValue(0)
+  const smoothX = useSpring(pointerX, { stiffness: 90, damping: 22, mass: 0.5 })
+  const smoothY = useSpring(pointerY, { stiffness: 90, damping: 22, mass: 0.5 })
+  const rotateY = useTransform(smoothX, [-1, 1], [-2.5, 2.5])
+  const rotateX = useTransform(smoothY, [-1, 1], [1.5, -1.5])
+  const t = copy[locale]
+
+  function handlePointerMove(event: PointerEvent<HTMLDivElement>) {
+    if (reducedMotion || !isInView || event.pointerType !== 'mouse') return
+    const bounds = event.currentTarget.getBoundingClientRect()
+    const x = (event.clientX - bounds.left) / bounds.width
+    const y = (event.clientY - bounds.top) / bounds.height
+    pointerX.set((x - 0.5) * 2)
+    pointerY.set((y - 0.5) * 2)
+    setFocus(x < 0.46 ? 'website' : x > 0.54 ? 'software' : null)
+  }
+
+  function resetPointer() {
+    pointerX.set(0)
+    pointerY.set(0)
+    setFocus(null)
+  }
+
+  const instant = reducedMotion ? 0 : undefined
 
   return (
-    <motion.div
+    <div
+      ref={rootRef}
       aria-hidden="true"
-      className="pointer-events-none relative mx-auto aspect-[4/5] w-full max-w-[350px] transform-gpu sm:max-w-[400px] lg:mr-0 lg:max-w-[500px]"
-      initial={{ opacity: 0, scale: 0.9, y: 24 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.8, ease: 'easeOut' as const, delay: 0.08 }}
+      className="dnse-stage relative mx-auto w-full max-w-[680px]"
+      data-focus={focus ?? 'core'}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={resetPointer}
     >
       <motion.div
-        className="absolute left-[18%] top-[18%] h-[58%] w-[64%] rounded-full border border-[var(--brand-blue)]/20 dark:border-[var(--brand-blue)]/30"
-        animate={reducedMotion ? undefined : { rotate: [0, 360], scale: [1, 0.94, 1] }}
-        transition={reducedMotion ? undefined : { duration: 22, repeat: Infinity, ease: 'linear' as const }}
-      />
-      <motion.div
-        className="absolute left-[10%] top-[27%] h-[48%] w-[80%] rotate-[-16deg] rounded-full border border-[var(--brand-gold)]/18 dark:border-[var(--brand-gold)]/25"
-        animate={reducedMotion ? undefined : { rotate: [-16, -376], scale: [1, 0.95, 1] }}
-        transition={reducedMotion ? undefined : { duration: 28, repeat: Infinity, ease: 'linear' as const }}
-      />
-      <motion.div
-        className="absolute left-[24%] top-[23%] h-[45%] w-[54%] rotate-[24deg] rounded-full border border-[var(--brand-purple)]/18 dark:border-[var(--brand-purple)]/28"
-        animate={reducedMotion ? undefined : { rotate: [24, 384], opacity: [0.72, 0.38, 0.72] }}
-        transition={reducedMotion ? undefined : { duration: 18, repeat: Infinity, ease: 'linear' as const }}
-      />
-
-      <div className="absolute left-[22%] top-[49%] h-px w-[56%] bg-[var(--brand-blue)]/25 dark:bg-[var(--brand-blue)]/35" />
-      <div className="absolute left-[33%] top-[31%] h-[42%] w-px rotate-[18deg] bg-[var(--brand-gold)]/20 dark:bg-[var(--brand-gold)]/30" />
-
-      {nodes.map(node => (
-        <motion.span
-          key={node.className}
-          className={`absolute h-2 w-2 rounded-full shadow-[0_0_18px_currentColor] ${node.className}`}
-          animate={reducedMotion ? undefined : { scale: [0.7, 1.35, 0.7], opacity: [0.35, 1, 0.35] }}
-          transition={reducedMotion ? undefined : { duration: 2.8, repeat: Infinity, delay: node.delay, ease }}
-        />
-      ))}
-
-      {layers.map(layer => (
+        className="dnse-scene relative h-full w-full"
+        style={reducedMotion ? undefined : { rotateX, rotateY }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: instant ?? 0.35 }}
+      >
+        <div className="dnse-grid" />
         <motion.div
-          key={layer.src}
-          className={`absolute transform-gpu ${layer.className}`}
-          animate={reducedMotion ? undefined : layer.animate}
-          transition={reducedMotion ? undefined : layer.transition}
+          className="dnse-baseline"
+          initial={{ scaleX: reducedMotion ? 1 : 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: instant ?? 0.8, delay: reducedMotion ? 0 : 0.25, ease: [0.22, 1, 0.36, 1] }}
+        />
+
+        <div className="dnse-output-position dnse-output-position--website">
+          <motion.div
+            className="dnse-output dnse-output--website"
+            initial={reducedMotion ? false : { opacity: 0, x: 72, y: 16, scale: 0.92 }}
+            animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+            transition={{ duration: instant ?? 0.9, delay: reducedMotion ? 0 : 1.28, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <div className="dnse-output-depth">
+              <div className="dnse-surface-bar"><i /><i /><i /><span>progreen.it</span></div>
+              <Image
+                src="/work-progreen-live.webp"
+                alt=""
+                width={1600}
+                height={900}
+                priority
+                sizes="(max-width: 640px) 260px, (max-width: 1024px) 330px, 360px"
+                className="h-auto w-full select-none"
+                draggable={false}
+              />
+              <span className="dnse-output-label">{t.website}</span>
+            </div>
+          </motion.div>
+        </div>
+
+        <div className="dnse-output-position dnse-output-position--software">
+          <motion.div
+            className="dnse-output dnse-output--software"
+            initial={reducedMotion ? false : { opacity: 0, x: -72, y: -16, scale: 0.92 }}
+            animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+            transition={{ duration: instant ?? 0.9, delay: reducedMotion ? 0 : 1.62, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <div className="dnse-output-depth">
+              <div className="dnse-surface-bar dnse-surface-bar--software"><span>OPERATIONS / PROGREEN</span><b /></div>
+              <Image
+                src="/work-progreen-app-redacted.webp"
+                alt=""
+                width={1812}
+                height={868}
+                priority
+                sizes="(max-width: 640px) 260px, (max-width: 1024px) 330px, 370px"
+                className="h-auto w-full select-none"
+                draggable={false}
+              />
+              <span className="dnse-output-label">{t.software}</span>
+            </div>
+          </motion.div>
+        </div>
+
+        <motion.div
+          className="dnse-connector dnse-connector--left"
+          initial={{ scaleX: reducedMotion ? 1 : 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: instant ?? 0.55, delay: reducedMotion ? 0 : 1.06, ease: [0.22, 1, 0.36, 1] }}
+        />
+        <motion.div
+          className="dnse-connector dnse-connector--right"
+          initial={{ scaleX: reducedMotion ? 1 : 0 }}
+          animate={{ scaleX: 1 }}
+          transition={{ duration: instant ?? 0.55, delay: reducedMotion ? 0 : 1.26, ease: [0.22, 1, 0.36, 1] }}
+        />
+
+        <motion.div
+          className="dnse-core"
+          initial={reducedMotion ? false : { opacity: 0, scale: 0.7, rotateY: 44 }}
+          animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+          transition={{ duration: instant ?? 0.75, delay: reducedMotion ? 0 : 0.16, ease: [0.16, 1, 0.3, 1] }}
         >
-          <Image
-            src={layer.src}
-            alt=""
-            width={1254}
-            height={1254}
-            priority={Boolean(layer.priority)}
-            loading="eager"
-            sizes="(max-width: 640px) 350px, (max-width: 1024px) 400px, 500px"
-            className="h-auto w-full select-none object-contain drop-shadow-[0_22px_60px_rgba(15,23,42,0.14)] dark:drop-shadow-[0_22px_70px_rgba(0,0,0,0.35)]"
-            draggable={false}
-          />
+          <div className="dnse-core-frame">
+            <motion.div
+              className="dnse-core-logo"
+              initial={reducedMotion ? false : { clipPath: 'inset(0 100% 0 0)' }}
+              animate={{ clipPath: 'inset(0 0% 0 0)' }}
+              transition={{ duration: instant ?? 0.7, delay: reducedMotion ? 0 : 0.38, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <Image src="/nivello-logo-text-light.svg" alt="" width={210} height={60} className="h-auto w-full dark:hidden" draggable={false} />
+              <Image src="/nivello-logo-text.svg" alt="" width={210} height={60} className="hidden h-auto w-full dark:block" draggable={false} />
+            </motion.div>
+          </div>
         </motion.div>
-      ))}
-    </motion.div>
+
+        <div className="dnse-layer-stack">
+          {t.layers.map((label, index) => (
+            <motion.div
+              key={label}
+              className={`dnse-layer dnse-layer--${index + 1}`}
+              initial={reducedMotion ? false : { opacity: 0, x: index % 2 ? 96 : -96, scaleX: 0.25 }}
+              animate={{ opacity: 1, x: 0, scaleX: 1 }}
+              transition={{ duration: instant ?? 0.55, delay: reducedMotion ? 0 : 0.55 + index * 0.13, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <span>{label}</span>
+            </motion.div>
+          ))}
+        </div>
+
+        <motion.div
+          className="dnse-lock dnse-lock--left"
+          initial={{ opacity: reducedMotion ? 1 : 0, scale: reducedMotion ? 1 : 1.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: instant ?? 0.25, delay: reducedMotion ? 0 : 2.08 }}
+        />
+        <motion.div
+          className="dnse-lock dnse-lock--right"
+          initial={{ opacity: reducedMotion ? 1 : 0, scale: reducedMotion ? 1 : 1.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: instant ?? 0.25, delay: reducedMotion ? 0 : 2.22 }}
+        />
+      </motion.div>
+    </div>
   )
 }

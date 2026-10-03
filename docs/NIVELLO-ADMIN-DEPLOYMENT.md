@@ -47,6 +47,21 @@ To store a hash rather than the plain code (recommended), generate it once and p
 php -r "echo password_hash('your-access-code', PASSWORD_DEFAULT), PHP_EOL;"
 ```
 
+## Authenticator two-factor authentication
+
+TOTP two-factor authentication is optional until it is enrolled, then required for every new admin login. It does not need SMTP, SMS, a database or an external API.
+
+1. Sign in and open **Settings → Two-factor authentication → Set up**.
+2. Confirm the current access code.
+3. Scan the locally generated QR code with any standards-based authenticator app and enter its six-digit code.
+4. Download or copy the ten one-time recovery codes. They are never shown again.
+
+The TOTP seed is written to `<parent of public_html>/nivello-admin-data/auth/mfa.json`, outside the served site, and the application attempts to set file permissions to `600`. Recovery codes are stored only as password hashes. Enabling MFA invalidates other admin sessions that have not verified the current MFA generation.
+
+The phone and server calculate the same code from the shared seed and current time, so the phone works offline. The server clock must remain accurate. The QR code is rendered in the browser and is not sent to a QR service.
+
+If the authenticator is unavailable, enter one saved recovery code at the MFA login step. Each recovery code works once. Losing both the authenticator and every recovery code requires a server-side reset of `auth/mfa.json`; allowing the access code alone to reset MFA would defeat the second factor.
+
 ## One-time GitHub setup
 
 1. **Actions:** make sure GitHub Actions is enabled for `PhoenixKola/nivello-website` (Settings → Actions → General).
@@ -82,8 +97,9 @@ php -r "echo password_hash('your-access-code', PASSWORD_DEFAULT), PHP_EOL;"
 4. **Callback URL:** by default it is built from the admin request host (`https://www.nivello.it/admin-api/github-callback.php`). If the site is reached through several hostnames, set `NIVELLO_ADMIN_PUBLIC_BASE_URL=https://www.nivello.it`. The callback must be HTTPS.
 5. **Deploy:** only after owner approval. The normal deploy uploads `out/`, which contains `admin/` and `admin-api/`. The data directory and the secrets file sit outside `public_html` and are never touched by deploys.
 6. **Check the workspace:** open `https://www.nivello.it/admin/` and sign in with the access code.
-7. **Check Settings:** "Lead discovery (GitHub Actions)" must show token and callback secret *Configured*, GitHub API *Reachable*, and the workflow found.
-8. **Survive a redeploy:** create a test tag, redeploy, and confirm the tag is still there.
+7. **Enable MFA:** use **Settings → Two-factor authentication**, scan the QR code, and save the recovery codes in a password manager.
+8. **Check Settings:** "Lead discovery (GitHub Actions)" must show token and callback secret *Configured*, GitHub API *Reachable*, and the workflow found.
+9. **Survive a redeploy:** create a test tag, redeploy, and confirm the tag and MFA login still work.
 
 ## First live tests (after both setups)
 

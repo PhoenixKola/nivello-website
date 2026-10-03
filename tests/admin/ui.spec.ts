@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { accessCode, resetMocks } from './helpers'
+import { accessCode, resetMocks, totp } from './helpers'
 
 test.describe.configure({ mode: 'serial', timeout: 120_000 })
 
@@ -36,6 +36,42 @@ test('the access code is not in the page or its JavaScript', async ({ page, requ
   expect(html).not.toContain(accessCode())
   const scripts = await page.locator('script[src]').evaluateAll(els => els.map(el => (el as HTMLScriptElement).src))
   for (const src of scripts) expect(await (await request.get(src)).text()).not.toContain(accessCode())
+})
+
+test('authenticator setup, second-step login and recovery work from the UI', async ({ page }) => {
+  await login(page)
+  await page.goto('/admin/#/settings')
+  await expect(page.getByText('Two-factor authentication', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Set up' }).click()
+
+  let dialog = page.getByRole('dialog')
+  await dialog.getByLabel('Access code', { exact: true }).fill(accessCode())
+  await dialog.getByRole('button', { name: 'Continue' }).click()
+  await expect(dialog.getByRole('img', { name: 'Authenticator setup QR code' })).toBeVisible()
+  const secret = (await dialog.locator('code').textContent())!.trim()
+  await dialog.getByLabel('Six-digit authenticator code').fill(totp(secret))
+  await dialog.getByRole('button', { name: 'Verify and enable' }).click()
+
+  await expect(dialog.getByRole('heading', { name: 'Save your recovery codes' })).toBeVisible()
+  const recoveryCodes = (await dialog.locator('code').allTextContents()).map(code => code.trim())
+  expect(recoveryCodes).toHaveLength(10)
+  await dialog.getByRole('button', { name: 'I saved these codes' }).click()
+  await expect(page.getByText('Authenticator verification is enabled')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Log out' }).click()
+  await page.getByLabel('Access code', { exact: true }).fill(accessCode())
+  await page.getByRole('button', { name: 'Sign in' }).click()
+  await expect(page.getByRole('heading', { name: 'Verify it’s you' })).toBeVisible()
+  await page.getByLabel('Authenticator or recovery code').fill(recoveryCodes[0])
+  await page.getByRole('button', { name: 'Verify and continue' }).click()
+  await expect(page.getByText('Two-factor authentication', { exact: true })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Disable' }).click()
+  dialog = page.getByRole('dialog')
+  await dialog.getByLabel('Access code', { exact: true }).fill(accessCode())
+  await dialog.getByLabel('Authenticator or recovery code').fill(recoveryCodes[1])
+  await dialog.getByRole('button', { name: 'Disable MFA' }).click()
+  await expect(page.getByText('Only the access code is required')).toBeVisible()
 })
 
 test('discovery from the UI completes and "View leads" opens the exact batch filter', async ({ page }) => {

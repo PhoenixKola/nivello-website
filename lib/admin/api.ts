@@ -43,6 +43,26 @@ export type ProposalInput = Omit<Proposal, 'id' | 'number' | 'status' | 'items' 
   milestones: { label: string; due: string; percent: number }[]
 }
 
+export type AdminSession = {
+  authenticated: boolean
+  mfaRequired: boolean
+  expired: boolean
+  csrfToken: string | null
+}
+
+export type AdminLoginResult = {
+  authenticated: boolean
+  mfaRequired: boolean
+  csrfToken: string | null
+  usedRecoveryCode?: boolean
+}
+
+export type MfaStatus = {
+  enabled: boolean
+  enabledAt: string | null
+  recoveryCodesRemaining: number
+}
+
 const BASE = '/admin-api'
 
 export class ApiError extends Error {
@@ -161,9 +181,14 @@ async function downloadResponse(response: Response, fallbackName: string) {
 }
 
 export const api = {
-  session: () => request<{ authenticated: boolean; expired: boolean; csrfToken: string | null }>('auth', 'session'),
-  login: (code: string) => post<{ authenticated: boolean; csrfToken: string }>('auth', 'login', { code }),
+  session: () => request<AdminSession>('auth', 'session'),
+  login: (code: string) => post<AdminLoginResult>('auth', 'login', { code }),
+  verifyMfa: (token: string) => post<AdminLoginResult>('auth', 'mfa-verify', { token }),
   logout: () => post<{ authenticated: boolean }>('auth', 'logout'),
+  mfaStatus: () => request<MfaStatus>('auth', 'mfa-status'),
+  startMfaEnrollment: (accessCode: string) => post<{ secret: string; provisioningUri: string; expiresIn: number }>('auth', 'mfa-enroll-start', { accessCode }),
+  confirmMfaEnrollment: (token: string) => post<{ status: MfaStatus; recoveryCodes: string[] }>('auth', 'mfa-enroll-confirm', { token }),
+  disableMfa: (accessCode: string, token: string) => post<MfaStatus>('auth', 'mfa-disable', { accessCode, token }),
 
   health: (refresh = false) => request<Health>('health', 'status', refresh ? { refresh: '1' } : {}),
   backupNow: () => post<{ file: string }>('health', 'backup'),

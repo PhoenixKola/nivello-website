@@ -27,7 +27,7 @@ The smoke suite (`tests/smoke.spec.ts`) serves `./out` with `scripts/serve-out.m
 
 Pushing to `main` runs `.github/workflows/deploy.yml`: lint, build, and smoke tests, then an SFTP upload of the tested build.
 
-The web root on the server is shared with other apps (`casco-bene/`, `demo/`, …). Deploys therefore only manage entries a Nivello build shipped: each build writes `out/.nivello-manifest`, and `scripts/deploy-plan.sh` mirrors (with `--delete`) only inside those entries and removes only entries listed in the previous manifest that are gone. Anything not created by a Nivello deploy is never touched. To add a new protected sibling name, extend `PROTECTED_RE` in that script.
+The web root on the server is shared with other apps (`auto-usate/`, `casco-bene/`, `demo/`, …). Deploys therefore only manage entries a Nivello build shipped: each build writes `out/.nivello-manifest`, and `scripts/deploy-plan.sh` mirrors (with `--delete`) only inside those entries and removes only entries listed in the previous manifest that are gone. Anything not created by a Nivello deploy is never touched. To add a new protected sibling name, extend `PROTECTED_RE` in that script.
 
 `public/sw.js` is a deliberate service-worker kill-switch for registrations left by an earlier site; see the comment in the file before removing it.
 
