@@ -2,10 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { motion, useReducedMotion, type Transition } from 'framer-motion'
+import { motion, type Transition } from 'framer-motion'
 import { ArrowUpRight, Check, Target } from 'lucide-react'
 import { getProcessStages } from '@/lib/process'
 import { getRoutePath, type Locale } from '@/lib/site'
+import { useHydratedReducedMotion } from '@/lib/useHydratedReducedMotion'
 
 /**
  * Build Pipeline — the homepage process section.
@@ -50,7 +51,7 @@ function ProjectArtifact({
   titleLabel: string
   compact?: boolean
 }) {
-  const reducedMotion = useReducedMotion()
+  const reducedMotion = useHydratedReducedMotion()
   const ease: Transition = reducedMotion ? { duration: 0 } : { duration: 0.45, ease: [0.22, 0.61, 0.36, 1] }
   const at = (from: number) => (stage >= from ? 1 : 0)
 
@@ -169,7 +170,7 @@ function ProjectArtifact({
 export default function HomeBuildPipeline({ locale }: { locale: Locale }) {
   const t = copy[locale]
   const stages = getProcessStages(locale)
-  const reducedMotion = useReducedMotion()
+  const reducedMotion = useHydratedReducedMotion()
   const itemRefs = useRef<(HTMLLIElement | null)[]>([])
   const [active, setActive] = useState(1)
 
@@ -234,7 +235,7 @@ export default function HomeBuildPipeline({ locale }: { locale: Locale }) {
           </div>
           <Link
             href={getRoutePath('process', locale)}
-            className="group inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-[var(--brand-blue)] hover:text-blue-600 dark:text-[var(--brand-gold)] dark:hover:text-yellow-300"
+            className="group inline-flex shrink-0 cursor-pointer items-center gap-2 text-sm font-semibold text-[var(--brand-blue)] hover:text-blue-600 active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--brand-blue)] dark:text-[var(--brand-gold)] dark:hover:text-yellow-300 dark:focus-visible:outline-[var(--brand-gold)]"
           >
             {t.link}
             <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />

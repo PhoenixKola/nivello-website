@@ -1,3 +1,6 @@
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { getProjectPath, getProjects } from '@/lib/projects'
@@ -19,7 +22,21 @@ const copy = {
 
 export default function ClientLogoMarquee({ locale }: { locale: Locale }) {
   const t = copy[locale]
+  const marqueeRef = useRef<HTMLDivElement>(null)
+  const [isVisible, setIsVisible] = useState(true)
   const projects = getProjects(locale).filter(project => logos[project.slug])
+
+  useEffect(() => {
+    const node = marqueeRef.current
+    if (!node || !('IntersectionObserver' in window)) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0.04 }
+    )
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [])
 
   const logoLinks = (duplicate: boolean) => projects.map(project => {
     const logo = logos[project.slug]
@@ -30,7 +47,7 @@ export default function ClientLogoMarquee({ locale }: { locale: Locale }) {
         href={getProjectPath(project.slug, locale)}
         aria-label={`${t.view}: ${project.title}`}
         tabIndex={duplicate ? -1 : undefined}
-        className="group relative flex h-[92px] w-[180px] shrink-0 items-center justify-center px-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--brand-blue)] sm:h-[104px] sm:w-[208px] xl:w-[238px] dark:focus-visible:outline-[var(--brand-gold)]"
+        className="group relative flex h-[92px] w-[180px] shrink-0 cursor-pointer items-center justify-center px-5 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--brand-blue)] sm:h-[104px] sm:w-[208px] xl:w-[238px] dark:focus-visible:outline-[var(--brand-gold)]"
       >
         <Image
           src={logo.src}
@@ -48,7 +65,7 @@ export default function ClientLogoMarquee({ locale }: { locale: Locale }) {
   })
 
   return (
-    <div className="relative z-20 mt-4 w-full pb-4 lg:-mt-2 lg:pb-6">
+    <div ref={marqueeRef} data-visible={isVisible ? 'true' : 'false'} className="client-logo-region relative z-20 mt-4 w-full pb-4 lg:-mt-2 lg:pb-6">
       <div className="mb-1 flex items-center gap-4 px-4 sm:px-6 lg:px-10">
         <p className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">{t.heading}</p>
         <span className="h-px flex-1 bg-gradient-to-r from-slate-300 via-slate-200 to-transparent dark:from-white/20 dark:via-white/10" aria-hidden="true" />

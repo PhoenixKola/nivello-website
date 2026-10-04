@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowDown, ArrowRight, ArrowUpRight, Check, Globe2, LayoutDashboard, Sparkles } from 'lucide-react'
 import ProjectTypeBadges from '@/components/ProjectTypeBadges'
-import WorkHeroGraphic from '@/components/WorkHeroGraphic'
+import WorkHeroGraphic, { WORK_HERO_SHOT } from '@/components/WorkHeroGraphic'
 import { getProjectId, getProjectPath, getProjects, getProjectImageAlt } from '@/lib/projects'
 import type { Locale } from '@/lib/site'
 
@@ -143,7 +143,7 @@ export default function WorkShowcase({ locale }: { locale: Locale }) {
               <motion.article key={project.title} id={getProjectId(project.title)} {...rise(index * 0.05)} className="h-full scroll-mt-24">
                 <Link href={getProjectPath(project.slug, locale)} className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[var(--project-color)] hover:shadow-[0_22px_60px_-28px_rgba(15,23,42,0.35)] dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none dark:hover:bg-white/[0.045]" style={{ ['--project-color' as string]: project.color }}>
                   <div className="relative aspect-[16/10] overflow-hidden border-b border-slate-100 bg-slate-100 dark:border-white/10 dark:bg-slate-900">
-                    <Image src={project.shot} alt={getProjectImageAlt(project.title, 'website', locale)} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover object-top transition-transform duration-700 group-hover:scale-[1.035]" />
+                    <Image src={project.shot} alt={getProjectImageAlt(project.title, 'website', locale)} fill sizes="(max-width: 768px) 100vw, 33vw" loading={project.shot === WORK_HERO_SHOT ? 'eager' : undefined} className="object-cover object-top transition-transform duration-700 group-hover:scale-[1.035]" />
                     <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-950/25 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
                   </div>
                   <div className="flex flex-1 flex-col p-5">

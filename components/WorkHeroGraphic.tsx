@@ -7,6 +7,9 @@ const copy = {
   it: { website: 'Esperienza pubblica', app: 'Spazio privato', websiteType: 'Sito web', appType: 'Web app' }
 } satisfies Record<Locale, Record<string, string>>
 
+/** Above the fold here; Next tracks images by URL, so the card that reuses it must also load eagerly. */
+export const WORK_HERO_SHOT = '/work-progreen-live.webp'
+
 export default function WorkHeroGraphic({ locale }: { locale: Locale }) {
   const t = copy[locale]
 
@@ -21,7 +24,7 @@ export default function WorkHeroGraphic({ locale }: { locale: Locale }) {
           <ArrowUpRight className="h-3.5 w-3.5 text-slate-400" />
         </div>
         <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-950">
-          <Image src="/work-progreen-live.webp" alt="" fill sizes="(max-width: 1024px) 82vw, 460px" className="object-cover object-top" priority />
+          <Image src={WORK_HERO_SHOT} alt="" fill sizes="(max-width: 1024px) 82vw, 460px" className="object-cover object-top" priority />
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/75 to-transparent px-4 pb-4 pt-12">
             <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#b9e5bf]">ProGreen</p>
             <p className="mt-1 text-sm font-semibold text-white">{t.websiteType}</p>

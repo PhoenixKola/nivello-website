@@ -3,10 +3,11 @@
 import { useCallback, useId, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowLeft, ArrowRight, ArrowUpRight, ExternalLink, Globe2, LayoutDashboard, Lock } from 'lucide-react'
 import { getProjectPath, getProjects, type Project } from '@/lib/projects'
 import { getRoutePath, type Locale } from '@/lib/site'
+import { useHydratedReducedMotion } from '@/lib/useHydratedReducedMotion'
 
 /**
  * Live Project Stage — the homepage featured-work section.
@@ -79,7 +80,7 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
 
     return proGreen ? [proGreen, ...allProjects.filter(item => item.slug !== 'progreen')] : allProjects
   }, [locale])
-  const reducedMotion = useReducedMotion()
+  const reducedMotion = useHydratedReducedMotion()
   const baseId = useId()
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
 
@@ -132,10 +133,11 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
   const body = showingApp ? project.app!.description : project.website?.description ?? project.websiteSummary ?? project.desc
   const bullets = showingApp ? project.app!.details : project.website?.details ?? project.details
   const result = showingApp ? project.app!.result : project.website?.result ?? project.result
+  const sectionStyle = { '--project-accent': project.color } as React.CSSProperties
 
   return (
-    <section className="bg-stone-50 dark:bg-slate-950/95" aria-labelledby="home-work-heading">
-      <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
+    <section className="home-work-stage" style={sectionStyle} aria-labelledby="home-work-heading">
+      <div className="mx-auto max-w-[1280px] px-4 py-20 md:px-6 md:py-28">
         <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
@@ -151,7 +153,7 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
           </div>
           <Link
             href={getRoutePath('work', locale)}
-            className="group inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-[var(--brand-blue)] hover:text-blue-600 dark:text-[var(--brand-gold)] dark:hover:text-yellow-300"
+            className="group inline-flex shrink-0 cursor-pointer items-center gap-2 text-sm font-semibold text-[var(--brand-blue)] hover:text-blue-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--brand-blue)] dark:text-[var(--brand-gold)] dark:hover:text-yellow-300 dark:focus-visible:outline-[var(--brand-gold)]"
           >
             {t.allWork}
             <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -162,7 +164,7 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
         <div
           role="tablist"
           aria-label={t.indexLabel}
-          className="-mx-4 mb-6 flex snap-x gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden"
+          className="home-work-tabs -mx-4 mb-8 flex snap-x overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden"
         >
           {projects.map((item, index) => {
             const isActive = index === activeIndex
@@ -180,11 +182,7 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
                 tabIndex={isActive ? 0 : -1}
                 onClick={() => select(index)}
                 onKeyDown={onTabKeyDown}
-                className={`inline-flex shrink-0 snap-start items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-950'
-                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900 dark:border-white/12 dark:bg-white/[0.04] dark:text-slate-300 dark:hover:border-white/25 dark:hover:text-white'
-                }`}
+                className="home-work-tab snap-start"
               >
                 <span
                   className="h-2 w-2 shrink-0 rounded-full ring-1 ring-black/10 dark:ring-white/20"
@@ -201,13 +199,12 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
           id={`${baseId}-panel`}
           role="tabpanel"
           aria-labelledby={`${baseId}-tab-${project.slug}`}
-          className="grid gap-6 lg:grid-cols-[1.55fr_1fr] lg:gap-8"
+          className="grid gap-8 lg:grid-cols-[1.72fr_0.88fr] lg:gap-12"
         >
           {/* media frame */}
           <div className="min-w-0">
-            <div
-              className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_30px_70px_-45px_rgba(15,23,42,0.6)] dark:border-white/10 dark:bg-slate-900/70 dark:shadow-[0_30px_70px_-40px_rgba(0,0,0,0.9)]">
-              <div className="flex items-center gap-2 border-b border-slate-200 bg-slate-50 px-3 py-2 dark:border-white/10 dark:bg-white/[0.04]">
+            <div className="home-work-shell">
+              <div className="home-work-chrome flex items-center gap-2 px-3 py-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-slate-300 dark:bg-slate-600" />
                 <span className="h-2.5 w-2.5 rounded-full bg-slate-300 dark:bg-slate-600" />
                 <span className="h-2.5 w-2.5 rounded-full bg-slate-300 dark:bg-slate-600" />
@@ -225,7 +222,7 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
                 </span>
               </div>
 
-              <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-950">
+              <div className="relative aspect-[16/9] overflow-hidden bg-slate-100 dark:bg-slate-950">
                 <AnimatePresence initial={false} mode="wait">
                   <motion.div
                     key={mediaKey}
@@ -275,7 +272,7 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
                         type="button"
                         aria-pressed={option.active}
                         onClick={option.onClick}
-                        className={`relative z-10 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-blue)] dark:focus-visible:outline-[var(--brand-gold)] ${
+                        className={`relative z-10 inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold transition-colors active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-blue)] dark:focus-visible:outline-[var(--brand-gold)] ${
                           option.active
                             ? 'text-white dark:text-slate-950'
                             : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
@@ -299,7 +296,7 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
                   type="button"
                   onClick={() => move(-1)}
                   aria-label={t.previous}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900 dark:border-white/12 dark:text-slate-300 dark:hover:border-white/30 dark:hover:text-white"
+                  className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-slate-200 text-slate-600 transition-all hover:-translate-y-0.5 hover:border-slate-400 hover:text-slate-900 active:translate-y-0 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-blue)] dark:border-white/12 dark:text-slate-300 dark:hover:border-white/30 dark:hover:text-white dark:focus-visible:outline-[var(--brand-gold)]"
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </button>
@@ -307,7 +304,7 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
                   type="button"
                   onClick={() => move(1)}
                   aria-label={t.next}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900 dark:border-white/12 dark:text-slate-300 dark:hover:border-white/30 dark:hover:text-white"
+                  className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-slate-200 text-slate-600 transition-all hover:-translate-y-0.5 hover:border-slate-400 hover:text-slate-900 active:translate-y-0 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-blue)] dark:border-white/12 dark:text-slate-300 dark:hover:border-white/30 dark:hover:text-white dark:focus-visible:outline-[var(--brand-gold)]"
                 >
                   <ArrowRight className="h-4 w-4" />
                 </button>
@@ -351,7 +348,7 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
               </ul>
 
               {result && (
-                <div className="mt-6 rounded-xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/[0.03]">
+                <div className="home-work-outcome">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
                     {t.result}
                   </p>
@@ -362,7 +359,7 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
               <div className="mt-6 flex flex-wrap items-center gap-3">
                 <Link
                   href={getProjectPath(project.slug, locale)}
-                  className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 dark:bg-white dark:text-slate-950"
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--brand-blue)] dark:bg-white dark:text-slate-950 dark:focus-visible:outline-[var(--brand-gold)]"
                 >
                   {t.caseStudy}
                   <ArrowRight className="h-4 w-4" />
@@ -372,7 +369,7 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
                     href={project.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:border-slate-400 hover:text-slate-900 dark:border-white/12 dark:text-slate-300 dark:hover:border-white/30 dark:hover:text-white"
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-600 transition-all hover:-translate-y-0.5 hover:border-slate-400 hover:text-slate-900 active:translate-y-0 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--brand-blue)] dark:border-white/12 dark:text-slate-300 dark:hover:border-white/30 dark:hover:text-white dark:focus-visible:outline-[var(--brand-gold)]"
                   >
                     {t.liveSite}
                     <ExternalLink className="h-3.5 w-3.5" />

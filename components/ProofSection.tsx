@@ -3,10 +3,11 @@
 import { useId, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import { getProjectPath, getProjects } from '@/lib/projects'
 import type { Locale } from '@/lib/site'
+import { useHydratedReducedMotion } from '@/lib/useHydratedReducedMotion'
 
 type ProofQuote = { slug: string; name: string; role: string; quote: string }
 
@@ -125,7 +126,7 @@ const accentBg = 'bg-[var(--accent)] dark:bg-[var(--accent-dark)]'
 
 export default function ProofSection({ locale }: { locale: Locale }) {
   const t = copy[locale]
-  const reducedMotion = useReducedMotion()
+  const reducedMotion = useHydratedReducedMotion()
   const baseId = useId()
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
   const [activeIndex, setActiveIndex] = useState(0)
@@ -166,23 +167,26 @@ export default function ProofSection({ locale }: { locale: Locale }) {
   const swap = reducedMotion ? { duration: 0 } : { duration: 0.4, ease }
 
   return (
-    <section className="bg-stone-50 dark:bg-slate-950/95" aria-labelledby="home-proof-heading">
-      <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
-        <div className="mb-10 max-w-2xl">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
-            {t.eyebrow}
-          </p>
-          <h2
-            id="home-proof-heading"
-            className="font-display text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.75rem] dark:text-white"
-          >
-            {t.title}
-          </h2>
-          <p className="mt-3 text-base leading-relaxed text-slate-500 dark:text-slate-300/80">{t.intro}</p>
+    <section className="home-proof-section" style={accentStyle(project.color)} aria-labelledby="home-proof-heading">
+      <div className="mx-auto max-w-[1240px] px-4 py-20 md:px-6 md:py-28">
+        <div className="home-proof-chapter">
+          <span className="home-proof-index" aria-hidden="true">03</span>
+          <div className="max-w-2xl">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
+              {t.eyebrow}
+            </p>
+            <h2
+              id="home-proof-heading"
+              className="font-display text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.75rem] dark:text-white"
+            >
+              {t.title}
+            </h2>
+            <p className="mt-3 text-base leading-relaxed text-slate-500 dark:text-slate-300/80">{t.intro}</p>
+          </div>
         </div>
 
         {/* ── Client selector: an editorial index, not a pill row ── */}
-        <div role="tablist" aria-label={t.selector} className="grid grid-cols-2 gap-x-4 sm:grid-cols-3 lg:grid-cols-6 lg:gap-x-0">
+        <div role="tablist" aria-label={t.selector} className="home-proof-rail grid grid-cols-2 gap-x-4 sm:grid-cols-3 lg:grid-cols-6 lg:gap-x-0">
           {items.map((item, index) => {
             const isActive = index === activeIndex
             return (
@@ -199,7 +203,7 @@ export default function ProofSection({ locale }: { locale: Locale }) {
                 tabIndex={isActive ? 0 : -1}
                 onClick={() => setActiveIndex(index)}
                 onKeyDown={onKeyDown}
-                className={`group relative flex min-h-16 flex-col items-start gap-1 border-t border-slate-200 px-1 pb-4 pt-4 text-left transition-colors sm:px-3 dark:border-white/10 ${
+                className={`group relative flex min-h-16 cursor-pointer flex-col items-start gap-1 border-t border-slate-300 px-1 pb-4 pt-4 text-left transition-colors active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-blue)] sm:px-3 dark:border-white/14 dark:focus-visible:outline-[var(--brand-gold)] ${
                   isActive ? 'text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                 }`}
               >
@@ -234,9 +238,9 @@ export default function ProofSection({ locale }: { locale: Locale }) {
           id={`${baseId}-panel`}
           role="tabpanel"
           aria-labelledby={`${baseId}-tab-${active.slug}`}
-          className="mt-8 grid gap-8 lg:mt-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14"
+          className="home-proof-layout mt-10 grid gap-10 lg:mt-12 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-14"
         >
-          <div className="order-2 flex min-w-0 flex-col lg:order-1">
+          <div className="order-1 flex min-w-0 flex-col">
             <AnimatePresence initial={false} mode="wait">
               <motion.figure
                 key={active.slug}
@@ -244,7 +248,7 @@ export default function ProofSection({ locale }: { locale: Locale }) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: reducedMotion ? 0 : -8 }}
                 transition={swap}
-                className="flex min-h-[15rem] flex-col"
+                className="home-proof-quote flex min-h-[15rem] flex-col"
               >
                 <span
                   aria-hidden="true"
@@ -253,7 +257,7 @@ export default function ProofSection({ locale }: { locale: Locale }) {
                 >
                   &ldquo;
                 </span>
-                <blockquote className="-mt-4 font-display text-xl leading-snug text-slate-900 sm:text-2xl lg:text-[1.7rem] lg:leading-[1.35] dark:text-white">
+                <blockquote className="-mt-4 max-w-[35rem] font-display text-2xl leading-[1.3] text-slate-900 sm:text-3xl lg:text-[1.9rem] dark:text-white">
                   {active.quote}
                 </blockquote>
                 <figcaption className="mt-6 flex items-center gap-3">
@@ -271,7 +275,7 @@ export default function ProofSection({ locale }: { locale: Locale }) {
                       {project.services.map(service => (
                         <li
                           key={service}
-                          className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-600 dark:border-white/10 dark:text-slate-300"
+                          className="bg-white/55 px-2 py-1 text-xs text-slate-600 dark:bg-white/[0.055] dark:text-slate-300"
                         >
                           {service}
                         </li>
@@ -286,7 +290,7 @@ export default function ProofSection({ locale }: { locale: Locale }) {
 
                 <Link
                   href={getProjectPath(project.slug, locale)}
-                  className="group mt-6 inline-flex w-fit items-center gap-2 text-sm font-semibold text-[var(--brand-blue)] hover:text-blue-600 dark:text-[var(--brand-gold)] dark:hover:text-yellow-300"
+                  className="group mt-6 inline-flex w-fit cursor-pointer items-center gap-2 text-sm font-semibold text-[var(--brand-blue)] hover:text-blue-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--brand-blue)] dark:text-[var(--brand-gold)] dark:hover:text-yellow-300 dark:focus-visible:outline-[var(--brand-gold)]"
                 >
                   {t.caseStudy}
                   <span className="sr-only">: {project.title}</span>
@@ -297,8 +301,8 @@ export default function ProofSection({ locale }: { locale: Locale }) {
           </div>
 
           {/* project preview */}
-          <div className="order-1 min-w-0 lg:order-2">
-            <div className="relative aspect-[16/11] overflow-hidden rounded-xl bg-slate-100 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-white/10">
+          <div className="order-2 min-w-0">
+            <div className="home-proof-media relative aspect-[16/11]">
               <AnimatePresence initial={false}>
                 <motion.div
                   key={project.slug}

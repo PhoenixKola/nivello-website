@@ -2,7 +2,7 @@
 
 import { useId, useState } from 'react'
 import Link from 'next/link'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, Check } from 'lucide-react'
 import {
   briefCopy,
@@ -16,6 +16,7 @@ import {
 } from '@/lib/projectBrief'
 import { track } from '@/lib/analytics'
 import type { Locale } from '@/lib/site'
+import { useHydratedReducedMotion } from '@/lib/useHydratedReducedMotion'
 
 const copy = {
   en: {
@@ -214,11 +215,13 @@ function OptionButton({
   label,
   hint,
   selected,
+  variant,
   onClick
 }: {
   label: string
   hint: string
   selected: boolean
+  variant: 'build' | 'stage'
   onClick: () => void
 }) {
   return (
@@ -226,25 +229,17 @@ function OptionButton({
       type="button"
       aria-pressed={selected}
       onClick={onClick}
-      className={`flex min-h-14 w-full items-start gap-3 rounded-xl border px-4 py-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-blue)] dark:focus-visible:outline-[var(--brand-gold)] ${
-        selected
-          ? 'border-slate-900 bg-white ring-1 ring-slate-900 dark:border-[var(--brand-gold)] dark:bg-white/[0.06] dark:ring-[var(--brand-gold)]'
-          : 'border-slate-200 bg-white/60 hover:border-slate-400 dark:border-white/12 dark:bg-white/[0.02] dark:hover:border-white/30'
-      }`}
+      className={`project-option project-option--${variant}`}
     >
       <span
         aria-hidden="true"
-        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors ${
-          selected
-            ? 'border-slate-900 bg-slate-900 text-white dark:border-[var(--brand-gold)] dark:bg-[var(--brand-gold)] dark:text-slate-950'
-            : 'border-slate-300 dark:border-white/25'
-        }`}
+        className="project-option-check"
       >
         {selected && <Check className="h-3 w-3" strokeWidth={3} />}
       </span>
       <span className="min-w-0">
-        <span className="block text-sm font-semibold text-slate-900 dark:text-white">{label}</span>
-        <span className="mt-0.5 block text-xs leading-relaxed text-slate-500 dark:text-slate-400">{hint}</span>
+        <span className="project-option-label">{label}</span>
+        <span className="project-option-hint">{hint}</span>
       </span>
     </button>
   )
@@ -253,7 +248,7 @@ function OptionButton({
 export default function ProjectLauncher({ locale }: { locale: Locale }) {
   const t = copy[locale]
   const labels = briefCopy[locale]
-  const reduced = Boolean(useReducedMotion())
+  const reduced = useHydratedReducedMotion()
   const headingId = useId()
   const step1Id = useId()
   const step2Id = useId()
@@ -275,9 +270,9 @@ export default function ProjectLauncher({ locale }: { locale: Locale }) {
   }
 
   return (
-    <section className="bg-stone-50 dark:bg-slate-950/95" aria-labelledby={headingId}>
-      <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
-        <div className="mb-10 max-w-2xl">
+    <section className="home-project-launcher" aria-labelledby={headingId}>
+      <div className="mx-auto max-w-[1200px] px-4 py-20 md:px-6 md:py-28">
+        <div className="mb-12 max-w-3xl">
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
             {t.eyebrow}
           </p>
@@ -291,10 +286,10 @@ export default function ProjectLauncher({ locale }: { locale: Locale }) {
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14">
-          <div className="space-y-8">
-            <div role="group" aria-labelledby={step1Id}>
-              <p id={step1Id} className="mb-3 flex items-center gap-2.5 text-sm font-semibold text-slate-900 dark:text-white">
-                <span className="text-[11px] tabular-nums tracking-[0.16em] text-slate-400 dark:text-slate-500">01</span>
+          <div className="project-launcher-steps" data-progress={phase}>
+            <div className={`project-launcher-step ${brief.build ? 'is-complete' : 'is-active'}`} role="group" aria-labelledby={step1Id}>
+              <p id={step1Id} className="mb-4 text-base font-semibold text-slate-900 dark:text-white">
+                <span className="project-launcher-step-number">01</span>
                 {t.step1}
               </p>
               <div className="grid gap-2.5 sm:grid-cols-3">
@@ -303,15 +298,16 @@ export default function ProjectLauncher({ locale }: { locale: Locale }) {
                     key={option}
                     {...labels.build[option]}
                     selected={brief.build === option}
+                    variant="build"
                     onClick={() => toggleBuild(option)}
                   />
                 ))}
               </div>
             </div>
 
-            <div role="group" aria-labelledby={step2Id}>
-              <p id={step2Id} className="mb-3 flex items-center gap-2.5 text-sm font-semibold text-slate-900 dark:text-white">
-                <span className="text-[11px] tabular-nums tracking-[0.16em] text-slate-400 dark:text-slate-500">02</span>
+            <div className={`project-launcher-step ${brief.stage ? 'is-complete' : brief.build ? 'is-active' : ''}`} role="group" aria-labelledby={step2Id}>
+              <p id={step2Id} className="mb-4 text-base font-semibold text-slate-900 dark:text-white">
+                <span className="project-launcher-step-number">02</span>
                 {t.step2}
               </p>
               <div className="grid gap-2.5 sm:grid-cols-3">
@@ -320,6 +316,7 @@ export default function ProjectLauncher({ locale }: { locale: Locale }) {
                     key={option}
                     {...labels.stage[option]}
                     selected={brief.stage === option}
+                    variant="stage"
                     onClick={() => toggleStage(option)}
                   />
                 ))}
@@ -328,7 +325,7 @@ export default function ProjectLauncher({ locale }: { locale: Locale }) {
           </div>
 
           <div className="flex flex-col lg:row-span-2">
-            <div className="rounded-2xl border border-slate-200 bg-white/70 p-4 sm:p-5 dark:border-white/10 dark:bg-white/[0.025]">
+            <div className="project-launcher-preview px-1 sm:px-3">
               <Blueprint brief={brief} reduced={reduced} />
 
               <ol className="mt-4 grid grid-cols-3 items-center" aria-hidden="true">
@@ -371,7 +368,7 @@ export default function ProjectLauncher({ locale }: { locale: Locale }) {
             <Link
               href={getBriefContactHref(brief, locale)}
               onClick={() => track('project_launcher_complete', brief.build && brief.stage ? `${brief.build}_${brief.stage}` : 'partial')}
-              className={`group inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition-all sm:w-auto ${
+              className={`group inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition-all active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--brand-blue)] sm:w-auto dark:focus-visible:outline-[var(--brand-gold)] ${
                 phase === 2
                   ? 'bg-slate-900 text-white shadow-[0_14px_34px_-14px_rgba(15,23,42,0.55)] hover:-translate-y-0.5 hover:bg-slate-800 dark:bg-[var(--brand-gold)] dark:text-slate-950 dark:shadow-none dark:hover:bg-yellow-300'
                   : 'border border-slate-900 bg-slate-900 text-white hover:bg-slate-800 dark:border-white/20 dark:bg-transparent dark:text-white dark:hover:border-[var(--brand-gold)]/55 dark:hover:bg-white/[0.06]'
