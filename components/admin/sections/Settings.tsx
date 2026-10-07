@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type ReactNode } from 'react'
-import { CheckCircle2, Database, Download, ExternalLink, GitBranch, HardDriveDownload, LogOut, Pencil, RefreshCw, Tag as TagIcon, Trash2, XCircle } from 'lucide-react'
+import { CheckCircle2, Download, ExternalLink, GitBranch, HardDriveDownload, Pencil, RefreshCw, Tag as TagIcon, Trash2, XCircle } from 'lucide-react'
 import { api } from '@/lib/admin/api'
 import { TAG_COLORS } from '@/lib/admin/constants'
 import { formatBytes, formatDateTime, formatNumber } from '@/lib/admin/format'
@@ -10,12 +10,14 @@ import { useAdmin } from '../AdminContext'
 import { TagSwatch } from '../ui/Badge'
 import { Button, IconButton } from '../ui/Button'
 import { Card, CardHeader } from '../ui/Card'
-import { Skeleton } from '../ui/Controls'
+import { Skeleton, Tabs } from '../ui/Controls'
 import { TextField } from '../ui/Inputs'
 import { ConfirmDialog, Modal } from '../ui/Overlay'
 import { useToast } from '../ui/Toast'
 import { cx, focusRing } from '../ui/styles'
-import MfaSettings from './MfaSettings'
+import AccountSettings from './settings/AccountSettings'
+import BillingSettings from './settings/BillingSettings'
+import TeamSettings from './settings/TeamSettings'
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -151,8 +153,8 @@ function TagManager() {
   )
 }
 
-export default function SettingsPage() {
-  const { health, refreshHealth, logout } = useAdmin()
+function GeneralSettings() {
+  const { health, refreshHealth } = useAdmin()
   const toast = useToast()
   const [checking, setChecking] = useState(false)
   const [backingUp, setBackingUp] = useState(false)
@@ -299,19 +301,35 @@ export default function SettingsPage() {
 
         <TagManager />
 
-        <MfaSettings />
-
-        <Card>
-          <CardHeader title="Session" description="Sessions end after 12 hours of inactivity." />
-          <div className="flex items-center gap-2 px-5 pb-5 pt-3">
-            <Database aria-hidden="true" className="h-4 w-4 text-slate-400" />
-            <span className="flex-1 text-sm text-slate-600 dark:text-slate-300">Signed in to the Nivello workspace</span>
-            <Button variant="secondary" icon={<LogOut className="h-4 w-4" />} onClick={logout}>
-              Log out
-            </Button>
-          </div>
-        </Card>
       </div>
+    </div>
+  )
+}
+
+type SettingsTab = 'general' | 'account' | 'team' | 'billing'
+const SETTINGS_TABS: SettingsTab[] = ['general', 'account', 'team', 'billing']
+
+export default function SettingsPage() {
+  const { route, navigate } = useAdmin()
+  const requested = route.params.get('tab') as SettingsTab | null
+  const tab: SettingsTab = requested && SETTINGS_TABS.includes(requested) ? requested : 'general'
+  return (
+    <div className="space-y-5">
+      <Tabs<SettingsTab>
+        label="Settings sections"
+        value={tab}
+        onChange={value => navigate('settings', value === 'general' ? {} : { tab: value })}
+        tabs={[
+          { value: 'general', label: 'General' },
+          { value: 'account', label: 'Account & security' },
+          { value: 'team', label: 'Team' },
+          { value: 'billing', label: 'Billing' }
+        ]}
+      />
+      {tab === 'general' && <GeneralSettings />}
+      {tab === 'account' && <AccountSettings />}
+      {tab === 'team' && <TeamSettings />}
+      {tab === 'billing' && <BillingSettings />}
     </div>
   )
 }

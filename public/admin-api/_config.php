@@ -28,9 +28,9 @@ define(
 
 /**
  * Server-side secrets, read from (in order):
- *   1. environment variables (NIVELLO_ADMIN_ACCESS_CODE[_HASH], NIVELLO_GITHUB_TOKEN, NIVELLO_ADMIN_CALLBACK_SECRET)
+ *   1. environment variables (NIVELLO_ADMIN_ACCESS_CODE[_HASH], NIVELLO_GITHUB_TOKEN, NIVELLO_ADMIN_CALLBACK_SECRET, NIVELLO_CREDENTIALS_KEY)
  *   2. a PHP file outside the web root: <parent of public_html>/nivello-admin-secrets.php
- *      returning ['access_code' or 'access_code_hash' => '...', 'github_token' => '...', 'callback_secret' => '...']
+ *      returning ['access_code' or 'access_code_hash' => '...', 'github_token' => '...', 'callback_secret' => '...', 'credentials_key' => 'base64:...']
  * See docs/NIVELLO-ADMIN-DEPLOYMENT.md. Never commit real values: the repository is public.
  */
 function admin_secret(string $key): string
@@ -41,6 +41,7 @@ function admin_secret(string $key): string
         'access_code_hash' => 'NIVELLO_ADMIN_ACCESS_CODE_HASH',
         'github_token' => 'NIVELLO_GITHUB_TOKEN',
         'callback_secret' => 'NIVELLO_ADMIN_CALLBACK_SECRET',
+        'credentials_key' => 'NIVELLO_CREDENTIALS_KEY',
     ][$key] ?? null;
     if ($env !== null && ($value = getenv($env)) !== false && $value !== '') {
         return $value;

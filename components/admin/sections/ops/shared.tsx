@@ -83,7 +83,10 @@ export function ActivityTimeline({ activities, empty = 'No activity yet.' }: { a
           <span aria-hidden="true" className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-300 dark:bg-white/25" />
           <div className="min-w-0">
             <p className="text-sm text-slate-700 dark:text-slate-200">{a.message}</p>
-            <p className="text-xs text-slate-400">{formatDateTime(a.at)}</p>
+            <p className="text-xs text-slate-400">
+              {formatDateTime(a.at)}
+              {a.actorName ? ` · by ${a.actorName}` : ''}
+            </p>
           </div>
         </li>
       ))}

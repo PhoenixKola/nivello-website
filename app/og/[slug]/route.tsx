@@ -62,6 +62,8 @@ const pages: Record<string, { title: string; eyebrow: string; description: strin
   'terms-it': { eyebrow: 'Legale', title: 'Termini e condizioni', description: 'Condizioni chiare per i progetti digitali.' },
   privacy: { eyebrow: 'Legal', title: 'Privacy Policy', description: 'How Nivello handles personal data.' },
   'privacy-it': { eyebrow: 'Legale', title: 'Privacy', description: 'Come Nivello gestisce i dati personali.' },
+  cookies: { eyebrow: 'Legal', title: 'Cookie Policy', description: 'Cookies and browser storage on the Nivello website.' },
+  'cookies-it': { eyebrow: 'Legale', title: 'Cookie policy', description: 'Cookie e memorizzazione nel browser sul sito Nivello.' },
   disclaimer: { eyebrow: 'Legal', title: 'Disclaimer', description: 'General website disclaimer for Nivello.' },
   'disclaimer-it': { eyebrow: 'Legale', title: 'Disclaimer', description: 'Disclaimer generale del sito Nivello.' }
 }

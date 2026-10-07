@@ -24,10 +24,20 @@ export default function PrivacyPage() {
           <li>information you provide via the contact form (name, email, company, project details)</li>
           <li>data exchanged by email when discussing potential or ongoing projects</li>
           <li>optional newsletter or update subscriptions, if activated in the future</li>
-          <li>technical information such as anonymised analytics data, used to understand how the site is used</li>
+          <li>aggregate, cookieless usage statistics about how the site is visited (see the <a href="/cookie-policy/">Cookie Policy</a>)</li>
         </ul>
         <p>
           Data is collected with your consent and processed in accordance with applicable data protection law, including the GDPR where it applies.
+        </p>
+      </section>
+
+      <section>
+        <h2>Website statistics, cookies and storage</h2>
+        <p>
+          This website does not use advertising, profiling or third-party tracking cookies. To understand how pages are used we run our own first-party, aggregate statistics: a random identifier is kept in your browser&apos;s session storage only for the current tab and is deleted when you close it. IP addresses are not stored for statistics (an approximate country is looked up on our own server and only the country is kept), and we do not combine this data with other sources. If your browser sends Do Not Track or Global Privacy Control, no statistics are collected.
+        </p>
+        <p>
+          Contact form submissions are delivered by email through Formspree, which processes the data you enter only when you send the form. Details are in the <a href="/cookie-policy/">Cookie Policy</a>.
         </p>
       </section>
 

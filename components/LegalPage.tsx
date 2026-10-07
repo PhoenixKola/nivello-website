@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
-import { ArrowUpRight, FileText, Mail, Scale, ScrollText, ShieldCheck } from 'lucide-react'
+import { ArrowUpRight, Cookie, FileText, Mail, Scale, ScrollText, ShieldCheck } from 'lucide-react'
 import { getRoutePath, type Locale } from '@/lib/site'
 
-type LegalKind = 'privacy' | 'disclaimer' | 'imprint' | 'terms'
+type LegalKind = 'privacy' | 'cookies' | 'disclaimer' | 'imprint' | 'terms'
 
 const copy = {
   en: {
@@ -14,7 +14,7 @@ const copy = {
     contactTitle: 'Questions?',
     contactBody: 'For privacy or legal enquiries, write to us directly.',
     contactCta: 'Email Nivello',
-    labels: { privacy: 'Privacy', disclaimer: 'Disclaimer', imprint: 'Imprint', terms: 'Terms & Conditions' }
+    labels: { privacy: 'Privacy', cookies: 'Cookie Policy', disclaimer: 'Disclaimer', imprint: 'Imprint', terms: 'Terms & Conditions' }
   },
   it: {
     center: 'Centro legale',
@@ -24,7 +24,7 @@ const copy = {
     contactTitle: 'Domande?',
     contactBody: 'Per richieste sulla privacy o questioni legali, scrivici direttamente.',
     contactCta: 'Scrivi a Nivello',
-    labels: { privacy: 'Privacy', disclaimer: 'Disclaimer', imprint: 'Note legali', terms: 'Termini e condizioni' }
+    labels: { privacy: 'Privacy', cookies: 'Cookie policy', disclaimer: 'Disclaimer', imprint: 'Note legali', terms: 'Termini e condizioni' }
   }
 } satisfies Record<Locale, {
   center: string
@@ -37,8 +37,9 @@ const copy = {
   labels: Record<LegalKind, string>
 }>
 
-const documents: Array<{ kind: LegalKind; route: 'privacy' | 'disclaimer' | 'imprint' | 'terms'; icon: typeof ShieldCheck }> = [
+const documents: Array<{ kind: LegalKind; route: LegalKind; icon: typeof ShieldCheck }> = [
   { kind: 'privacy', route: 'privacy', icon: ShieldCheck },
+  { kind: 'cookies', route: 'cookies', icon: Cookie },
   { kind: 'disclaimer', route: 'disclaimer', icon: FileText },
   { kind: 'imprint', route: 'imprint', icon: Scale },
   { kind: 'terms', route: 'terms', icon: ScrollText }
@@ -46,9 +47,10 @@ const documents: Array<{ kind: LegalKind; route: 'privacy' | 'disclaimer' | 'imp
 
 const documentNumbers: Record<LegalKind, string> = {
   privacy: '01',
-  disclaimer: '02',
-  imprint: '03',
-  terms: '04'
+  cookies: '02',
+  disclaimer: '03',
+  imprint: '04',
+  terms: '05'
 }
 
 export default function LegalPage({

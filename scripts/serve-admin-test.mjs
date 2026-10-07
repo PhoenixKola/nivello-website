@@ -18,6 +18,8 @@ const token = 'mock-token-' + randomBytes(8).toString('hex')
 const ports = { php: 4174, scraper: 8191, github: 8192 }
 // A fresh access code per run: nothing in the repository knows it.
 const accessCode = 'test-' + randomBytes(9).toString('hex')
+// A fresh credentials master key per run, like the one kept in the private secrets file in production.
+const credentialsKey = 'base64:' + randomBytes(32).toString('base64')
 writeFileSync(resolve(root, 'env.json'), JSON.stringify({ secret, token, dataDir, ports, accessCode }))
 
 const children = []
@@ -52,6 +54,7 @@ start('github', process.execPath, ['scripts/mock-github-actions.mjs'], {
 start('php', 'php', ['-S', `127.0.0.1:${ports.php}`, '-t', 'out'], {
   NIVELLO_ADMIN_DATA_DIR: dataDir,
   NIVELLO_ADMIN_ACCESS_CODE: accessCode,
+  NIVELLO_CREDENTIALS_KEY: credentialsKey,
   NIVELLO_GITHUB_API_BASE: `http://127.0.0.1:${ports.github}`,
   NIVELLO_GITHUB_TOKEN: token,
   NIVELLO_ADMIN_CALLBACK_SECRET: secret,

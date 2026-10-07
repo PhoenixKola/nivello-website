@@ -24,10 +24,20 @@ export default function PrivacyPageIt() {
           <li>informazioni inserite nel form di contatto (nome, email, azienda, dettagli del progetto)</li>
           <li>dati scambiati via email durante la richiesta di preventivi o la gestione dei progetti</li>
           <li>eventuali iscrizioni a newsletter o aggiornamenti, se attivate in futuro</li>
-          <li>informazioni tecniche e statistiche anonime sull&apos;uso del sito (ad esempio tramite strumenti di analytics)</li>
+          <li>statistiche aggregate e senza cookie sull&apos;uso del sito (vedi la <a href="/it/cookie-policy/">Cookie policy</a>)</li>
         </ul>
         <p>
           I dati vengono raccolti con il consenso dell&apos;utente e trattati in conformità alla normativa applicabile, incluso il GDPR, ove previsto.
+        </p>
+      </section>
+
+      <section>
+        <h2>Statistiche del sito, cookie e memorizzazione</h2>
+        <p>
+          Questo sito non utilizza cookie pubblicitari, di profilazione o di tracciamento di terze parti. Per capire come vengono consultate le pagine usiamo statistiche aggregate di prima parte: un identificativo casuale viene conservato nella memoria di sessione del browser solo per la scheda corrente e viene eliminato alla sua chiusura. Gli indirizzi IP non vengono memorizzati a fini statistici (un paese approssimativo viene ricavato sul nostro server e viene conservato solo il paese) e non incrociamo questi dati con altre fonti. Se il browser invia i segnali Do Not Track o Global Privacy Control, nessuna statistica viene raccolta.
+        </p>
+        <p>
+          Le richieste inviate tramite il form di contatto vengono recapitate via email tramite Formspree, che tratta i dati inseriti solo al momento dell&apos;invio. I dettagli sono nella <a href="/it/cookie-policy/">Cookie policy</a>.
         </p>
       </section>
 

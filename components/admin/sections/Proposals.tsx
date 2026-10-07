@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import Image from 'next/image'
-import { AlertCircle, ArrowDown, ArrowLeft, ArrowUp, Copy, Download, Eye, FilePlus2, FileText, Link2, Plus, Printer, Send, Trash2, X } from 'lucide-react'
+import { AlertCircle, ArrowDown, ArrowLeft, ArrowUp, Copy, Download, Eye, FilePlus2, FileText, Link2, Plus, Printer, Receipt, Send, Trash2, X } from 'lucide-react'
 import { api, type ProposalInput } from '@/lib/admin/api'
 import { CURRENCIES, PROPOSAL_STATUSES, PROPOSAL_STATUS_META, PROPOSAL_UNITS, STAGE_LABEL, STATUS_LABEL } from '@/lib/admin/constants'
 import { formatDay, formatMoney } from '@/lib/admin/format'
@@ -20,6 +20,8 @@ import { useToast } from '../ui/Toast'
 import { cx, fieldBase, focusRing } from '../ui/styles'
 import { ActivityTimeline, EntityPicker, RecordLink, type PickerKind } from './ops/shared'
 import { computeDraft, fromDraft, newKey, toDraft, type Draft } from './proposals/model'
+import DocumentTabs from './invoices/DocumentTabs'
+import Invoices from './invoices/Invoices'
 import ProposalDocument, { draftToProposal } from './proposals/ProposalDocument'
 
 type Filter = ProposalStatus | 'all'
@@ -382,6 +384,11 @@ function Editor({ id, onBack, onChanged }: { id: string; onBack: () => void; onC
             Re-send
           </Button>
         )}
+        {p.status === 'accepted' && (
+          <Button size="sm" variant="primary" icon={<Receipt className="h-3.5 w-3.5" />} onClick={() => navigate('proposals', { doc: 'invoices', new: '1', proposal: id })}>
+            Create Fattura
+          </Button>
+        )}
         <Button
           size="sm"
           icon={<Download className="h-3.5 w-3.5" />}
@@ -716,6 +723,14 @@ function Editor({ id, onBack, onChanged }: { id: string; onBack: () => void; onC
                 <TextArea label="Scope of work" value={draft.scope} maxLength={8000} onChange={e => set('scope', e.target.value)} className="min-h-[140px]" />
                 <TextArea label="Assumptions" value={draft.assumptions} maxLength={4000} onChange={e => set('assumptions', e.target.value)} />
                 <TextArea label="Terms" value={draft.terms} maxLength={6000} onChange={e => set('terms', e.target.value)} />
+                <TextArea
+                  label={draft.language === 'it' ? 'Riservatezza e Proprietà Intellettuale' : 'Confidentiality & Intellectual Property'}
+                  hint="Shown in the Preview, PDF and DOCX. New Preventivi start with the default clause; leave empty to omit it."
+                  value={draft.confidentiality}
+                  maxLength={6000}
+                  rows={6}
+                  onChange={e => set('confidentiality', e.target.value)}
+                />
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <TextField label="Acceptance place" value={draft.acceptancePlace} maxLength={120} onChange={e => set('acceptancePlace', e.target.value)} />
                   <TextField label="Acceptance date" type="date" value={draft.acceptanceDate} onChange={e => set('acceptanceDate', e.target.value)} />
@@ -868,6 +883,12 @@ function Editor({ id, onBack, onChanged }: { id: string; onBack: () => void; onC
 }
 
 export default function Proposals() {
+  const { route } = useAdmin()
+  if (route.params.get('doc') === 'invoices') return <Invoices />
+  return <ProposalsList />
+}
+
+function ProposalsList() {
   const { route, navigate } = useAdmin()
   const [filter, setFilter] = useState<Filter>('all')
   const [q, setQ] = useState('')
@@ -911,6 +932,7 @@ export default function Proposals() {
   const total = counts ? Object.values(counts).reduce((a, b) => a + b, 0) : undefined
   return (
     <div className="space-y-5">
+      <DocumentTabs value="proposals" />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Tabs
           label="Proposal filter"

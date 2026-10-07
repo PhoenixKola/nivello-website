@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ComponentType } from 'react'
 import Image from 'next/image'
-import { ChevronDown, LogOut, Menu as MenuIcon, X } from 'lucide-react'
+import { ChevronDown, LogOut, Menu as MenuIcon, UserRound, X } from 'lucide-react'
 import type { AdminSection } from '@/lib/admin/hooks'
 import { useAdmin } from './AdminContext'
 import AdminThemeToggle from './AdminThemeToggle'
@@ -26,6 +26,7 @@ import { IconButton } from './ui/Button'
 import LocalNav from './ui/LocalNav'
 import { Menu } from './ui/Listbox'
 import { cx, focusRing } from './ui/styles'
+import UserAvatar from './ui/UserAvatar'
 
 /** Screens that exist; sidebar areas without a screen are not shown. */
 const VIEWS: Partial<Record<AdminSection, ComponentType>> = {
@@ -149,7 +150,7 @@ function LeadForgeNav() {
 }
 
 export default function AdminShell() {
-  const { route, logout } = useAdmin()
+  const { route, logout, me, navigate } = useAdmin()
   const [mobileOpen, setMobileOpen] = useState(false)
   const area = areaFor(route.section)
   const View = VIEWS[route.section]
@@ -164,7 +165,10 @@ export default function AdminShell() {
   const account = (
     <Menu
       label="Account"
-      items={[{ label: 'Log out', icon: <LogOut className="h-4 w-4" />, onSelect: logout }]}
+      items={[
+        { label: 'Account & security', icon: <UserRound className="h-4 w-4" />, onSelect: () => navigate('settings', { tab: 'account' }) },
+        { label: 'Log out', icon: <LogOut className="h-4 w-4" />, onSelect: logout }
+      ]}
       trigger={({ ref, open, toggle, onKeyDown, menuId }) => (
         <button
           ref={ref}
@@ -176,8 +180,11 @@ export default function AdminShell() {
           onKeyDown={onKeyDown}
           className={cx('flex h-9 cursor-pointer items-center gap-2 rounded-lg px-1.5 text-sm text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/[0.07]', focusRing)}
         >
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[var(--brand-blue)] to-[var(--brand-purple)] text-xs font-semibold text-white">N</span>
-          <span className="hidden md:inline">Nivello team</span>
+          <UserAvatar user={me} />
+          <span className="hidden text-left leading-tight md:block">
+            <span className="block text-sm font-medium text-slate-800 dark:text-slate-100">{me.displayName}</span>
+          </span>
+          <span className="sr-only">Signed in as {me.displayName}</span>
           <ChevronDown aria-hidden="true" className="h-3.5 w-3.5 text-slate-400" />
         </button>
       )}

@@ -4,16 +4,21 @@ declare(strict_types=1);
 define('NIVELLO_ADMIN', true);
 require __DIR__ . '/_bootstrap.php';
 require __DIR__ . '/_ops.php';
+require __DIR__ . '/_invoices.php';
+require __DIR__ . '/_finance.php';
+require __DIR__ . '/_vault.php';
 
 function project_detail(array $state, string $id): array
 {
     $project = $state['projects'][ops_index($state, 'projects', $id, 'Project')];
     $inquiry = ops_find($state, 'inbox', $project['inboxId']);
     $proposals = array_values(array_map('proposal_summary', array_filter($state['proposals'], fn ($p) => $p['projectId'] === $id || $p['id'] === $project['proposalId'])));
+    $invoices = array_values(array_map(fn ($inv) => invoice_summary($inv), array_filter($state['invoices'] ?? [], fn ($inv) => ($inv['projectId'] ?? null) === $id)));
     return [
         'project' => project_view($state, $project, gmdate('Y-m-d')),
         'inquiry' => $inquiry ? inbox_summary($inquiry) : null,
         'proposals' => $proposals,
+        'invoices' => $invoices,
         'activities' => ops_activities_for($state, 'project', $id),
     ];
 }
@@ -54,18 +59,33 @@ function project_task_input(array $input, array $project, array $current = []): 
     return array_replace([
         'id' => new_id('task'), 'projectId' => $project['id'], 'milestoneId' => null, 'proposalItemId' => null,
         'title' => '', 'description' => '', 'status' => 'todo', 'priority' => 'normal', 'dueDate' => null,
-        'assignee' => '', 'order' => 0, 'createdAt' => $now, 'updatedAt' => $now, 'completedAt' => null,
+        'assignee' => '', 'assigneeUserId' => null, 'order' => 0, 'createdAt' => $now, 'updatedAt' => $now, 'completedAt' => null,
     ], $current, [
         'title' => v_string($input['title'] ?? ($current['title'] ?? ''), 'Task title', 200, true),
         'description' => v_string($input['description'] ?? ($current['description'] ?? ''), 'Task description', 4000),
         'status' => $status,
         'priority' => array_key_exists('priority', $input) ? v_enum($input['priority'], 'Task priority', PROJECT_TASK_PRIORITIES) : ($current['priority'] ?? 'normal'),
         'dueDate' => array_key_exists('dueDate', $input) ? v_date($input['dueDate'], 'Task due date') : ($current['dueDate'] ?? null),
-        'assignee' => v_string($input['assignee'] ?? ($current['assignee'] ?? ''), 'Assignee', 120),
+        // Legacy free-text assignee is kept as-is; new assignments use a real user id.
+        'assignee' => (string) ($current['assignee'] ?? ''),
+        'assigneeUserId' => array_key_exists('assigneeUserId', $input) ? v_assignee($input['assigneeUserId'], $current['assigneeUserId'] ?? null) : ($current['assigneeUserId'] ?? null),
         'milestoneId' => $milestoneId,
         'updatedAt' => $now,
         'completedAt' => $status === 'done' ? ($current['completedAt'] ?? $now) : null,
     ]);
+}
+
+function log_task_assignment(array &$state, string $projectId, ?string $before, array $task): void
+{
+    $after = $task['assigneeUserId'] ?? null;
+    if ($before === $after) {
+        return;
+    }
+    $people = project_people_index();
+    $message = $after !== null
+        ? 'Task assigned to ' . ($people[$after]['displayName'] ?? 'a team member') . ': ' . $task['title']
+        : 'Task unassigned: ' . $task['title'];
+    add_ops_activity($state, 'project', $projectId, 'task_assigned', $message, ['taskId' => $task['id'], 'assigneeUserId' => $after]);
 }
 
 api_run([
@@ -228,6 +248,7 @@ api_run([
             $state['projects'][$pi]['tasks'][] = $task;
             $state['projects'][$pi]['updatedAt'] = now_iso();
             add_ops_activity($state, 'project', $projectId, 'task_created', 'Task created: ' . $task['title'], ['taskId' => $task['id']]);
+            log_task_assignment($state, $projectId, null, $task);
             return project_detail($state, $projectId);
         });
     },
@@ -246,6 +267,7 @@ api_run([
             $state['projects'][$pi]['updatedAt'] = now_iso();
             $event = $before['status'] !== 'done' && $after['status'] === 'done' ? 'task_completed' : ($before['status'] === 'done' && $after['status'] !== 'done' ? 'task_reopened' : 'task_updated');
             add_ops_activity($state, 'project', $projectId, $event, ($event === 'task_completed' ? 'Task completed: ' : ($event === 'task_reopened' ? 'Task reopened: ' : 'Task updated: ')) . $after['title'], ['taskId' => $id]);
+            log_task_assignment($state, $projectId, $before['assigneeUserId'] ?? null, $after);
             return project_detail($state, $projectId);
         });
     },
@@ -264,12 +286,59 @@ api_run([
             return project_detail($state, $projectId);
         });
     },
+    'POST payment-create' => function () {
+        $body = json_body();
+        $projectId = v_id($body['projectId'] ?? '', 'prj', 'Project id');
+        $input = is_array($body['payment'] ?? null) ? $body['payment'] : [];
+        $requestId = v_request_id($body['requestId'] ?? null);
+        $confirm = v_bool($body['confirmOverpayment'] ?? false);
+        return Store::instance()->mutate(function (array &$state, bool &$dirty) use ($projectId, $input, $requestId, $confirm) {
+            $pi = ops_index($state, 'projects', $projectId, 'Project');
+            $result = record_project_payment($state, $pi, $input, $requestId, $confirm);
+            $dirty = !$result['duplicate'];
+            return project_detail($state, $projectId);
+        });
+    },
+    'POST payment-update' => function () {
+        $body = json_body();
+        $projectId = v_id($body['projectId'] ?? '', 'prj', 'Project id');
+        $id = v_id($body['id'] ?? '', 'pay', 'Payment id');
+        $input = is_array($body['payment'] ?? null) ? $body['payment'] : [];
+        $confirm = v_bool($body['confirmOverpayment'] ?? false);
+        return Store::instance()->mutate(function (array &$state) use ($projectId, $id, $input, $confirm) {
+            $pi = ops_index($state, 'projects', $projectId, 'Project');
+            $payments = $state['projects'][$pi]['payments'] ?? [];
+            $index = project_work_index($payments, $id, 'Payment');
+            $before = $payments[$index];
+            $after = payment_input($state, $state['projects'][$pi], $input, $before);
+            guard_overpayment($state, $state['projects'][$pi], payments_total($payments, $id) + $after['amount'], $confirm);
+            $state['projects'][$pi]['payments'][$index] = $after;
+            $state['projects'][$pi]['updatedAt'] = now_iso();
+            add_ops_activity($state, 'project', $projectId, 'payment_updated', 'Payment updated: ' . money_label($before['amount'], $before['currency']) . ' → ' . money_label($after['amount'], $after['currency']), ['paymentId' => $id, 'amount' => $after['amount']]);
+            return project_detail($state, $projectId);
+        });
+    },
+    'POST payment-delete' => function () {
+        $body = json_body();
+        $projectId = v_id($body['projectId'] ?? '', 'prj', 'Project id');
+        $id = v_id($body['id'] ?? '', 'pay', 'Payment id');
+        return Store::instance()->mutate(function (array &$state) use ($projectId, $id) {
+            $pi = ops_index($state, 'projects', $projectId, 'Project');
+            $payments = $state['projects'][$pi]['payments'] ?? [];
+            $index = project_work_index($payments, $id, 'Payment');
+            $removed = $payments[$index];
+            array_splice($state['projects'][$pi]['payments'], $index, 1);
+            $state['projects'][$pi]['updatedAt'] = now_iso();
+            add_ops_activity($state, 'project', $projectId, 'payment_deleted', 'Payment deleted: ' . money_label($removed['amount'], $removed['currency']), ['paymentId' => $id, 'amount' => $removed['amount']]);
+            return project_detail($state, $projectId);
+        });
+    },
     'POST delete' => function () {
         $id = v_id(json_body()['id'] ?? '', 'prj', 'Project id');
-        return Store::instance()->mutate(function (array &$state) use ($id) {
+        $result = Store::instance()->mutate(function (array &$state) use ($id) {
             $i = ops_index($state, 'projects', $id, 'Project');
             array_splice($state['projects'], $i, 1);
-            foreach (['inbox', 'proposals'] as $collection) {
+            foreach (['inbox', 'proposals', 'invoices'] as $collection) {
                 foreach ($state[$collection] as &$record) {
                     if ($record['projectId'] === $id) {
                         $record['projectId'] = null;
@@ -280,5 +349,7 @@ api_run([
             $state['opsActivities'] = array_values(array_filter($state['opsActivities'], fn ($a) => !($a['entity'] === 'project' && $a['entityId'] === $id)));
             return ['deleted' => true];
         });
+        vault_delete_project($id);
+        return $result;
     },
 ]);

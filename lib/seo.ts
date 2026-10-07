@@ -193,6 +193,19 @@ export const pageSeo = {
     ogSlug: 'privacy-it',
     locale: 'it'
   }),
+  cookies: makeMetadata({
+    title: 'Cookie Policy',
+    description: 'Which cookies and browser storage the Nivello website uses, and why.',
+    route: 'cookies',
+    ogSlug: 'cookies'
+  }),
+  cookiesIt: makeMetadata({
+    title: 'Cookie policy',
+    description: 'Quali cookie e strumenti di memorizzazione usa il sito Nivello, e perché.',
+    route: 'cookies',
+    ogSlug: 'cookies-it',
+    locale: 'it'
+  }),
   disclaimer: makeMetadata({
     title: 'Disclaimer',
     description: 'General website disclaimer for Nivello content, links, and services.',

@@ -18,6 +18,7 @@ export default function LoginScreen({
   initialMfaRequired?: boolean
 }) {
   const [step, setStep] = useState<'access' | 'mfa'>(initialMfaRequired ? 'mfa' : 'access')
+  const [identifier, setIdentifier] = useState('')
   const [code, setCode] = useState('')
   const [visible, setVisible] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -26,11 +27,11 @@ export default function LoginScreen({
   const submit = async (event: FormEvent) => {
     event.preventDefault()
     const value = code.trim()
-    if (!value || busy) return
+    if (!value || busy || (step === 'access' && !identifier.trim())) return
     setBusy(true)
     setError(null)
     try {
-      const result = step === 'access' ? await api.login(code) : await api.verifyMfa(value)
+      const result = step === 'access' ? await api.login(identifier.trim(), code) : await api.verifyMfa(value)
       if (result.authenticated && result.csrfToken) {
         onSuccess(result.csrfToken)
       } else if (result.mfaRequired) {
@@ -67,7 +68,7 @@ export default function LoginScreen({
           </div>
           <h1 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">{step === 'access' ? 'Sign in to Nivello Admin' : 'Verify it’s you'}</h1>
           <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
-            {step === 'access' ? 'Lead discovery and CRM for the Nivello team.' : 'Enter the current code from your authenticator app, or use a recovery code.'}
+            {step === 'access' ? 'Sign in with your own account.' : 'Enter the current code from your authenticator app, or use a recovery code.'}
           </p>
 
           {notice && step === 'access' && (
@@ -77,6 +78,25 @@ export default function LoginScreen({
           )}
 
           <form onSubmit={submit} className="mt-6" noValidate>
+            {step === 'access' && (
+              <div className="mb-4">
+                <label htmlFor="identifier" className="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-300">
+                  Username or email
+                </label>
+                <input
+                  id="identifier"
+                  type="text"
+                  autoComplete="username"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  autoFocus
+                  value={identifier}
+                  onChange={event => setIdentifier(event.target.value)}
+                  aria-invalid={error ? true : undefined}
+                  className={cx(fieldBase, 'h-11 text-[15px]', error && 'border-red-400 dark:border-red-400/60')}
+                />
+              </div>
+            )}
             <label htmlFor="access-code" className="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-300">
               {step === 'access' ? 'Access code' : 'Authenticator or recovery code'}
             </label>
@@ -85,7 +105,7 @@ export default function LoginScreen({
                 id="access-code"
                 type={step === 'access' && !visible ? 'password' : 'text'}
                 autoComplete={step === 'access' ? 'current-password' : 'one-time-code'}
-                autoFocus
+                autoFocus={step === 'mfa'}
                 value={code}
                 onChange={event => setCode(event.target.value)}
                 aria-invalid={error ? true : undefined}
@@ -107,7 +127,7 @@ export default function LoginScreen({
             <p id="login-error" role="alert" className="mt-2 min-h-5 text-xs text-red-600 dark:text-red-300">
               {error}
             </p>
-            <Button type="submit" variant="primary" size="lg" loading={busy} disabled={!code.trim()} className="mt-2 w-full">
+            <Button type="submit" variant="primary" size="lg" loading={busy} disabled={!code.trim() || (step === 'access' && !identifier.trim())} className="mt-2 w-full">
               {step === 'access' ? 'Sign in' : 'Verify and continue'}
             </Button>
             {step === 'mfa' && (
@@ -123,7 +143,7 @@ export default function LoginScreen({
                   setError(null)
                 }}
               >
-                Use the access code again
+                Back to sign in
               </Button>
             )}
           </form>

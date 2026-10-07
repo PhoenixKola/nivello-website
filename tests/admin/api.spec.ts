@@ -1,7 +1,7 @@
 import { rmSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { expect, request, test } from '@playwright/test'
-import { accessCode, ADMIN_BASE, getBatch, loginApi, mockMode, mockState, resetMocks, signedCallback, stackEnv, startBatch, terminal, totp, waitForBatch, type Api } from './helpers'
+import { accessCode, ADMIN_BASE, OWNER_LOGIN, getBatch, loginApi, mockMode, mockState, resetMocks, signedCallback, stackEnv, startBatch, terminal, totp, waitForBatch, type Api } from './helpers'
 
 test.describe.configure({ mode: 'serial', timeout: 120_000 })
 
@@ -25,11 +25,11 @@ test.describe('auth', () => {
     expect(unauth.status()).toBe(401)
     expect((await unauth.json()).error.code).toBe('UNAUTHENTICATED')
 
-    const wrong = await anon.post('/admin-api/auth.php?action=login', { data: { code: 'not-the-code' } })
+    const wrong = await anon.post('/admin-api/auth.php?action=login', { data: { identifier: OWNER_LOGIN, code: 'not-the-code' } })
     expect(wrong.status()).toBe(401)
     expect((await wrong.json()).error.code).toBe('INVALID_CODE')
 
-    const ok = await anon.post('/admin-api/auth.php?action=login', { data: { code: accessCode() } })
+    const ok = await anon.post('/admin-api/auth.php?action=login', { data: { identifier: OWNER_LOGIN, code: accessCode() } })
     expect(ok.status()).toBe(200)
     const csrf = (await ok.json()).data.csrfToken
     expect(csrf).toMatch(/^[a-f0-9]{64}$/)
@@ -65,7 +65,7 @@ test.describe('auth', () => {
     expect((await api.get('auth.php?action=mfa-status')).body.data.enabled).toBe(false)
 
     const stale = await request.newContext({ baseURL: ADMIN_BASE })
-    expect((await stale.post('/admin-api/auth.php?action=login', { data: { code: accessCode() } })).status()).toBe(200)
+    expect((await stale.post('/admin-api/auth.php?action=login', { data: { identifier: OWNER_LOGIN, code: accessCode() } })).status()).toBe(200)
 
     const start = await api.post('auth.php?action=mfa-enroll-start', { accessCode: accessCode() })
     expect(start.status, JSON.stringify(start.body)).toBe(200)
@@ -81,7 +81,7 @@ test.describe('auth', () => {
     await stale.dispose()
 
     const second = await request.newContext({ baseURL: ADMIN_BASE })
-    const password = await second.post('/admin-api/auth.php?action=login', { data: { code: accessCode() } })
+    const password = await second.post('/admin-api/auth.php?action=login', { data: { identifier: OWNER_LOGIN, code: accessCode() } })
     expect(password.status()).toBe(200)
     expect((await password.json()).data).toMatchObject({ authenticated: false, mfaRequired: true, csrfToken: null })
     expect((await (await second.get('/admin-api/auth.php?action=session')).json()).data.mfaRequired).toBe(true)
@@ -91,7 +91,7 @@ test.describe('auth', () => {
     expect((await verify.json()).data).toMatchObject({ authenticated: true, mfaRequired: false, usedRecoveryCode: true })
 
     await second.post('/admin-api/auth.php?action=logout', { data: {} })
-    const passwordAgain = await second.post('/admin-api/auth.php?action=login', { data: { code: accessCode() } })
+    const passwordAgain = await second.post('/admin-api/auth.php?action=login', { data: { identifier: OWNER_LOGIN, code: accessCode() } })
     expect(passwordAgain.status()).toBe(200)
     const reused = await second.post('/admin-api/auth.php?action=mfa-verify', { data: { token: recoveryCodes[0] } })
     expect(reused.status()).toBe(401)
@@ -103,7 +103,7 @@ test.describe('auth', () => {
     expect(disable.body.data.enabled).toBe(false)
 
     const direct = await request.newContext({ baseURL: ADMIN_BASE })
-    const directLogin = await direct.post('/admin-api/auth.php?action=login', { data: { code: accessCode() } })
+    const directLogin = await direct.post('/admin-api/auth.php?action=login', { data: { identifier: OWNER_LOGIN, code: accessCode() } })
     expect((await directLogin.json()).data).toMatchObject({ authenticated: true, mfaRequired: false })
     await direct.dispose()
   })
@@ -550,10 +550,10 @@ test('repeated wrong codes are throttled', async () => {
   const anon = await request.newContext({ baseURL: ADMIN_BASE })
   let last = 0
   for (let i = 0; i < 6; i++) {
-    last = (await anon.post('/admin-api/auth.php?action=login', { data: { code: `wrong-${i}` } })).status()
+    last = (await anon.post('/admin-api/auth.php?action=login', { data: { identifier: OWNER_LOGIN, code: `wrong-${i}` } })).status()
   }
   expect(last).toBe(429)
-  const blocked = await anon.post('/admin-api/auth.php?action=login', { data: { code: accessCode() } })
+  const blocked = await anon.post('/admin-api/auth.php?action=login', { data: { identifier: OWNER_LOGIN, code: accessCode() } })
   expect(blocked.status()).toBe(429)
   await anon.dispose()
   rmSync(resolve(stackEnv().dataDir, 'login-throttle.json'), { force: true })

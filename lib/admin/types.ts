@@ -58,7 +58,7 @@ export type ScoreReason = { delta: number; label: string }
 export type Score = { score: number; reasons: ScoreReason[] }
 
 export type Note = { id: string; leadId: string; body: string; createdAt: string }
-export type Activity = { id: string; leadId: string; type: string; message: string; at: string; companyName?: string | null }
+export type Activity = { id: string; leadId: string; type: string; message: string; at: string; companyName?: string | null; actorId?: string; actorName?: string }
 
 export type LeadDetail = {
   lead: Lead
@@ -389,7 +389,7 @@ export type HealthOverview = {
 
 export type MonitorInput = { name: string; url: string; expectedStatus: number; enabled: boolean; notes: string }
 
-export type OpsActivity = { id: string; entity: string; entityId: string; type: string; message: string; meta: Record<string, unknown>; at: string }
+export type OpsActivity = { id: string; entity: string; entityId: string; type: string; message: string; meta: Record<string, unknown>; at: string; actorId?: string; actorName?: string }
 export type LeadBrief = { id: string; companyName: string; status: LeadStatus; email: string }
 
 export type InboxStatus = 'new' | 'replied' | 'qualified' | 'converted' | 'closed' | 'spam'
@@ -455,7 +455,10 @@ export type ProjectTask = {
   status: ProjectTaskStatus
   priority: ProjectTaskPriority
   dueDate: string | null
+  /** Legacy free-text assignee, kept for old tasks. */
   assignee: string
+  assigneeUserId: string | null
+  assigneeUser: UserBrief | null
   order: number
   createdAt: string
   updatedAt: string
@@ -503,6 +506,40 @@ export type Project = {
   milestones: ProjectMilestone[]
   tasks: ProjectTask[]
   progress: ProjectProgress
+  brandColors: BrandColor[]
+  payments: ProjectPayment[]
+  finance: ProjectFinance
+}
+
+export type BrandColor = { label: string; hex: string }
+
+export type PaymentMethod = '' | 'bank_transfer' | 'card' | 'cash' | 'paypal' | 'other'
+
+export type ProjectPayment = {
+  id: string
+  amount: number
+  currency: Currency
+  date: string
+  method: PaymentMethod
+  reference: string
+  note: string
+  linkedInvoiceId: string | null
+  recordedByUserId: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export type ProjectFinance = {
+  currency: Currency
+  contracted: number | null
+  contractedSource: 'project' | 'proposal' | null
+  acceptedProposal: { id: string; number: string; total: number; currency: Currency } | null
+  invoiced: number
+  invoiceCount: number
+  paid: number
+  outstanding: number | null
+  paidPercent: number | null
+  overpaid: boolean
 }
 
 export type ProjectList = {
@@ -533,7 +570,7 @@ export type ProposalSummary = {
   acceptedAt: string | null
 }
 
-export type ProjectDetail = { project: Project; inquiry: InboxSummary | null; proposals: ProposalSummary[]; activities: OpsActivity[] }
+export type ProjectDetail = { project: Project; inquiry: InboxSummary | null; proposals: ProposalSummary[]; invoices: InvoiceSummary[]; activities: OpsActivity[] }
 
 export type ProposalItem = { id: string; title: string; description: string; details: string; quantity: number; unit: ProposalUnit; unitPrice: number; optional: boolean; total: number; code?: string }
 export type ProposalSection = { id: string; title: string; note: string; order: number; subtotal: number; items: ProposalItem[] }
@@ -564,6 +601,7 @@ export type Proposal = {
   scope: string
   assumptions: string
   terms: string
+  confidentiality: string
   notes: string
   items: ProposalItem[]
   sections: ProposalSection[]
@@ -588,3 +626,151 @@ export type LeadRelated = {
   projects: { id: string; name: string; stage: ProjectStage; targetDate: string | null }[]
   proposals: ProposalSummary[]
 }
+
+// ── Admin users ─────────────────────────────────────────────────────────────
+
+export type UserStatus = 'active' | 'invited' | 'disabled'
+export type UserBrief = { id: string; displayName: string; title: string; status: UserStatus }
+export type AdminUser = UserBrief & {
+  email: string
+  login: string
+  role: 'admin'
+  mfaEnabled: boolean
+  usesServerAccessCode: boolean
+  setupPending: boolean
+  setupExpiresAt: string | null
+  createdAt: string
+  updatedAt: string
+  lastLoginAt: string | null
+}
+
+// ── Project credentials (metadata only; secrets are revealed on request) ─────
+
+export type CredentialType = 'hosting' | 'sftp' | 'domain' | 'email' | 'cms' | 'database' | 'github' | 'api' | 'other'
+export type ProjectCredential = {
+  id: string
+  projectId: string
+  type: CredentialType
+  label: string
+  username: string
+  urlOrHost: string
+  hasSecret: boolean
+  hasNotes: boolean
+  createdAt: string
+  updatedAt: string
+  createdBy: UserBrief | null
+  updatedBy: UserBrief | null
+}
+export type CredentialInput = { type: CredentialType; label: string; username: string; urlOrHost: string; secret?: string; notes?: string }
+
+// ── Fatture ─────────────────────────────────────────────────────────────────
+
+export type InvoiceStatus = 'draft' | 'ready' | 'issued' | 'paid' | 'cancelled'
+export type SdiStatus = 'not_exported' | 'xml_generated' | 'to_send' | 'sent' | 'delivered' | 'rejected' | 'undeliverable'
+
+export type BillingParty = {
+  name: string
+  vatNumber: string
+  taxCode: string
+  address: string
+  streetNumber: string
+  postalCode: string
+  city: string
+  province: string
+  country: string
+  pec: string
+}
+export type ClientBilling = BillingParty & { recipientCode: string }
+export type BillingProfile = BillingParty & {
+  taxRegime: string
+  email: string
+  phone: string
+  iban: string
+  bankName: string
+  showBankDetails: boolean
+  transmitterId: string
+  defaultPaymentTerms: string
+}
+export type BillingMeta = { profile: BillingProfile; missing: string[]; taxRegimes: Record<string, string>; natures: Record<string, string>; paymentModes: Record<string, string> }
+
+export type InvoiceLine = {
+  description: string
+  quantity: number
+  unit: string
+  unitPrice: number
+  discountPercent: number
+  vatRate: number
+  vatNature: string
+  vatReference: string
+  total: number
+}
+export type InvoiceVatGroup = { vatRate: number; vatNature: string; vatReference: string; taxable: number; vat: number }
+
+export type Invoice = {
+  id: string
+  number: string | null
+  year: number | null
+  sequence: number | null
+  type: 'TD01'
+  status: InvoiceStatus
+  due: 'overdue' | null
+  issueDate: string
+  dueDate: string | null
+  projectId: string | null
+  proposalId: string | null
+  leadId: string | null
+  supplier: BillingProfile | null
+  client: ClientBilling
+  lines: InvoiceLine[]
+  currency: Currency
+  vatSummary: InvoiceVatGroup[]
+  totals: { taxable: number; vat: number; stampDuty: number; total: number }
+  stampDuty: boolean
+  paymentMode: string
+  paymentTerms: string
+  notes: string
+  sdi: { transmissionStatus: SdiStatus; fileName: string | null; transmittedAt: string | null; sdiIdentifier: string; receiptType: string; receiptAt: string | null; rejectionReason: string }
+  paidAt: string | null
+  cancelledAt: string | null
+  cancelReason: string
+  createdAt: string
+  updatedAt: string
+  project: { id: string; name: string } | null
+  proposal: { id: string; number: string; status: ProposalStatus } | null
+  createdBy: UserBrief | null
+  xmlProblems: string[]
+}
+
+export type InvoiceSummary = {
+  id: string
+  number: string | null
+  status: InvoiceStatus
+  due: 'overdue' | null
+  issueDate: string
+  dueDate: string | null
+  clientName: string
+  currency: Currency
+  total: number
+  projectId: string | null
+  proposalId: string | null
+  sdiStatus: SdiStatus
+  updatedAt: string
+}
+
+export type InvoiceDetail = { invoice: Invoice; billingReady: boolean; activities: OpsActivity[] }
+
+export type InvoiceLineInput = { description: string; quantity: number | string; unit: string; unitPrice: number | string; discountPercent: number | string; vatRate: number | string; vatNature: string; vatReference: string }
+export type InvoiceInput = Partial<{
+  issueDate: string
+  dueDate: string | null
+  currency: Currency
+  client: ClientBilling
+  projectId: string | null
+  proposalId: string | null
+  leadId: string | null
+  paymentMode: string
+  paymentTerms: string
+  notes: string
+  stampDuty: boolean
+  lines: InvoiceLineInput[]
+}>

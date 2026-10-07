@@ -1,4 +1,16 @@
 import type {
+  AdminUser,
+  BillingMeta,
+  BillingProfile,
+  CredentialInput,
+  InvoiceDetail,
+  InvoiceInput,
+  InvoiceStatus,
+  InvoiceSummary,
+  ProjectCredential,
+  ProjectPayment,
+  SdiStatus,
+  UserBrief,
   AgendaItem,
   AnalyticsSummary,
   CalendarEvent,
@@ -48,6 +60,7 @@ export type AdminSession = {
   mfaRequired: boolean
   expired: boolean
   csrfToken: string | null
+  user: AdminUser | null
 }
 
 export type AdminLoginResult = {
@@ -182,7 +195,47 @@ async function downloadResponse(response: Response, fallbackName: string) {
 
 export const api = {
   session: () => request<AdminSession>('auth', 'session'),
-  login: (code: string) => post<AdminLoginResult>('auth', 'login', { code }),
+  login: (identifier: string, code: string) => post<AdminLoginResult>('auth', 'login', { identifier, code }),
+  changeAccessCode: (current: string, next: string) => post<{ user: AdminUser }>('auth', 'change-access-code', { current, next }),
+  setupInfo: (token: string) => request<{ displayName: string; login: string; title: string }>('auth', 'setup-info', { token }),
+  setupStart: (token: string, accessCode: string) => post<{ secret: string; provisioningUri: string; displayName: string }>('auth', 'setup-start', { token, accessCode }),
+  setupComplete: (token: string, token2: string) => post<AdminLoginResult & { recoveryCodes: string[] }>('auth', 'setup-complete', { token, token2 }),
+
+  team: () => request<{ users: AdminUser[]; meId: string }>('users', 'list'),
+  people: () => request<{ users: UserBrief[] }>('users', 'people'),
+  createUser: (user: Pick<AdminUser, 'displayName' | 'title' | 'email' | 'login'>) => post<{ users: AdminUser[]; meId: string; created: AdminUser; setupUrl: string }>('users', 'create', { user }),
+  updateUser: (id: string, user: Partial<Pick<AdminUser, 'displayName' | 'title' | 'email' | 'login'>>) => post<{ users: AdminUser[]; meId: string }>('users', 'update', { id, user }),
+  setUserStatus: (id: string, status: 'active' | 'disabled', confirmSelf = false) => post<{ users: AdminUser[]; meId: string }>('users', 'set-status', { id, status, confirmSelf }),
+  userSetupLink: (id: string, confirmSelf = false) => post<{ users: AdminUser[]; meId: string; setupUrl: string }>('users', 'setup-link', { id, confirmSelf }),
+
+  credentials: (projectId: string) => request<{ credentials: ProjectCredential[]; problem: string | null }>('credentials', 'list', { projectId }),
+  createCredential: (projectId: string, credential: CredentialInput) => post<{ credentials: ProjectCredential[]; problem: string | null }>('credentials', 'create', { projectId, credential }),
+  updateCredential: (id: string, credential: CredentialInput) => post<{ credentials: ProjectCredential[]; problem: string | null }>('credentials', 'update', { id, credential }),
+  revealCredential: (id: string) => post<{ id: string; secret: string; notes: string }>('credentials', 'reveal', { id }),
+  deleteCredential: (id: string) => post<{ credentials: ProjectCredential[]; problem: string | null }>('credentials', 'delete', { id }),
+
+  createPayment: (projectId: string, payment: Omit<Partial<ProjectPayment>, 'amount'> & { amount: number | string }, requestId: string, confirmOverpayment = false) =>
+    post<ProjectDetail>('projects', 'payment-create', { projectId, payment, requestId, confirmOverpayment }),
+  updatePayment: (projectId: string, id: string, payment: Omit<Partial<ProjectPayment>, 'amount'> & { amount: number | string }, confirmOverpayment = false) =>
+    post<ProjectDetail>('projects', 'payment-update', { projectId, id, payment, confirmOverpayment }),
+  deletePayment: (projectId: string, id: string) => post<ProjectDetail>('projects', 'payment-delete', { projectId, id }),
+
+  invoices: (status: InvoiceStatus | 'all' | 'overdue', q = '') => request<{ invoices: InvoiceSummary[]; counts: Record<InvoiceStatus | 'overdue', number>; billingReady: boolean }>('invoices', 'list', { status, q }),
+  invoice: (id: string) => request<InvoiceDetail>('invoices', 'get', { id }),
+  createInvoice: (invoice: InvoiceInput, from?: { proposalId?: string; projectId?: string; mode?: 'items' | 'percent'; percent?: number }) => post<InvoiceDetail>('invoices', 'create', { invoice, from }),
+  updateInvoice: (id: string, invoice: InvoiceInput) => post<InvoiceDetail>('invoices', 'update', { id, invoice }),
+  finalizeInvoice: (id: string) => post<InvoiceDetail>('invoices', 'finalize', { id }),
+  invoiceStatus: (id: string, status: 'draft' | 'issued' | 'paid' | 'cancelled', extra: { recordPayment?: boolean; paymentDate?: string; reason?: string; confirmOverpayment?: boolean } = {}) =>
+    post<InvoiceDetail>('invoices', 'set-status', { id, status, ...extra }),
+  recordSdi: (id: string, sdi: { transmissionStatus: Exclude<SdiStatus, 'not_exported' | 'xml_generated'>; transmittedAt?: string | null; sdiIdentifier?: string; receiptAt?: string | null; rejectionReason?: string }) =>
+    post<InvoiceDetail>('invoices', 'record-sdi', { id, ...sdi }),
+  downloadInvoiceXml: async (id: string) => {
+    const response = await request<Response>('invoices', 'xml', { id }, { raw: true })
+    await downloadResponse(response, 'fattura.xml')
+  },
+  deleteInvoice: (id: string) => post<{ deleted: boolean }>('invoices', 'delete', { id }),
+  billing: () => request<BillingMeta>('invoices', 'billing'),
+  saveBilling: (profile: BillingProfile) => post<BillingMeta>('invoices', 'billing', { profile }),
   verifyMfa: (token: string) => post<AdminLoginResult>('auth', 'mfa-verify', { token }),
   logout: () => post<{ authenticated: boolean }>('auth', 'logout'),
   mfaStatus: () => request<MfaStatus>('auth', 'mfa-status'),

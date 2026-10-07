@@ -13,7 +13,7 @@ import { Modal } from '../ui/Overlay'
 type Enrollment = { secret: string; provisioningUri: string; expiresIn: number }
 type SetupStep = 'password' | 'scan' | 'recovery'
 
-function saveRecoveryCodes(codes: string[]) {
+export function saveRecoveryCodes(codes: string[]) {
   const contents = ['Nivello Admin recovery codes', 'Each code can be used once.', '', ...codes, ''].join('\n')
   const url = URL.createObjectURL(new Blob([contents], { type: 'text/plain;charset=utf-8' }))
   const link = document.createElement('a')

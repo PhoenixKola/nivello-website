@@ -78,6 +78,7 @@ final class Store
             'inbox' => [],
             'projects' => [],
             'proposals' => [],
+            'invoices' => [],
             'opsActivities' => [],
             'counters' => [],
             'settings' => [],
@@ -394,7 +395,7 @@ function add_ops_activity(array &$state, string $entity, string $entityId, strin
         'message' => $message,
         'meta' => $meta ?: new stdClass(),
         'at' => now_iso(),
-    ];
+    ] + (function_exists('activity_actor') ? activity_actor() : []);
     $overflow = count($state['opsActivities']) - 20000;
     if ($overflow > 0) {
         array_splice($state['opsActivities'], 0, $overflow);
@@ -429,7 +430,7 @@ function add_activity(array &$state, string $leadId, string $type, string $messa
         'message' => $message,
         'meta' => $meta ?: new stdClass(),
         'at' => now_iso(),
-    ];
+    ] + (function_exists('activity_actor') ? activity_actor() : []);
     // Keep the log bounded; oldest entries go first.
     $overflow = count($state['activities']) - 60000;
     if ($overflow > 0) {

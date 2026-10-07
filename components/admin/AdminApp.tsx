@@ -4,20 +4,35 @@ import { useCallback, useEffect, useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { api, setCsrfToken, setUnauthenticatedHandler } from '@/lib/admin/api'
 import { useHashRoute } from '@/lib/admin/hooks'
+import type { AdminUser } from '@/lib/admin/types'
 import { AdminProvider } from './AdminContext'
 import AdminShell from './AdminShell'
 import LoginScreen from './LoginScreen'
+import SetupScreen from './SetupScreen'
 import { ToastProvider } from './ui/Toast'
 
-type SessionState = { status: 'loading' } | { status: 'anonymous'; notice: string | null; mfaRequired?: boolean } | { status: 'authenticated' } | { status: 'error'; message: string }
+type SessionState =
+  | { status: 'loading' }
+  | { status: 'anonymous'; notice: string | null; mfaRequired?: boolean }
+  | { status: 'authenticated'; user: AdminUser }
+  | { status: 'error'; message: string }
 
 export default function AdminApp() {
   const [session, setSession] = useState<SessionState>({ status: 'loading' })
   const [route, navigate] = useHashRoute()
+  const setupToken = route.raw === 'setup' ? route.params.get('token') : null
 
   const signOut = useCallback((notice: string | null = null) => {
     setCsrfToken(null)
     setSession({ status: 'anonymous', notice })
+  }, [])
+
+  /** Reads the session (and the signed-in user) after load or a successful sign-in. */
+  const loadSession = useCallback(async (afterLogin = false) => {
+    const result = await api.session()
+    setCsrfToken(result.csrfToken)
+    if (result.authenticated && result.user) setSession({ status: 'authenticated', user: result.user })
+    else setSession({ status: 'anonymous', notice: afterLogin ? 'Please sign in again.' : result.expired ? 'Your session expired. Please sign in again.' : null, mfaRequired: result.mfaRequired })
   }, [])
 
   useEffect(() => {
@@ -29,8 +44,8 @@ export default function AdminApp() {
         if (cancelled) return
         setCsrfToken(result.csrfToken)
         setSession(
-          result.authenticated
-            ? { status: 'authenticated' }
+          result.authenticated && result.user
+            ? { status: 'authenticated', user: result.user }
             : { status: 'anonymous', notice: result.expired ? 'Your session expired. Please sign in again.' : null, mfaRequired: result.mfaRequired }
         )
       })
@@ -42,6 +57,11 @@ export default function AdminApp() {
       setUnauthenticatedHandler(null)
     }
   }, [signOut])
+
+  const signedIn = (csrf: string) => {
+    setCsrfToken(csrf)
+    loadSession(true).catch(error => setSession({ status: 'error', message: error.message }))
+  }
 
   return (
     <ToastProvider>
@@ -59,18 +79,23 @@ export default function AdminApp() {
           </div>
         </div>
       )}
-      {session.status === 'anonymous' && (
-        <LoginScreen
-          notice={session.notice}
-          initialMfaRequired={session.mfaRequired}
-          onSuccess={csrf => {
-            setCsrfToken(csrf)
-            setSession({ status: 'authenticated' })
-          }}
-        />
-      )}
+      {session.status === 'anonymous' &&
+        (setupToken ? (
+          <SetupScreen token={setupToken} onDone={csrf => {
+            navigate('dashboard')
+            signedIn(csrf)
+          }} />
+        ) : (
+          <LoginScreen notice={session.notice} initialMfaRequired={session.mfaRequired} onSuccess={signedIn} />
+        ))}
       {session.status === 'authenticated' && (
-        <AdminProvider route={route} navigate={navigate} onLogout={() => signOut('You have been signed out.')}>
+        <AdminProvider
+          route={route}
+          navigate={navigate}
+          me={session.user}
+          onMeChange={user => setSession({ status: 'authenticated', user })}
+          onLogout={() => signOut('You have been signed out.')}
+        >
           <AdminShell />
         </AdminProvider>
       )}

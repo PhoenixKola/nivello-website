@@ -6,9 +6,18 @@ import Link from 'next/link'
 import { getProjectPath, getProjects } from '@/lib/projects'
 import type { Locale } from '@/lib/site'
 
-const logos: Record<string, { src: string; width: number; height: number; contrast?: 'dark-logo' | 'light-logo'; className?: string }> = {
-  'rombo-nord': { src: '/client-logos/rombo-nord.webp', width: 400, height: 400, className: 'max-h-[88px] max-w-[166px] sm:max-h-[98px] sm:max-w-[190px]' },
-  'le-camelie': { src: '/client-logos/le-camelie.webp', width: 228, height: 237, className: 'max-h-[88px] max-w-[166px] sm:max-h-[98px] sm:max-w-[190px]' },
+type LogoAsset = { src: string; width: number; height: number; className?: string }
+
+/** `dark` swaps in a version drawn for dark backgrounds; its className normalises the rendered visual size. */
+const logos: Record<string, LogoAsset & { contrast?: 'dark-logo' | 'light-logo'; dark?: LogoAsset }> = {
+  'rombo-nord': { src: '/client-logos/rombo-nord.webp', width: 448, height: 438, className: 'max-h-[80px] max-w-[156px] sm:max-h-[88px] sm:max-w-[176px]' },
+  'le-camelie': {
+    src: '/client-logos/le-camelie.webp',
+    width: 228,
+    height: 237,
+    className: 'max-h-[88px] max-w-[166px] sm:max-h-[98px] sm:max-w-[190px]',
+    dark: { src: '/client-logos/le-camelie-dark.webp', width: 313, height: 320, className: 'max-h-[76px] max-w-[150px] sm:max-h-[84px] sm:max-w-[170px]' }
+  },
   'gjergj-jozef-kola': { src: '/client-logos/gjergj-jozef-kola.png', width: 305, height: 57, contrast: 'dark-logo' },
   consteam: { src: '/client-logos/consteam.webp', width: 400, height: 190, contrast: 'light-logo' },
   'your-assist-in-italy': { src: '/client-logos/your-assist-in-italy.svg', width: 130, height: 49, className: 'max-h-[84px] max-w-[170px] sm:max-h-[92px] sm:max-w-[196px]' },
@@ -19,6 +28,8 @@ const copy = {
   en: { heading: 'Trusted by', view: 'View project' },
   it: { heading: 'Hanno scelto Nivello', view: 'Vedi progetto' }
 }
+
+const imageClass = 'h-auto w-auto max-h-[76px] max-w-[150px] object-contain opacity-75 transition-all duration-300 group-hover:scale-105 group-hover:opacity-100 group-focus-visible:scale-105 group-focus-visible:opacity-100 sm:max-h-[84px] sm:max-w-[174px]'
 
 export default function ClientLogoMarquee({ locale }: { locale: Locale }) {
   const t = copy[locale]
@@ -55,8 +66,11 @@ export default function ClientLogoMarquee({ locale }: { locale: Locale }) {
           width={logo.width}
           height={logo.height}
           sizes="(max-width: 640px) 150px, 180px"
-          className={`h-auto w-auto max-h-[76px] max-w-[150px] object-contain opacity-75 transition-all duration-300 group-hover:scale-105 group-hover:opacity-100 group-focus-visible:scale-105 group-focus-visible:opacity-100 sm:max-h-[84px] sm:max-w-[174px] ${logo.contrast === 'dark-logo' ? 'dark:invert' : ''} ${logo.contrast === 'light-logo' ? 'invert dark:invert-0' : ''} ${logo.className || ''}`}
+          className={`${imageClass} ${logo.dark ? 'dark:hidden' : ''} ${logo.contrast === 'dark-logo' ? 'dark:invert' : ''} ${logo.contrast === 'light-logo' ? 'invert dark:invert-0' : ''} ${logo.className || ''}`}
         />
+        {logo.dark && (
+          <Image src={logo.dark.src} alt="" width={logo.dark.width} height={logo.dark.height} sizes="(max-width: 640px) 150px, 180px" className={`${imageClass} hidden dark:block ${logo.dark.className || ''}`} />
+        )}
         <span role="tooltip" className="pointer-events-none absolute bottom-0 left-1/2 z-10 -translate-x-1/2 translate-y-1 whitespace-nowrap rounded-full bg-slate-950 px-2.5 py-1 text-[10px] font-semibold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100 dark:bg-white dark:text-slate-950">
           {project.title}
         </span>

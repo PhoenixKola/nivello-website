@@ -2,6 +2,7 @@ import '@/app/globals.css'
 import AnalyticsTracker from '@/components/AnalyticsTracker'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import PrivacyNotice from '@/components/PrivacyNotice'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import StructuredData from '@/components/StructuredData'
 import { fraunces, inter } from '@/lib/fonts'
@@ -35,6 +36,7 @@ export default function SiteShell({ lang, children }: { lang: Locale; children: 
             {children}
             <Footer />
           </div>
+          <PrivacyNotice locale={lang} />
         </ThemeProvider>
       </body>
     </html>

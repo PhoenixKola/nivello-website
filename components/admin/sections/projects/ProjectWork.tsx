@@ -14,6 +14,8 @@ import { Select } from '../../ui/Listbox'
 import { ConfirmDialog, Modal } from '../../ui/Overlay'
 import { useToast } from '../../ui/Toast'
 import { cx, focusRing } from '../../ui/styles'
+import UserAvatar from '../../ui/UserAvatar'
+import { useAdmin } from '../../AdminContext'
 
 const TASK_STATUSES: { value: ProjectTaskStatus; label: string }[] = [
   { value: 'todo', label: 'To do' }, { value: 'in_progress', label: 'In progress' }, { value: 'blocked', label: 'Blocked' }, { value: 'done', label: 'Done' }
@@ -25,9 +27,9 @@ const PRIORITIES: { value: ProjectTaskPriority; label: string }[] = [
   { value: 'low', label: 'Low' }, { value: 'normal', label: 'Normal' }, { value: 'high', label: 'High' }, { value: 'urgent', label: 'Urgent' }
 ]
 
-type TaskDraft = Pick<ProjectTask, 'title' | 'description' | 'status' | 'priority' | 'dueDate' | 'assignee' | 'milestoneId'>
+type TaskDraft = Pick<ProjectTask, 'title' | 'description' | 'status' | 'priority' | 'dueDate' | 'assigneeUserId' | 'milestoneId'>
 type MilestoneDraft = Pick<ProjectMilestone, 'title' | 'description' | 'status' | 'dueDate'>
-const blankTask = (): TaskDraft => ({ title: '', description: '', status: 'todo', priority: 'normal', dueDate: null, assignee: '', milestoneId: null })
+const blankTask = (assigneeUserId: string | null = null): TaskDraft => ({ title: '', description: '', status: 'todo', priority: 'normal', dueDate: null, assigneeUserId, milestoneId: null })
 const blankMilestone = (): MilestoneDraft => ({ title: '', description: '', status: 'not_started', dueDate: null })
 
 export function ProjectProgressCard({ detail }: { detail: ProjectDetail }) {
@@ -54,17 +56,25 @@ function Metric({ label, value, warn }: { label: string; value: string; warn?: b
 
 export function ProjectTasks({ detail, onChange }: { detail: ProjectDetail; onChange: (detail: ProjectDetail) => void }) {
   const toast = useToast()
+  const { me, people } = useAdmin()
   const [status, setStatus] = useState<ProjectTaskStatus | 'all' | 'open' | 'overdue' | 'completed'>('all')
   const [milestone, setMilestone] = useState('all')
+  const [assignee, setAssignee] = useState<string>('all')
   const [editing, setEditing] = useState<ProjectTask | 'new' | null>(null)
   const [draft, setDraft] = useState<TaskDraft>(blankTask)
   const [deleting, setDeleting] = useState<ProjectTask | null>(null)
   const [busy, setBusy] = useState(false)
   const items = useMemo(() => detail.project.tasks.filter(task => {
     const statusMatch = status === 'all' || (status === 'open' && task.status !== 'done') || (status === 'overdue' && task.overdue) || (status === 'completed' && task.status === 'done') || task.status === status
-    return statusMatch && (milestone === 'all' || task.milestoneId === milestone)
-  }), [detail.project.tasks, status, milestone])
-  const open = (task?: ProjectTask) => { setEditing(task ?? 'new'); setDraft(task ? { title: task.title, description: task.description, status: task.status, priority: task.priority, dueDate: task.dueDate, assignee: task.assignee, milestoneId: task.milestoneId } : blankTask()) }
+    const assigneeMatch = assignee === 'all' || (assignee === 'me' && task.assigneeUserId === me.id) || (assignee === 'none' && !task.assigneeUserId) || task.assigneeUserId === assignee
+    return statusMatch && assigneeMatch && (milestone === 'all' || task.milestoneId === milestone)
+  }), [detail.project.tasks, status, milestone, assignee, me.id])
+  // Disabled users stay visible on their old tasks but cannot receive new assignments.
+  const assigneeOptions = (current: string | null) => [
+    { value: '', label: 'Unassigned' },
+    ...people.filter(u => u.status === 'active' || u.id === current).map(u => ({ value: u.id, label: u.status === 'active' ? `${u.displayName}${u.id === me.id ? ' (you)' : ''}` : `${u.displayName} (disabled)` }))
+  ]
+  const open = (task?: ProjectTask) => { setEditing(task ?? 'new'); setDraft(task ? { title: task.title, description: task.description, status: task.status, priority: task.priority, dueDate: task.dueDate, assigneeUserId: task.assigneeUserId, milestoneId: task.milestoneId } : blankTask()) }
   const save = async (event: FormEvent) => {
     event.preventDefault(); setBusy(true)
     try {
@@ -80,15 +90,16 @@ export function ProjectTasks({ detail, onChange }: { detail: ProjectDetail; onCh
       <ProjectProgressCard detail={detail} />
       <Card>
         <CardHeader title="Tasks" description="Plan the next actions, owners and deadlines." actions={<Button size="sm" variant="primary" icon={<Plus className="h-3.5 w-3.5" />} onClick={() => open()}>Add task</Button>} />
-        <div className="grid grid-cols-1 gap-2 border-y border-slate-100 px-5 py-3 sm:grid-cols-2 dark:border-white/[0.06]">
+        <div className="grid grid-cols-1 gap-2 border-y border-slate-100 px-5 py-3 sm:grid-cols-3 dark:border-white/[0.06]">
           <Select label="Task status filter" value={status} onChange={setStatus} options={[{ value: 'all', label: 'All tasks' }, { value: 'open', label: 'Open' }, { value: 'overdue', label: 'Overdue' }, { value: 'completed', label: 'Completed' }, ...TASK_STATUSES.filter(item => item.value === 'in_progress' || item.value === 'blocked')]} />
           <Select label="Milestone filter" value={milestone} onChange={setMilestone} options={[{ value: 'all', label: 'All milestones' }, ...detail.project.milestones.map(m => ({ value: m.id, label: m.title }))]} />
+          <Select label="Assignee filter" value={assignee} onChange={setAssignee} options={[{ value: 'all', label: 'Everyone' }, { value: 'me', label: 'My tasks' }, { value: 'none', label: 'Unassigned' }, ...people.filter(u => u.id !== me.id).map(u => ({ value: u.id, label: u.displayName }))]} />
         </div>
         {!items.length ? <EmptyState icon={<ListTodo className="h-5 w-5" />} title="No matching tasks" description="Add a task or adjust the filters." /> : <ul className="divide-y divide-slate-100 dark:divide-white/[0.06]">{items.map(task => (
           <li key={task.id} className="px-5 py-4">
             <div className="flex flex-wrap items-start gap-3">
               <button type="button" onClick={() => quickStatus(task, task.status === 'done' ? 'todo' : 'done')} aria-label={task.status === 'done' ? `Reopen ${task.title}` : `Complete ${task.title}`} className={cx('mt-0.5 flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full border', task.status === 'done' ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-300 text-transparent hover:text-slate-400 dark:border-white/20', focusRing)}><Check className="h-4 w-4" /></button>
-              <button type="button" onClick={() => open(task)} className={cx('min-w-40 flex-1 cursor-pointer text-left', focusRing)}><span className={cx('font-medium text-slate-900 dark:text-white', task.status === 'done' && 'line-through opacity-60')}>{task.title}</span>{task.description && <span className="mt-1 block text-sm text-slate-500 dark:text-slate-400">{task.description}</span>}<span className="mt-2 flex flex-wrap gap-2 text-xs text-slate-500">{task.assignee && <span>{task.assignee}</span>}{task.dueDate && <span className={task.overdue ? 'font-medium text-red-600 dark:text-red-400' : ''}>{task.overdue ? 'Overdue · ' : ''}{formatDay(task.dueDate)}</span>}</span></button>
+              <button type="button" onClick={() => open(task)} className={cx('min-w-40 flex-1 cursor-pointer text-left', focusRing)}><span className={cx('font-medium text-slate-900 dark:text-white', task.status === 'done' && 'line-through opacity-60')}>{task.title}</span>{task.description && <span className="mt-1 block text-sm text-slate-500 dark:text-slate-400">{task.description}</span>}<span className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">{task.assigneeUser ? <span className="inline-flex items-center gap-1.5"><UserAvatar user={task.assigneeUser} size="sm" />{task.assigneeUser.displayName}{task.assigneeUser.status === 'disabled' && ' (disabled)'}</span> : task.assignee ? <span title="Assignee from before team accounts existed">{task.assignee} · legacy</span> : <span className="text-slate-400">Unassigned</span>}{task.dueDate && <span className={task.overdue ? 'font-medium text-red-600 dark:text-red-400' : ''}>{task.overdue ? 'Overdue · ' : ''}{formatDay(task.dueDate)}</span>}</span></button>
               <div className="w-36"><Select label={`Status for ${task.title}`} size="sm" value={task.status} onChange={value => quickStatus(task, value)} options={TASK_STATUSES} /></div>
               <Badge tone={task.priority === 'urgent' ? 'red' : task.priority === 'high' ? 'amber' : 'slate'}>{task.priority}</Badge>
               <button type="button" aria-label={`Delete ${task.title}`} onClick={() => setDeleting(task)} className={cx('flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-400/10', focusRing)}><Trash2 className="h-3.5 w-3.5" /></button>
@@ -97,7 +108,7 @@ export function ProjectTasks({ detail, onChange }: { detail: ProjectDetail; onCh
         ))}</ul>}
       </Card>
       <Modal open={!!editing} onClose={() => setEditing(null)} title={editing === 'new' ? 'Add task' : 'Edit task'} footer={<><Button variant="ghost" onClick={() => setEditing(null)}>Cancel</Button><Button variant="primary" form="project-task-form" type="submit" loading={busy}>Save task</Button></>}>
-        <form id="project-task-form" onSubmit={save} className="space-y-3"><TextField label="Task title" required maxLength={200} value={draft.title} onChange={e => setDraft(d => ({ ...d, title: e.target.value }))} /><TextArea label="Description" maxLength={4000} value={draft.description} onChange={e => setDraft(d => ({ ...d, description: e.target.value }))} /><div className="grid grid-cols-1 gap-3 sm:grid-cols-2"><Select label="Status" value={draft.status} onChange={value => setDraft(d => ({ ...d, status: value }))} options={TASK_STATUSES} /><Select label="Priority" value={draft.priority} onChange={value => setDraft(d => ({ ...d, priority: value }))} options={PRIORITIES} /><TextField label="Due date" type="date" value={draft.dueDate ?? ''} onChange={e => setDraft(d => ({ ...d, dueDate: e.target.value || null }))} /><TextField label="Assignee" maxLength={120} value={draft.assignee} onChange={e => setDraft(d => ({ ...d, assignee: e.target.value }))} /></div><Select label="Milestone" value={draft.milestoneId ?? ''} onChange={value => setDraft(d => ({ ...d, milestoneId: value || null }))} options={[{ value: '', label: 'No milestone' }, ...detail.project.milestones.map(m => ({ value: m.id, label: m.title }))]} /></form>
+        <form id="project-task-form" onSubmit={save} className="space-y-3"><TextField label="Task title" required maxLength={200} value={draft.title} onChange={e => setDraft(d => ({ ...d, title: e.target.value }))} /><TextArea label="Description" maxLength={4000} value={draft.description} onChange={e => setDraft(d => ({ ...d, description: e.target.value }))} /><div className="grid grid-cols-1 gap-3 sm:grid-cols-2"><Select label="Status" value={draft.status} onChange={value => setDraft(d => ({ ...d, status: value }))} options={TASK_STATUSES} /><Select label="Priority" value={draft.priority} onChange={value => setDraft(d => ({ ...d, priority: value }))} options={PRIORITIES} /><TextField label="Due date" type="date" value={draft.dueDate ?? ''} onChange={e => setDraft(d => ({ ...d, dueDate: e.target.value || null }))} /><div><span className="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-300">Assignee</span><Select label="Assignee" value={draft.assigneeUserId ?? ''} onChange={value => setDraft(d => ({ ...d, assigneeUserId: value || null }))} options={assigneeOptions(editing && editing !== 'new' ? editing.assigneeUserId : null)} /></div></div><Select label="Milestone" value={draft.milestoneId ?? ''} onChange={value => setDraft(d => ({ ...d, milestoneId: value || null }))} options={[{ value: '', label: 'No milestone' }, ...detail.project.milestones.map(m => ({ value: m.id, label: m.title }))]} /></form>
       </Modal>
       <ConfirmDialog open={!!deleting} onClose={() => setDeleting(null)} danger title="Delete task?" description={deleting?.title} confirmLabel="Delete task" onConfirm={async () => { if (!deleting) return; try { onChange(await api.deleteProjectTask(detail.project.id, deleting.id)); setDeleting(null); toast.success('Task deleted') } catch (error) { toast.error('Task not deleted', (error as Error).message) } }} />
     </div>

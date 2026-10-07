@@ -276,13 +276,45 @@ export async function buildProposalDocx(p: Proposal) {
   body.appendChild(sectPr)
   zip.file('word/document.xml', serializer.serializeToString(documentXml))
 
+  let footer = await zip.file('word/footer1.xml')!.async('string')
   if (p.language === 'en') {
-    let footer = await zip.file('word/footer1.xml')!.async('string')
     footer = footer.replace('>Pagina <', `>${labels.page} <`).replace('> di <', `> ${labels.of} <`)
-    zip.file('word/footer1.xml', footer)
   }
+  zip.file('word/footer1.xml', withFooterNotice(parser, serializer, footer, labels.notice))
 
   return zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', compression: 'DEFLATE' })
+}
+
+/** Writes the discreet confidentiality notice into the template footer's leading empty paragraph. */
+function withFooterNotice(parser: DOMParser, serializer: XMLSerializer, footerXml: string, notice: string) {
+  const footer = parser.parseFromString(footerXml, 'application/xml')
+  const root = footer.documentElement
+  const paragraph = wChildren(root, 'p')[0]
+  if (!paragraph) return footerXml
+  const doc = paragraph.ownerDocument
+  const el = (name: string, attrs: Record<string, string> = {}) => {
+    const node = doc.createElementNS(W, `w:${name}`)
+    for (const [key, value] of Object.entries(attrs)) node.setAttributeNS(W, `w:${key}`, value)
+    return node
+  }
+  let pPr = wChildren(paragraph, 'pPr')[0]
+  if (!pPr) {
+    pPr = el('pPr')
+    paragraph.insertBefore(pPr, paragraph.firstChild)
+  }
+  pPr.appendChild(el('jc', { val: 'center' }))
+  const run = el('r')
+  const rPr = el('rPr')
+  rPr.appendChild(el('rFonts', { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' }))
+  rPr.appendChild(el('color', { val: '94A3B8' }))
+  rPr.appendChild(el('sz', { val: '12' }))
+  rPr.appendChild(el('szCs', { val: '12' }))
+  run.appendChild(rPr)
+  const t = el('t')
+  setText(t, notice)
+  run.appendChild(t)
+  paragraph.appendChild(run)
+  return serializer.serializeToString(footer)
 }
 
 export async function downloadProposalDocx(p: Proposal) {

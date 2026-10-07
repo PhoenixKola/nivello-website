@@ -125,6 +125,7 @@ function Timeline({ activities, now }: { activities: Activity[]; now: number }) 
               <p className="text-sm text-slate-800 dark:text-slate-100">{activity.message}</p>
               <p className="text-xs text-slate-400" title={formatDateTime(activity.at)}>
                 {now ? formatRelative(activity.at, now) : formatDateTime(activity.at)}
+                {activity.actorName ? ` · by ${activity.actorName}` : ''}
               </p>
             </div>
           </li>

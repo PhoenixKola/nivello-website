@@ -10,6 +10,7 @@ export type RouteKey =
   | 'imprint'
   | 'terms'
   | 'privacy'
+  | 'cookies'
   | 'disclaimer'
 
 type SiteRoute = {
@@ -30,6 +31,7 @@ export const siteRoutes: SiteRoute[] = [
   { key: 'imprint', paths: { en: '/imprint/', it: '/it/impronta/' }, labels: { en: 'Imprint', it: 'Note legali' }, footer: true },
   { key: 'terms', paths: { en: '/terms/', it: '/it/termini/' }, labels: { en: 'Terms & Conditions', it: 'Termini e condizioni' }, footer: true },
   { key: 'privacy', paths: { en: '/privacy/', it: '/it/privacy/' }, labels: { en: 'Privacy', it: 'Privacy' }, footer: true },
+  { key: 'cookies', paths: { en: '/cookie-policy/', it: '/it/cookie-policy/' }, labels: { en: 'Cookie Policy', it: 'Cookie policy' }, footer: true },
   { key: 'disclaimer', paths: { en: '/disclaimer/', it: '/it/disclaimer/' }, labels: { en: 'Disclaimer', it: 'Disclaimer' }, footer: true }
 ]
 

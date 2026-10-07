@@ -17,7 +17,7 @@ const LEAD_STATUS_ORDER = ['new' => 0, 'contacted' => 1, 'follow_up' => 1, 'inte
 
 function ensure_proposal_shape(array &$proposal): void
 {
-    foreach (['inboxId' => null, 'clientCode' => '', 'clientSector' => '', 'clientAddress' => '', 'clientPhone' => '', 'clientLogo' => null, 'expiredAt' => null, 'acceptance' => ['place' => '', 'date' => null], 'versions' => []] as $key => $default) {
+    foreach (['inboxId' => null, 'clientCode' => '', 'clientSector' => '', 'clientAddress' => '', 'clientPhone' => '', 'clientLogo' => null, 'confidentiality' => '', 'expiredAt' => null, 'acceptance' => ['place' => '', 'date' => null], 'versions' => []] as $key => $default) {
         if (!array_key_exists($key, $proposal)) $proposal[$key] = $default;
     }
     if (!isset($proposal['sections']) || !is_array($proposal['sections']) || !$proposal['sections']) {
@@ -132,6 +132,10 @@ api_run([
                 throw new ApiError('VALIDATION_ERROR', 'Proposal limit reached.', 422);
             }
             $proposal = blank_proposal();
+            $lang = in_array($fields['language'] ?? null, ['en', 'it'], true) ? $fields['language'] : 'en';
+            // New Preventivi include the confidentiality clause by default; existing ones are untouched.
+            $proposal['confidentiality'] = PROPOSAL_CONFIDENTIALITY[$lang];
+            $proposal['language'] = $lang;
             apply_proposal_fields($state, $proposal, $fields);
             prefill_client($state, $proposal);
             $proposal['number'] = next_proposal_number($state, $proposal['clientCode']);
@@ -279,7 +283,7 @@ api_run([
             }
             $copy = blank_proposal();
             ensure_proposal_shape($source);
-            foreach (['title', 'language', 'leadId', 'projectId', 'inboxId', 'clientCode', 'clientName', 'clientCompany', 'clientEmail', 'clientSector', 'clientAddress', 'clientPhone', 'currency', 'intro', 'scope', 'assumptions', 'terms', 'notes', 'items', 'sections', 'discount', 'tax', 'milestones', 'totals', 'acceptance'] as $field) {
+            foreach (['title', 'language', 'leadId', 'projectId', 'inboxId', 'clientCode', 'clientName', 'clientCompany', 'clientEmail', 'clientSector', 'clientAddress', 'clientPhone', 'currency', 'intro', 'scope', 'assumptions', 'terms', 'confidentiality', 'notes', 'items', 'sections', 'discount', 'tax', 'milestones', 'totals', 'acceptance'] as $field) {
                 $copy[$field] = $source[$field];
             }
             $copy['number'] = next_proposal_number($state, $copy['clientCode']);

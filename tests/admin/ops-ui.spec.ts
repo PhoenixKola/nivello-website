@@ -1,12 +1,13 @@
 import { readFileSync } from 'node:fs'
 import { expect, request, test, type Page } from '@playwright/test'
 import JSZip from 'jszip'
-import { accessCode, ADMIN_BASE } from './helpers'
+import { accessCode, ADMIN_BASE, OWNER_LOGIN } from './helpers'
 
 test.describe.configure({ mode: 'serial', timeout: 120_000 })
 
 async function login(page: Page) {
   await page.goto('/admin/')
+  await page.getByLabel('Username or email').fill(OWNER_LOGIN)
   await page.getByLabel('Access code', { exact: true }).fill(accessCode())
   await page.getByRole('button', { name: 'Sign in' }).click()
   await expect(page.locator('header h1')).toBeVisible()
@@ -80,12 +81,19 @@ test('projects: create, move with the accessible menu, open details', async ({ p
   await modal.getByLabel('Client', { exact: true }).fill('UI Client')
   await modal.getByRole('button', { name: 'Create project' }).click()
 
-  const drawer = page.getByRole('dialog', { name: 'Project UI test project' })
-  await expect(drawer).toBeVisible()
-  await drawer.getByLabel('Next action').fill('Kick-off call')
-  await drawer.getByRole('button', { name: 'Save changes' }).click()
-  await expect(drawer.getByText('Details updated')).toBeVisible()
-  await drawer.getByRole('button', { name: 'Close' }).first().click()
+  // Projects open as a full page, never in a drawer.
+  await expect(page).toHaveURL(/#\/projects\?project=prj_[a-f0-9]{16}$/)
+  const main = page.locator('#admin-main')
+  await expect(main.getByRole('heading', { name: 'UI test project', level: 2 })).toBeVisible()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  await expect(main.getByRole('tablist', { name: 'Project workspace' })).toBeVisible()
+  await main.getByRole('button', { name: 'Edit details' }).click()
+  const edit = page.getByRole('dialog', { name: 'Edit project details' })
+  await edit.getByLabel('Next action').fill('Kick-off call')
+  await edit.getByRole('button', { name: 'Save changes' }).click()
+  await expect(page.getByText('Details updated').first()).toBeVisible()
+  await expect(main.getByText('Kick-off call').first()).toBeVisible()
+  await main.getByRole('button', { name: 'Projects', exact: true }).click()
 
   // Grouped board: the project keeps its exact stage (shown as a chip) inside its workflow group.
   const board = page.getByRole('region', { name: 'Project pipeline board' })
@@ -115,23 +123,33 @@ test('project detail manages milestones and tasks in responsive local tabs', asy
   await expect(projectButton).toBeVisible()
   await projectButton.click()
   await page.setViewportSize({ width: 390, height: 844 })
-  const drawer = page.getByRole('dialog', { name: 'Project UI test project' })
-  await drawer.getByRole('tab', { name: /Milestones/ }).click()
-  await drawer.getByRole('button', { name: 'Add milestone' }).click()
+  const workspace = page.locator('#admin-main')
+  await workspace.getByRole('tab', { name: /Milestones/ }).click()
+  await expect(page).toHaveURL(/tab=milestones/)
+  await workspace.getByRole('button', { name: 'Add milestone' }).click()
   const milestone = page.getByRole('dialog', { name: 'Add milestone' })
   await milestone.getByLabel('Milestone title').fill('Launch readiness')
   await milestone.getByRole('button', { name: 'Save milestone' }).click()
-  await expect(drawer.getByText('Launch readiness')).toBeVisible()
+  await expect(workspace.getByText('Launch readiness').first()).toBeVisible()
 
-  await drawer.getByRole('tab', { name: /Tasks/ }).click()
-  await drawer.getByRole('button', { name: 'Add task' }).click()
+  await workspace.getByRole('tab', { name: /Tasks/ }).click()
+  await workspace.getByRole('button', { name: 'Add task' }).click()
   const task = page.getByRole('dialog', { name: 'Add task' })
   await task.getByLabel('Task title').fill('Run launch checklist')
-  await task.getByLabel('Assignee').fill('Nivello')
+  // Assignees are real admin accounts, not free text.
+  await task.getByRole('button', { name: /^Assignee/ }).click()
+  await page.getByRole('option', { name: 'Francesko CTO (you)' }).click()
   await task.getByRole('button', { name: 'Save task' }).click()
-  await expect(drawer.getByText('Run launch checklist')).toBeVisible()
-  await drawer.getByRole('button', { name: 'Complete Run launch checklist' }).click()
-  await expect(drawer.getByText('1 of 1 tasks complete')).toBeVisible()
+  await expect(workspace.getByText('Run launch checklist')).toBeVisible()
+  await expect(workspace.getByRole('listitem').filter({ hasText: 'Run launch checklist' }).getByText('Francesko CTO')).toBeVisible()
+  await workspace.getByRole('button', { name: /^Assignee filter/ }).click()
+  await page.getByRole('option', { name: 'My tasks' }).click()
+  await expect(workspace.getByText('Run launch checklist')).toBeVisible()
+  await workspace.getByRole('button', { name: 'Complete Run launch checklist' }).click()
+  await expect(workspace.getByText('1 of 1 tasks complete')).toBeVisible()
+  await workspace.getByRole('tab', { name: 'Activity' }).click()
+  await expect(workspace.getByText(/Task assigned to Francesko CTO: Run launch checklist/)).toBeVisible()
+  await expect(workspace.getByText(/by Francesko CTO/).first()).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
   await page.screenshot({ path: testInfo.outputPath('project-tasks-mobile.png'), fullPage: true })
   await page.setViewportSize({ width: 1366, height: 900 })
@@ -236,7 +254,7 @@ test('realistic Preventivo output and responsive preview retain the template str
   await expect(page.getByRole('heading', { name: 'Piattaforma operativa Alba Energia', level: 1 })).toBeVisible()
   // Same template structure as the DOCX/PDF: metadata block, parties, section bars, tables, summary, payments, acceptance.
   const sheet = page.getByRole('article', { name: /^Preventivo NIV-AE-/ })
-  for (const text of ['PREVENTIVO', 'FORNITORE', 'CLIENTE', 'Alba Energia S.r.l.', 'SEZIONE A — ANALISI E PROGETTAZIONE', 'SEZIONE B — SVILUPPO PIATTAFORMA', 'Voce / descrizione', 'Subtotale Sezione A', 'RIEPILOGO', 'PIANO DEI PAGAMENTI', 'ACCETTAZIONE DEL PREVENTIVO', 'Firma del cliente', 'Nivello · Soluzioni digitali']) {
+  for (const text of ['PREVENTIVO', 'FORNITORE', 'CLIENTE', 'Alba Energia S.r.l.', 'SEZIONE A — ANALISI E PROGETTAZIONE', 'SEZIONE B — SVILUPPO PIATTAFORMA', 'Voce / descrizione', 'Subtotale Sezione A', 'RIEPILOGO', 'PIANO DEI PAGAMENTI', 'RISERVATEZZA E PROPRIETÀ INTELLETTUALE', 'ACCETTAZIONE DEL PREVENTIVO', 'Firma del cliente', 'Nivello · Soluzioni digitali', '© Nivello · Documento riservato · Riproduzione non autorizzata vietata']) {
     await expect(sheet.getByText(text, { exact: true }).first(), text).toBeVisible()
   }
   await expect(sheet.getByText('A1) Workshop operativo')).toBeVisible()
@@ -303,7 +321,7 @@ test('overview command center: attention with deep links, upcoming, pipeline and
   await expect(row).toHaveCount(1)
   await row.getByRole('button', { name: 'Open project' }).click()
   await expect(page).toHaveURL(/#\/projects\?project=prj_[a-f0-9]{16}&tab=tasks/)
-  await expect(page.getByRole('dialog', { name: 'Project Overview Project' }).getByRole('tab', { name: /^Tasks/, selected: true })).toBeVisible()
+  await expect(page.locator('#admin-main').getByRole('tablist', { name: 'Project workspace' }).getByRole('tab', { name: /^Tasks/, selected: true })).toBeVisible()
 
   await page.goto('/admin/#/dashboard')
   await page.getByRole('group', { name: 'Quick actions' }).getByRole('button', { name: 'New event' }).click()
@@ -359,4 +377,49 @@ test('calendar: manual event CRUD, source filters, linked items and responsive v
   }
   await page.reload()
   await expect(page.getByRole('tab', { name: 'Agenda', selected: true })).toBeVisible()
+})
+
+test('project workspace tabs, Fatture and Team render the new records without horizontal overflow', async ({ page }) => {
+  await login(page)
+  await page.goto('/admin/#/projects')
+  await page.getByRole('tab', { name: /All projects/i }).click()
+  await page.getByRole('button', { name: /Workspace API project/ }).first().click()
+  const main = page.locator('#admin-main')
+  await expect(main.getByRole('heading', { name: 'Workspace API project', level: 2 })).toBeVisible()
+
+  await main.getByRole('tab', { name: 'Finance' }).click()
+  await expect(main.getByRole('heading', { name: 'Payments received' })).toBeVisible()
+  await expect(main.getByText('Contracted').first()).toBeVisible()
+
+  await main.getByRole('tab', { name: 'Brand' }).click()
+  await expect(main.getByLabel('HEX value for color 1')).toHaveValue('#0B1020')
+
+  await main.getByRole('tab', { name: 'Access' }).click()
+  await main.getByRole('button', { name: 'Add credential' }).click()
+  const form = page.getByRole('dialog', { name: 'Add credential' })
+  await form.getByLabel('Label').fill('Hosting panel')
+  await form.getByLabel('Secret (password, token, key)').fill('ui-secret-value')
+  await form.getByRole('button', { name: 'Save' }).click()
+  const card = main.getByRole('listitem').filter({ hasText: 'Hosting panel' })
+  await expect(card.getByLabel('Hidden secret')).toBeVisible()
+  await expect(main.getByText('ui-secret-value')).toHaveCount(0)
+  await card.getByRole('button', { name: 'Reveal' }).click()
+  await expect(card.getByText('ui-secret-value')).toBeVisible()
+
+  await main.getByRole('tab', { name: /Documents/ }).click()
+  await expect(main.getByText(/^Fattura \d+\/\d{4}$/).first()).toBeVisible()
+
+  for (const width of [390, 1366]) {
+    await page.setViewportSize({ width, height: 900 })
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), `workspace overflow at ${width}px`).toBe(true)
+  }
+
+  await page.goto('/admin/#/proposals?doc=invoices')
+  await expect(page.getByRole('tablist', { name: 'Document type' }).getByRole('tab', { name: 'Fatture', selected: true })).toBeVisible()
+  await expect(main.getByText('Rossi Srl').first()).toBeVisible()
+
+  await page.goto('/admin/#/settings?tab=team')
+  await expect(main.getByText('Amelio CEO')).toBeVisible()
+  await expect(main.getByText('Disabled', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Signed in as Francesko CTO/ })).toBeVisible()
 })

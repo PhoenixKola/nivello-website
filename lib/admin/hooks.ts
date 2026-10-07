@@ -19,7 +19,8 @@ export type AdminSection =
   | 'settings'
 const SECTIONS: AdminSection[] = ['dashboard', 'find', 'leads', 'followups', 'duplicates', 'history', 'insights', 'analytics', 'inbox', 'calendar', 'projects', 'proposals', 'health', 'settings']
 
-export type AdminRoute = { section: AdminSection; params: URLSearchParams }
+/** `raw` is the unvalidated first path segment (e.g. "setup" for one-time account setup links). */
+export type AdminRoute = { section: AdminSection; params: URLSearchParams; raw: string }
 
 function subscribeHash(callback: () => void) {
   window.addEventListener('hashchange', callback)
@@ -35,7 +36,7 @@ export function useHashRoute(): [AdminRoute, (section: AdminSection, params?: Re
     const search = params ? new URLSearchParams(params).toString() : ''
     window.location.hash = `/${next}${search ? `?${search}` : ''}`
   }, [])
-  return [{ section, params: new URLSearchParams(query) }, navigate]
+  return [{ section, params: new URLSearchParams(query), raw: path }, navigate]
 }
 
 /** A clock that ticks while mounted; use for elapsed/relative times instead of Date.now() in render. */

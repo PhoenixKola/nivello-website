@@ -1,10 +1,11 @@
 import { expect, test, type Page } from '@playwright/test'
-import { accessCode, resetMocks, totp } from './helpers'
+import { accessCode, OWNER_LOGIN, resetMocks, totp } from './helpers'
 
 test.describe.configure({ mode: 'serial', timeout: 120_000 })
 
 async function login(page: Page) {
   await page.goto('/admin/')
+  await page.getByLabel('Username or email').fill(OWNER_LOGIN)
   await page.getByLabel('Access code', { exact: true }).fill(accessCode())
   await page.getByRole('button', { name: 'Sign in' }).click()
   await expect(page.locator('header h1')).toBeVisible()
@@ -17,6 +18,7 @@ test.beforeAll(async () => {
 test('login: wrong code shows an error, the right code opens the workspace without the public site chrome', async ({ page }) => {
   await page.goto('/admin/')
   await expect(page.getByText('Internal workspace')).toBeVisible()
+  await page.getByLabel('Username or email').fill(OWNER_LOGIN)
   await page.getByLabel('Access code', { exact: true }).fill('definitely-wrong')
   await page.getByRole('button', { name: 'Show access code' }).click()
   await expect(page.getByLabel('Access code', { exact: true })).toHaveAttribute('type', 'text')
@@ -40,7 +42,7 @@ test('the access code is not in the page or its JavaScript', async ({ page, requ
 
 test('authenticator setup, second-step login and recovery work from the UI', async ({ page }) => {
   await login(page)
-  await page.goto('/admin/#/settings')
+  await page.goto('/admin/#/settings?tab=account')
   await expect(page.getByText('Two-factor authentication', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Set up' }).click()
 
@@ -59,6 +61,7 @@ test('authenticator setup, second-step login and recovery work from the UI', asy
   await expect(page.getByText('Authenticator verification is enabled')).toBeVisible()
 
   await page.getByRole('button', { name: 'Log out' }).click()
+  await page.getByLabel('Username or email').fill(OWNER_LOGIN)
   await page.getByLabel('Access code', { exact: true }).fill(accessCode())
   await page.getByRole('button', { name: 'Sign in' }).click()
   await expect(page.getByRole('heading', { name: 'Verify it’s you' })).toBeVisible()

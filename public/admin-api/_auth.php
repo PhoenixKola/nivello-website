@@ -6,6 +6,8 @@ if (!defined('NIVELLO_ADMIN')) {
     exit;
 }
 
+require_once __DIR__ . '/_users.php';
+
 function request_is_https(): bool
 {
     return (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off')
@@ -32,6 +34,27 @@ function admin_session_start(): void
     session_start();
 }
 
+/**
+ * A session stays valid only while its user exists, is active, has the same auth version (bumped on
+ * disable / access reset) and, when the user has an authenticator, the same authenticator generation.
+ */
+function session_user_valid(array $session): ?array
+{
+    $userId = (string) ($session['userId'] ?? '');
+    if ($userId === '') {
+        return null;
+    }
+    $user = user_by_id($userId);
+    if (!$user || $user['status'] !== 'active' || (int) ($session['authVersion'] ?? 0) !== (int) $user['authVersion']) {
+        return null;
+    }
+    $generation = user_mfa_enabled($user) ? (string) $user['mfa']['generation'] : '';
+    if ($generation !== '' && !hash_equals($generation, (string) ($session['mfaGeneration'] ?? ''))) {
+        return null;
+    }
+    return $user;
+}
+
 /** Returns the session's auth state without keeping the session locked. */
 function current_session(): array
 {
@@ -40,19 +63,22 @@ function current_session(): array
     $authenticated = !empty($_SESSION['auth']);
     $mfaRequired = !empty($_SESSION['mfaPending']);
     $expired = false;
+    $user = null;
     if ($mfaRequired && $now - (int) ($_SESSION['mfaPendingAt'] ?? 0) > MFA_PENDING_SECONDS) {
-        unset($_SESSION['mfaPending'], $_SESSION['mfaPendingAt'], $_SESSION['mfaAttempts']);
+        unset($_SESSION['mfaPending'], $_SESSION['mfaPendingAt'], $_SESSION['mfaAttempts'], $_SESSION['mfaUserId']);
         $mfaRequired = false;
         $expired = true;
     }
     if ($authenticated) {
         $idle = $now - (int) ($_SESSION['lastSeen'] ?? 0);
         $age = $now - (int) ($_SESSION['loginAt'] ?? 0);
-        if ($idle > SESSION_IDLE_SECONDS || $age > SESSION_MAX_SECONDS || !mfa_session_authorized($_SESSION)) {
+        $user = session_user_valid($_SESSION);
+        if ($idle > SESSION_IDLE_SECONDS || $age > SESSION_MAX_SECONDS || $user === null) {
             $_SESSION = [];
             session_regenerate_id(true);
             $authenticated = false;
             $expired = true;
+            $user = null;
         } else {
             $_SESSION['lastSeen'] = $now;
         }
@@ -60,7 +86,7 @@ function current_session(): array
     $csrf = $authenticated ? (string) ($_SESSION['csrf'] ?? '') : '';
     // Release the session lock so long-running requests (scraper polling) never block the UI.
     session_write_close();
-    return ['authenticated' => $authenticated, 'mfaRequired' => $mfaRequired, 'expired' => $expired, 'csrf' => $csrf];
+    return ['authenticated' => $authenticated, 'mfaRequired' => $mfaRequired, 'expired' => $expired, 'csrf' => $csrf, 'user' => $user];
 }
 
 function require_auth(): void
@@ -72,6 +98,7 @@ function require_auth(): void
             : new ApiError('UNAUTHENTICATED', 'Please sign in.', 401);
     }
     $GLOBALS['__admin_csrf'] = $session['csrf'];
+    $GLOBALS['__admin_user'] = $session['user'];
 }
 
 function require_csrf(): void
@@ -83,7 +110,7 @@ function require_csrf(): void
     }
 }
 
-/** The access code is configured as a password hash (preferred) or plain value, never in the repository. */
+/** The server access code (legacy owner sign-in) is a password hash (preferred) or plain value, never in the repository. */
 function access_code_configured(): bool
 {
     return admin_secret('access_code_hash') !== '' || strlen(admin_secret('access_code')) >= 8;
@@ -99,13 +126,15 @@ function access_code_matches(string $code): bool
     return strlen($plain) >= 8 && hash_equals($plain, $code);
 }
 
-function admin_complete_login(string $mfaGeneration = ''): string
+function admin_complete_login(array $user, string $mfaGeneration = ''): string
 {
     admin_session_start();
     session_regenerate_id(true);
     $now = time();
     $_SESSION = [
         'auth' => true,
+        'userId' => $user['id'],
+        'authVersion' => (int) $user['authVersion'],
         'loginAt' => $now,
         'lastSeen' => $now,
         'csrf' => bin2hex(random_bytes(32)),
@@ -113,62 +142,104 @@ function admin_complete_login(string $mfaGeneration = ''): string
     ];
     $csrf = $_SESSION['csrf'];
     session_write_close();
+    users_mutate_one($user['id'], function (array &$u) {
+        $u['lastLoginAt'] = now_iso();
+    });
     return $csrf;
 }
 
-/** Verifies the access code and either finishes login or creates a short MFA-pending session. */
-function admin_login(string $code): array
+/** Both the client (IP) and the account carry their own failure window; either one can lock sign-in. */
+function login_throttles(?array $user): array
 {
-    if (!access_code_configured()) {
-        throw new ApiError('ACCESS_NOT_CONFIGURED', 'The admin access code is not configured on the server. See docs/NIVELLO-ADMIN-DEPLOYMENT.md.', 503);
+    $throttles = [new LoginThrottle()];
+    if ($user) {
+        $throttles[] = new LoginThrottle('user:' . $user['id']);
     }
-    $throttle = new LoginThrottle();
-    $retryAfter = $throttle->retryAfter();
+    return $throttles;
+}
+
+function throttle_guard(array $throttles): void
+{
+    $retryAfter = max(array_map(fn (LoginThrottle $t) => $t->retryAfter(), $throttles));
     if ($retryAfter > 0) {
         throw new ApiError('TOO_MANY_ATTEMPTS', "Too many failed attempts. Try again in {$retryAfter} seconds.", 429, ['retryAfter' => $retryAfter]);
     }
-    if (!access_code_matches($code)) {
+}
+
+function throttle_fail(array $throttles): void
+{
+    foreach ($throttles as $throttle) {
         $throttle->recordFailure();
-        usleep(400000);
-        throw new ApiError('INVALID_CODE', 'That access code is not correct.', 401);
+    }
+    usleep(400000);
+}
+
+function throttle_clear(array $throttles): void
+{
+    foreach ($throttles as $throttle) {
+        $throttle->clear();
+    }
+}
+
+/**
+ * Identifier + access code. Unknown, disabled and not-yet-set-up accounts fail exactly like a wrong
+ * code, so the response does not reveal which identifiers exist.
+ */
+function admin_login(string $identifier, string $code): array
+{
+    $users = users_all();
+    if (!access_code_configured() && !array_filter($users, fn ($u) => $u['accessCodeHash'] !== '')) {
+        throw new ApiError('ACCESS_NOT_CONFIGURED', 'The admin access code is not configured on the server. See docs/NIVELLO-ADMIN-DEPLOYMENT.md.', 503);
+    }
+    $user = user_by_identifier($identifier);
+    $throttles = login_throttles($user);
+    throttle_guard($throttles);
+
+    $ok = $user !== null && $user['status'] === 'active' && user_access_code_matches($user, $code);
+    if ($user === null) {
+        // Spend comparable time on unknown identifiers.
+        password_verify($code, password_hash('nivello-unknown-identifier', PASSWORD_DEFAULT));
+    }
+    if (!$ok) {
+        throttle_fail($throttles);
+        throw new ApiError('INVALID_CODE', 'Those sign-in details are not correct.', 401);
     }
 
-    $state = mfa_state();
-    if (!empty($state['enabled']) && is_string($state['secret'] ?? null) && $state['secret'] !== '') {
+    if (user_mfa_enabled($user)) {
         admin_session_start();
         session_regenerate_id(true);
         $_SESSION = [
             'mfaPending' => true,
             'mfaPendingAt' => time(),
             'mfaAttempts' => 0,
+            'mfaUserId' => $user['id'],
         ];
         session_write_close();
         return ['authenticated' => false, 'mfaRequired' => true, 'csrfToken' => null];
     }
 
-    $throttle->clear();
-    return ['authenticated' => true, 'mfaRequired' => false, 'csrfToken' => admin_complete_login()];
+    throttle_clear($throttles);
+    return ['authenticated' => true, 'mfaRequired' => false, 'csrfToken' => admin_complete_login($user)];
 }
 
+/** Second factor for the user who passed the first step; never checked against any other account. */
 function admin_verify_mfa(string $token): array
 {
-    $throttle = new LoginThrottle();
-    $retryAfter = $throttle->retryAfter();
-    if ($retryAfter > 0) {
-        throw new ApiError('TOO_MANY_ATTEMPTS', "Too many failed attempts. Try again in {$retryAfter} seconds.", 429, ['retryAfter' => $retryAfter]);
-    }
-
     admin_session_start();
     $now = time();
     $pending = !empty($_SESSION['mfaPending']) && $now - (int) ($_SESSION['mfaPendingAt'] ?? 0) <= MFA_PENDING_SECONDS;
+    $userId = (string) ($_SESSION['mfaUserId'] ?? '');
     session_write_close();
-    if (!$pending) {
-        throw new ApiError('MFA_RESTART_REQUIRED', 'The verification window expired. Enter the access code again.', 401);
+    $user = $pending && $userId !== '' ? user_by_id($userId) : null;
+    if (!$user || $user['status'] !== 'active') {
+        throw new ApiError('MFA_RESTART_REQUIRED', 'The verification window expired. Sign in again.', 401);
     }
+    $throttles = login_throttles($user);
+    throttle_guard($throttles);
 
-    $verified = mfa_verify_factor($token);
+    $verified = user_verify_factor($user['id'], $token);
     if ($verified === null) {
-        $throttle->recordFailure();
+        throttle_fail($throttles);
         admin_session_start();
         $_SESSION['mfaAttempts'] = (int) ($_SESSION['mfaAttempts'] ?? 0) + 1;
         $restart = $_SESSION['mfaAttempts'] >= LOGIN_MAX_FAILURES;
@@ -176,108 +247,184 @@ function admin_verify_mfa(string $token): array
             $_SESSION = [];
         }
         session_write_close();
-        usleep(400000);
         throw new ApiError(
             $restart ? 'MFA_RESTART_REQUIRED' : 'INVALID_MFA_CODE',
-            $restart ? 'Too many incorrect codes. Enter the access code again.' : 'That authenticator or recovery code is not correct.',
+            $restart ? 'Too many incorrect codes. Sign in again.' : 'That authenticator or recovery code is not correct.',
             401
         );
     }
 
-    $throttle->clear();
+    throttle_clear($throttles);
     return [
         'authenticated' => true,
         'mfaRequired' => false,
-        'csrfToken' => admin_complete_login((string) $verified['generation']),
+        'csrfToken' => admin_complete_login(user_by_id($user['id']), (string) $verified['generation']),
         'usedRecoveryCode' => $verified['kind'] === 'recovery',
     ];
 }
 
-function admin_start_mfa_enrollment(string $accessCode): array
+/** Re-checks the signed-in user's own access code before sensitive account changes. */
+function require_own_access_code(array $user, string $accessCode): void
 {
-    $throttle = new LoginThrottle();
-    $retryAfter = $throttle->retryAfter();
-    if ($retryAfter > 0) {
-        throw new ApiError('TOO_MANY_ATTEMPTS', "Too many failed attempts. Try again in {$retryAfter} seconds.", 429, ['retryAfter' => $retryAfter]);
-    }
-    if (!access_code_matches($accessCode)) {
-        $throttle->recordFailure();
-        usleep(400000);
+    $throttles = login_throttles($user);
+    throttle_guard($throttles);
+    if (!user_access_code_matches($user, $accessCode)) {
+        throttle_fail($throttles);
         throw new ApiError('INVALID_CODE', 'That access code is not correct.', 401);
     }
-    if (mfa_enabled()) {
+    throttle_clear($throttles);
+}
+
+function admin_start_mfa_enrollment(string $accessCode): array
+{
+    $user = current_admin();
+    require_own_access_code($user, $accessCode);
+    if (user_mfa_enabled($user)) {
         throw new ApiError('MFA_ALREADY_ENABLED', 'Authenticator verification is already enabled.', 409);
     }
-    $throttle->clear();
     $secret = mfa_base32_encode(random_bytes(20));
     admin_session_start();
-    $_SESSION['mfaEnrollment'] = ['secret' => $secret, 'createdAt' => time()];
+    $_SESSION['mfaEnrollment'] = ['secret' => $secret, 'createdAt' => time(), 'userId' => $user['id']];
     session_write_close();
-    return [
-        'secret' => $secret,
-        'provisioningUri' => mfa_provisioning_uri($secret),
-        'expiresIn' => MFA_ENROLLMENT_SECONDS,
-    ];
+    return ['secret' => $secret, 'provisioningUri' => user_provisioning_uri($user, $secret), 'expiresIn' => MFA_ENROLLMENT_SECONDS];
 }
 
 function admin_confirm_mfa_enrollment(string $token): array
 {
-    $throttle = new LoginThrottle();
-    $retryAfter = $throttle->retryAfter();
-    if ($retryAfter > 0) {
-        throw new ApiError('TOO_MANY_ATTEMPTS', "Too many failed attempts. Try again in {$retryAfter} seconds.", 429, ['retryAfter' => $retryAfter]);
-    }
+    $user = current_admin();
+    $throttles = login_throttles($user);
+    throttle_guard($throttles);
     admin_session_start();
     $enrollment = is_array($_SESSION['mfaEnrollment'] ?? null) ? $_SESSION['mfaEnrollment'] : null;
     session_write_close();
-    if (!$enrollment || time() - (int) ($enrollment['createdAt'] ?? 0) > MFA_ENROLLMENT_SECONDS) {
+    if (!$enrollment || ($enrollment['userId'] ?? '') !== $user['id'] || time() - (int) ($enrollment['createdAt'] ?? 0) > MFA_ENROLLMENT_SECONDS) {
         throw new ApiError('MFA_ENROLLMENT_EXPIRED', 'Authenticator setup expired. Start again.', 409);
     }
-    $secret = is_string($enrollment['secret'] ?? null) ? $enrollment['secret'] : '';
+    $secret = (string) ($enrollment['secret'] ?? '');
     $step = mfa_matching_step($secret, $token);
     if ($step === null) {
-        $throttle->recordFailure();
-        usleep(400000);
+        throttle_fail($throttles);
         throw new ApiError('INVALID_MFA_CODE', 'That authenticator code is not correct.', 422);
     }
-    $throttle->clear();
-    $enabled = mfa_enable($secret, $step);
+    throttle_clear($throttles);
+    $enabled = user_mfa_enable($user['id'], $secret, $step);
     admin_session_start();
     $_SESSION['mfaGeneration'] = $enabled['generation'];
     unset($_SESSION['mfaEnrollment']);
     session_write_close();
-    return [
-        'status' => mfa_status(),
-        'recoveryCodes' => $enabled['recoveryCodes'],
-    ];
+    return ['status' => user_mfa_status(user_by_id($user['id'])), 'recoveryCodes' => $enabled['recoveryCodes']];
 }
 
 function admin_disable_mfa(string $accessCode, string $token): array
 {
-    $throttle = new LoginThrottle();
-    $retryAfter = $throttle->retryAfter();
-    if ($retryAfter > 0) {
-        throw new ApiError('TOO_MANY_ATTEMPTS', "Too many failed attempts. Try again in {$retryAfter} seconds.", 429, ['retryAfter' => $retryAfter]);
+    $user = current_admin();
+    require_own_access_code($user, $accessCode);
+    if (!user_mfa_enabled($user)) {
+        return user_mfa_status($user);
     }
-    if (!access_code_matches($accessCode)) {
-        $throttle->recordFailure();
-        usleep(400000);
-        throw new ApiError('INVALID_CODE', 'That access code is not correct.', 401);
-    }
-    if (!mfa_enabled()) {
-        return mfa_status();
-    }
-    if (mfa_verify_factor($token) === null) {
-        $throttle->recordFailure();
-        usleep(400000);
+    $throttles = login_throttles($user);
+    if (user_verify_factor($user['id'], $token) === null) {
+        throttle_fail($throttles);
         throw new ApiError('INVALID_MFA_CODE', 'That authenticator or recovery code is not correct.', 401);
     }
-    $throttle->clear();
-    mfa_disable();
+    $updated = users_mutate_one($user['id'], function (array &$u) {
+        $u['mfa'] = blank_mfa();
+    });
     admin_session_start();
     $_SESSION['mfaGeneration'] = '';
     session_write_close();
-    return mfa_status();
+    return user_mfa_status($updated);
+}
+
+/** Changes the signed-in user's own access code; other sessions of that user end. */
+function admin_change_access_code(string $current, string $next): array
+{
+    $user = current_admin();
+    require_own_access_code($user, $current);
+    $next = v_access_code($next);
+    $updated = users_mutate_one($user['id'], function (array &$u) use ($next) {
+        $u['accessCodeHash'] = password_hash($next, PASSWORD_DEFAULT);
+        $u['usesServerAccessCode'] = false;
+        $u['authVersion']++;
+    });
+    admin_session_start();
+    $_SESSION['authVersion'] = (int) $updated['authVersion'];
+    session_write_close();
+    return user_public($updated);
+}
+
+// ── One-time account setup (Settings → Team creates the link) ──────────────
+
+function setup_user_or_fail(string $token): array
+{
+    $user = user_by_setup_token($token);
+    if (!$user) {
+        throw new ApiError('SETUP_LINK_INVALID', 'This setup link is invalid or has expired. Ask an admin for a new one.', 404);
+    }
+    return $user;
+}
+
+/** Step 1: choose an access code; returns the new authenticator secret. Nothing is saved yet. */
+function admin_setup_start(string $token, string $accessCode): array
+{
+    $throttles = login_throttles(null);
+    throttle_guard($throttles);
+    $user = user_by_setup_token($token);
+    if (!$user) {
+        throttle_fail($throttles);
+        throw new ApiError('SETUP_LINK_INVALID', 'This setup link is invalid or has expired. Ask an admin for a new one.', 404);
+    }
+    $accessCode = v_access_code($accessCode);
+    $secret = mfa_base32_encode(random_bytes(20));
+    admin_session_start();
+    session_regenerate_id(true);
+    $_SESSION = ['setup' => [
+        'userId' => $user['id'],
+        'tokenHash' => hash('sha256', $token),
+        'codeHash' => password_hash($accessCode, PASSWORD_DEFAULT),
+        'secret' => $secret,
+        'createdAt' => time(),
+    ]];
+    session_write_close();
+    return ['secret' => $secret, 'provisioningUri' => user_provisioning_uri($user, $secret), 'displayName' => $user['displayName']];
+}
+
+/** Step 2: confirm the authenticator; the account becomes active and is signed in. */
+function admin_setup_complete(string $token, string $totp): array
+{
+    $user = setup_user_or_fail($token);
+    $throttles = login_throttles($user);
+    throttle_guard($throttles);
+    admin_session_start();
+    $setup = is_array($_SESSION['setup'] ?? null) ? $_SESSION['setup'] : null;
+    session_write_close();
+    if (!$setup || $setup['userId'] !== $user['id'] || !hash_equals((string) $setup['tokenHash'], hash('sha256', $token)) || time() - (int) $setup['createdAt'] > MFA_ENROLLMENT_SECONDS) {
+        throw new ApiError('MFA_ENROLLMENT_EXPIRED', 'Setup expired. Open the link again and restart.', 409);
+    }
+    $step = mfa_matching_step((string) $setup['secret'], $totp);
+    if ($step === null) {
+        throttle_fail($throttles);
+        throw new ApiError('INVALID_MFA_CODE', 'That authenticator code is not correct.', 422);
+    }
+    throttle_clear($throttles);
+    $codes = mfa_new_recovery_codes();
+    $generation = bin2hex(random_bytes(16));
+    $active = users_mutate_one($user['id'], function (array &$u) use ($setup, $step, $codes, $generation) {
+        $u['accessCodeHash'] = (string) $setup['codeHash'];
+        $u['usesServerAccessCode'] = false;
+        $u['status'] = 'active';
+        $u['setup'] = null;
+        $u['authVersion']++;
+        $u['mfa'] = [
+            'enabled' => true,
+            'secret' => (string) $setup['secret'],
+            'generation' => $generation,
+            'enabledAt' => now_iso(),
+            'lastUsedStep' => $step,
+            'recoveryCodes' => mfa_hash_recovery_codes($codes),
+        ];
+    });
+    return ['csrfToken' => admin_complete_login($active, $generation), 'recoveryCodes' => $codes, 'authenticated' => true, 'mfaRequired' => false];
 }
 
 function admin_logout(): void
@@ -295,16 +442,16 @@ function admin_logout(): void
     session_destroy();
 }
 
-/** Per-client failed-login counter kept next to the data file. */
+/** Failed-attempt counter for one subject (client IP by default, or "user:<id>"), kept next to the data file. */
 final class LoginThrottle
 {
     private string $file;
     private string $key;
 
-    public function __construct()
+    public function __construct(?string $subject = null)
     {
         $this->file = ADMIN_DATA_DIR . '/login-throttle.json';
-        $this->key = hash('sha256', (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
+        $this->key = hash('sha256', $subject ?? (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
     }
 
     public function retryAfter(): int

@@ -3,10 +3,16 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { api, ApiError } from '@/lib/admin/api'
 import { usePolling, type AdminRoute, type AdminSection } from '@/lib/admin/hooks'
-import type { Batch, Health, Tag, TagColor } from '@/lib/admin/types'
+import type { AdminUser, Batch, Health, Tag, TagColor, UserBrief } from '@/lib/admin/types'
 import { useToast } from './ui/Toast'
 
 type AdminContextValue = {
+  /** The signed-in admin. */
+  me: AdminUser
+  setMe: (user: AdminUser) => void
+  /** Every admin account (for assignees and attribution); disabled users stay listed for history. */
+  people: UserBrief[]
+  refreshPeople: () => Promise<void>
   route: AdminRoute
   navigate: (section: AdminSection, params?: Record<string, string>) => void
   tags: Tag[]
@@ -27,8 +33,16 @@ type AdminContextValue = {
 
 const AdminContext = createContext<AdminContextValue | null>(null)
 
-export function AdminProvider({ route, navigate, onLogout, children }: { route: AdminRoute; navigate: AdminContextValue['navigate']; onLogout: () => void; children: ReactNode }) {
+export function AdminProvider({ route, navigate, onLogout, me, onMeChange, children }: { route: AdminRoute; navigate: AdminContextValue['navigate']; onLogout: () => void; me: AdminUser; onMeChange: (user: AdminUser) => void; children: ReactNode }) {
   const toast = useToast()
+  const [people, setPeople] = useState<UserBrief[]>([])
+  const refreshPeople = useCallback(async () => {
+    try {
+      setPeople((await api.people()).users)
+    } catch {
+      // Assignee pickers fall back to the signed-in user.
+    }
+  }, [])
   const [tags, setTags] = useState<Tag[]>([])
   const [health, setHealth] = useState<Health | null>(null)
   const [openBatches, setOpenBatches] = useState<Batch[]>([])
@@ -75,13 +89,14 @@ export function AdminProvider({ route, navigate, onLogout, children }: { route: 
     const first = requestAnimationFrame(() => {
       refreshTags()
       refreshHealth()
+      refreshPeople()
     })
     const timer = setInterval(() => refreshHealth(), 60000)
     return () => {
       cancelAnimationFrame(first)
       clearInterval(timer)
     }
-  }, [refreshTags, refreshHealth])
+  }, [refreshTags, refreshHealth, refreshPeople])
 
   // Polls the discovery tick while batches are open. The tick also advances work on the server.
   usePolling(
@@ -121,6 +136,10 @@ export function AdminProvider({ route, navigate, onLogout, children }: { route: 
 
   const value = useMemo<AdminContextValue>(
     () => ({
+      me,
+      setMe: onMeChange,
+      people: people.length ? people : [{ id: me.id, displayName: me.displayName, title: me.title, status: me.status }],
+      refreshPeople,
       route,
       navigate,
       tags,
@@ -137,7 +156,7 @@ export function AdminProvider({ route, navigate, onLogout, children }: { route: 
       leadId,
       logout
     }),
-    [route, navigate, tags, refreshTags, createTag, health, refreshHealth, openBatches, trackBatch, dataVersion, notifyChanged, leadId, logout]
+    [me, onMeChange, people, refreshPeople, route, navigate, tags, refreshTags, createTag, health, refreshHealth, openBatches, trackBatch, dataVersion, notifyChanged, leadId, logout]
   )
 
   return <AdminContext.Provider value={value}>{children}</AdminContext.Provider>

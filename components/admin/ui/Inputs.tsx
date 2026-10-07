@@ -22,9 +22,9 @@ export function Field({ label, hint, error, htmlFor, children, className }: { la
   )
 }
 
-type TextFieldProps = InputHTMLAttributes<HTMLInputElement> & { label?: ReactNode; hint?: ReactNode; error?: string | null }
+type TextFieldProps = InputHTMLAttributes<HTMLInputElement> & { label?: ReactNode; hint?: ReactNode; error?: string | null; wrapperClassName?: string }
 
-export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function TextField({ label, hint, error, className, id, ...rest }, ref) {
+export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function TextField({ label, hint, error, className, wrapperClassName, id, ...rest }, ref) {
   const generated = useId()
   const inputId = id ?? generated
   const input = (
@@ -38,7 +38,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function T
   )
   if (!label) return input
   return (
-    <Field label={label} hint={hint} error={error} htmlFor={inputId}>
+    <Field label={label} hint={hint} error={error} htmlFor={inputId} className={wrapperClassName}>
       {input}
     </Field>
   )

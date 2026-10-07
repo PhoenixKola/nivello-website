@@ -97,6 +97,8 @@ export const TEMPLATE_LABELS = {
     scope: 'AMBITO DEL LAVORO',
     assumptions: 'PREMESSE',
     terms: 'CONDIZIONI',
+    confidentiality: 'RISERVATEZZA E PROPRIETÀ INTELLETTUALE',
+    notice: '© Nivello · Documento riservato · Riproduzione non autorizzata vietata',
     acceptance: 'ACCETTAZIONE DEL PREVENTIVO',
     placeDate: 'Luogo e data',
     signature: 'Firma del cliente',
@@ -127,6 +129,8 @@ export const TEMPLATE_LABELS = {
     scope: 'SCOPE OF WORK',
     assumptions: 'ASSUMPTIONS',
     terms: 'TERMS',
+    confidentiality: 'CONFIDENTIALITY & INTELLECTUAL PROPERTY',
+    notice: '© Nivello · Confidential document · Unauthorised reproduction prohibited',
     acceptance: 'PROPOSAL ACCEPTANCE',
     placeDate: 'Place and date',
     signature: 'Client signature',
@@ -201,7 +205,11 @@ export function textBlocks(p: Proposal) {
   const labels = TEMPLATE_LABELS[p.language]
   return {
     before: [{ title: labels.introduction, text: p.intro }, { title: labels.scope, text: p.scope }].filter(block => block.text.trim()),
-    after: [{ title: labels.assumptions, text: p.assumptions }, { title: labels.terms, text: p.terms }].filter(block => block.text.trim())
+    after: [
+      { title: labels.assumptions, text: p.assumptions },
+      { title: labels.terms, text: p.terms },
+      { title: labels.confidentiality, text: p.confidentiality ?? '' }
+    ].filter(block => block.text.trim())
   }
 }
 

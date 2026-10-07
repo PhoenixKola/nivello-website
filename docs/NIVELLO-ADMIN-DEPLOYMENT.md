@@ -37,7 +37,8 @@ Browser ──HTTPS──> nivello.it/admin/ ──same-origin──> /admin-api
 | --- | --- | --- |
 | `NIVELLO_GITHUB_TOKEN` | Hetzner only | Fine-grained GitHub token used by PHP to dispatch/cancel the workflow |
 | `NIVELLO_ADMIN_CALLBACK_SECRET` | Hetzner **and** GitHub repository secret (same value) | HMAC key for runner → Nivello callbacks |
-| Admin access code (`access_code_hash`, or `access_code`) | Hetzner only | The code used to sign in to `/admin/` |
+| Admin access code (`access_code_hash`, or `access_code`) | Hetzner only | Sign-in code for the original admin account (`francesko`) until it sets a personal code |
+| `NIVELLO_CREDENTIALS_KEY` (`credentials_key`) | Hetzner only | 32-byte master key that encrypts project credentials (Projects → Access) |
 
 The repository is public, so the access code is **not** in the code. PHP reads it from the secrets file or environment on the server, checks it there, and never sends it to the browser. Until it is set, the sign-in screen reports that access is not configured.
 
@@ -47,20 +48,50 @@ To store a hash rather than the plain code (recommended), generate it once and p
 php -r "echo password_hash('your-access-code', PASSWORD_DEFAULT), PHP_EOL;"
 ```
 
+## Admin accounts
+
+Every admin has their own account: a login identifier (username, or email if set), a personal access code (stored as a password hash), their own authenticator (TOTP) and their own failed-attempt counter. Accounts live in `<parent of public_html>/nivello-admin-data/auth/users.json` (permissions `600`). Nothing about an account is in the repository.
+
+- **Existing admin.** On first use after this update, the single existing admin becomes **Francesko CTO** with the username `francesko`. It keeps signing in with the server access code above and keeps its authenticator (copied from `auth/mfa.json`). Setting a personal code in **Settings → Account & security** replaces the server code for this account.
+- **Adding Amelio CEO (or anyone else).** Open **Settings → Team → Add admin**, enter the display name, title and username (email optional). Nivello shows a one-time setup link valid for 72 hours; send it privately. Opening the link lets the new admin choose their own access code (12+ characters) and enrol their own authenticator; the account becomes active only after that. The link is stored only as a hash and works once. **Reset sign-in** creates a new link and clears that account's code and authenticator.
+- **Disable / enable.** Disabling signs the account out immediately. The last active admin cannot be disabled or reset.
+
+Activity created after this update records which admin did it (for example *Payment recorded … by Amelio CEO*). Older activity stays unattributed.
+
 ## Authenticator two-factor authentication
 
-TOTP two-factor authentication is optional until it is enrolled, then required for every new admin login. It does not need SMTP, SMS, a database or an external API.
+Each admin has their own TOTP authenticator. It is required for accounts created from a setup link and optional for the original account until it is enrolled. It does not need SMTP, SMS, a database or an external API.
 
-1. Sign in and open **Settings → Two-factor authentication → Set up**.
+1. Sign in and open **Settings → Account & security → Two-factor authentication → Set up**.
 2. Confirm the current access code.
 3. Scan the locally generated QR code with any standards-based authenticator app and enter its six-digit code.
 4. Download or copy the ten one-time recovery codes. They are never shown again.
 
-The TOTP seed is written to `<parent of public_html>/nivello-admin-data/auth/mfa.json`, outside the served site, and the application attempts to set file permissions to `600`. Recovery codes are stored only as password hashes. Enabling MFA invalidates other admin sessions that have not verified the current MFA generation.
+Each admin's TOTP seed is written to `<parent of public_html>/nivello-admin-data/auth/users.json`, outside the served site, and the application attempts to set file permissions to `600`. Recovery codes are stored only as password hashes. Enabling MFA invalidates other admin sessions that have not verified the current MFA generation.
 
 The phone and server calculate the same code from the shared seed and current time, so the phone works offline. The server clock must remain accurate. The QR code is rendered in the browser and is not sent to a QR service.
 
-If the authenticator is unavailable, enter one saved recovery code at the MFA login step. Each recovery code works once. Losing both the authenticator and every recovery code requires a server-side reset of `auth/mfa.json`; allowing the access code alone to reset MFA would defeat the second factor.
+If the authenticator is unavailable, enter one saved recovery code at the MFA login step. Each recovery code works once. Losing both the authenticator and every recovery code requires another admin to use **Settings → Team → Reset sign-in** (or a server-side edit of `auth/users.json` for the last admin); allowing the access code alone to reset MFA would defeat the second factor.
+
+## Credentials master key
+
+Project credentials (Projects → Access) are encrypted with libsodium `secretbox`, or AES-256-GCM when sodium is unavailable. The 32-byte master key is read from `credentials_key` in the secrets file (or `NIVELLO_CREDENTIALS_KEY`). It is never derived from an access code, returned to the browser or logged. Generate it **once**:
+
+```bash
+php -r "echo 'base64:', base64_encode(random_bytes(32)), PHP_EOL;"
+```
+
+Paste the output as `credentials_key` in `nivello-admin-secrets.php` and keep an offline copy in your password manager. Without the key the Access tab shows a locked notice and stores nothing. With a different key, existing credentials cannot be read (Nivello reports a key mismatch); restore the original key to read them. Encrypted credentials are kept in `nivello-admin-data/vault/credentials.json`, separate from the CRM data and its CSV exports.
+
+## Fatture (invoices) and SdI
+
+The fiscal Italian invoice is the FatturaPA XML delivered through the Sistema di Interscambio (SdI); a PDF is only a courtesy copy. Nivello does not transmit to SdI. The workflow is:
+
+1. Create the Fattura (from scratch, a project, or an accepted Preventivo) and finalize it. Finalizing assigns the annual number (`1/2026`, `2/2026`, …) and freezes the supplier and client details.
+2. Download **XML for SdI** (format FPR12, schema `Schema_VFPR12_v1.2.3`, FatturaPA format specification 1.4, valid from 1 April 2025) and send it through the Agenzia delle Entrate portal (*Fatture e Corrispettivi*), PEC, or your accountant's channel.
+3. Record the SdI outcome in Nivello: sent, delivered (ricevuta di consegna), rejected (notifica di scarto) or impossible delivery (mancata consegna).
+
+Supported XML scenario: ordinary domestic invoice (TD01) in EUR between Italian parties, with standard VAT rates or zero-rate lines that state a Natura code and a legal reference, and optional virtual stamp duty. Other cases (foreign clients, credit notes, split payment, withholding taxes, non-EUR) block the XML export with an explanation. The bundled schema in `tests/admin/fixtures/fatturapa/` is used by the automated tests; refresh it from fatturapa.gov.it when the Agenzia publishes a new version.
 
 ## One-time GitHub setup
 
@@ -76,7 +107,7 @@ If the authenticator is unavailable, enter one saved recovery code at the MFA lo
 
 ## One-time Hetzner setup
 
-1. **PHP requirements:** PHP **8.1+** with `curl`, `json`, `mbstring`, `session` (and `iconv`, recommended).
+1. **PHP requirements:** PHP **8.1+** with `curl`, `json`, `mbstring`, `session`, `dom` (Fatture XML), and `sodium` or `openssl` with AES-256-GCM (credential encryption); `iconv` recommended. Without sodium/OpenSSL the credentials vault stays locked; it never stores plaintext.
 2. **Data directory:** the store defaults to `<parent of public_html>/nivello-admin-data/`.
    - PHP creates it on first use if the parent is writable. Otherwise create it and make it writable by PHP (`chmod 770`).
    - To use a different path, set `NIVELLO_ADMIN_DATA_DIR`.
@@ -90,6 +121,7 @@ If the authenticator is unavailable, enter one saved recovery code at the MFA lo
        'access_code_hash' => '$2y$10$…',   // or 'access_code' => 'your-access-code' (min. 8 characters)
        'github_token' => 'github_pat_…',
        'callback_secret' => '…same value as the GitHub secret…',
+       'credentials_key' => 'base64:…',  // see "Credentials master key" below
    ];
    ```
 
@@ -97,7 +129,8 @@ If the authenticator is unavailable, enter one saved recovery code at the MFA lo
 4. **Callback URL:** by default it is built from the admin request host (`https://www.nivello.it/admin-api/github-callback.php`). If the site is reached through several hostnames, set `NIVELLO_ADMIN_PUBLIC_BASE_URL=https://www.nivello.it`. The callback must be HTTPS.
 5. **Deploy:** only after owner approval. The normal deploy uploads `out/`, which contains `admin/` and `admin-api/`. The data directory and the secrets file sit outside `public_html` and are never touched by deploys.
 6. **Check the workspace:** open `https://www.nivello.it/admin/` and sign in with the access code.
-7. **Enable MFA:** use **Settings → Two-factor authentication**, scan the QR code, and save the recovery codes in a password manager.
+7. **Enable MFA:** sign in as `francesko`, use **Settings → Account & security → Two-factor authentication**, scan the QR code, and save the recovery codes in a password manager.
+   Then add the other admins from **Settings → Team** (see *Admin accounts*), and complete **Settings → Billing** before finalizing the first Fattura.
 8. **Check Settings:** "Lead discovery (GitHub Actions)" must show token and callback secret *Configured*, GitHub API *Reachable*, and the workflow found.
 9. **Survive a redeploy:** create a test tag, redeploy, and confirm the tag and MFA login still work.
 

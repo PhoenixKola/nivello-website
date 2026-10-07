@@ -54,6 +54,7 @@ export function draftToProposal(d: Draft, base: Proposal): Proposal {
     scope: d.scope,
     assumptions: d.assumptions,
     terms: d.terms,
+    confidentiality: d.confidentiality,
     items,
     sections,
     discount: { type: d.discountType, value: num(d.discountValue) },
@@ -113,6 +114,10 @@ function Body({ text }: { text: string }) {
 
 function Footer({ page, pages, labels }: { page: number; pages: number; labels: TemplateLabels }) {
   return (
+    <>
+    <p className="absolute inset-x-[14.5mm] bottom-[10.6mm] text-center text-[6pt]" style={{ color: C.faint }}>
+      {labels.notice}
+    </p>
     <footer className="absolute inset-x-[14.5mm] bottom-[4.5mm] flex items-baseline justify-between gap-4 pt-[2.4mm] text-[7pt]" style={{ borderTop: `0.25mm solid ${C.border}`, color: C.muted }}>
       <span className="font-bold" style={{ color: C.ink }}>
         {TEMPLATE_SUPPLIER.footerBrand}
@@ -122,6 +127,7 @@ function Footer({ page, pages, labels }: { page: number; pages: number; labels: 
         {labels.page} {page} {labels.of} {pages}
       </span>
     </footer>
+    </>
   )
 }
 
@@ -129,7 +135,7 @@ function Sheet({ children, page, pages, labels }: { children: ReactNode; page: n
   return (
     <div
       data-preview-page={page}
-      className="relative mx-auto min-h-[297mm] w-[210mm] bg-white px-[14.5mm] pb-[16mm] pt-[11.8mm] shadow-[0_2px_24px_rgba(15,23,42,0.14)] print:shadow-none print:[break-after:page]"
+      className="relative mx-auto min-h-[297mm] w-[210mm] bg-white px-[14.5mm] pb-[19mm] pt-[11.8mm] shadow-[0_2px_24px_rgba(15,23,42,0.14)] print:shadow-none print:[break-after:page]"
       style={{ ...font, color: C.ink, colorScheme: 'light' }}
     >
       {children}

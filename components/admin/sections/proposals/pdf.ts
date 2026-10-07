@@ -263,6 +263,7 @@ export async function buildProposalPdf(p: Proposal) {
   const pages = doc.getNumberOfPages()
   for (let page = 1; page <= pages; page++) {
     doc.setPage(page)
+    text(labels.notice, 105, 286.4, 6, FAINT, { align: 'center' })
     line(LEFT, 287.7, RIGHT, 287.7, BORDER, 0.25)
     text(TEMPLATE_SUPPLIER.footerBrand, LEFT, 291.5, 7, INK, { bold: true })
     text(TEMPLATE_SUPPLIER.footerContact, 120.5, 291.5, 7, MUTED, { align: 'center' })

@@ -25,6 +25,7 @@ export type Draft = {
   scope: string
   assumptions: string
   terms: string
+  confidentiality: string
   notes: string
   sections: DraftSection[]
   items: DraftItem[]
@@ -68,6 +69,7 @@ export function toDraft(p: Proposal): Draft {
     scope: p.scope,
     assumptions: p.assumptions,
     terms: p.terms,
+    confidentiality: p.confidentiality ?? '',
     notes: p.notes,
     sections: draftSections,
     items: sections.flatMap((section, sectionIndex) => section.items.map(i => ({ key: newKey(), id: i.id, sectionKey: draftSections[sectionIndex].key, description: i.title || i.description, details: i.description || i.details, quantity: String(i.quantity), unit: i.unit, unitPrice: amount(i.unitPrice), optional: i.optional }))),
@@ -102,6 +104,7 @@ export function fromDraft(d: Draft) {
     scope: d.scope,
     assumptions: d.assumptions,
     terms: d.terms,
+    confidentiality: d.confidentiality,
     notes: d.notes,
     sections: d.sections.map(section => ({
       id: section.id,

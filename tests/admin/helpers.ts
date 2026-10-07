@@ -16,6 +16,9 @@ export function accessCode(): string {
   return stackEnv().accessCode
 }
 
+/** The pre-existing admin is migrated to this account; it keeps signing in with the server access code. */
+export const OWNER_LOGIN = 'francesko'
+
 export function totp(secret: string, timestamp = Date.now()): string {
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
   let buffer = 0
@@ -49,7 +52,7 @@ export type Api = {
 
 export async function loginApi(): Promise<Api> {
   const ctx = await request.newContext({ baseURL: ADMIN_BASE })
-  const res = await ctx.post('/admin-api/auth.php?action=login', { data: { code: accessCode() } })
+  const res = await ctx.post('/admin-api/auth.php?action=login', { data: { identifier: OWNER_LOGIN, code: accessCode() } })
   expect(res.status()).toBe(200)
   const csrf = (await res.json()).data.csrfToken as string
   const wrap = async (promise: ReturnType<APIRequestContext['get']>) => {

@@ -291,6 +291,9 @@ function blank_project(): array
         'tags' => [],
         'milestones' => [],
         'tasks' => [],
+        'brandColors' => blank_brand_colors(),
+        'payments' => [],
+        'paymentRequests' => [],
         'stageChangedAt' => $now,
         'createdAt' => $now,
         'updatedAt' => $now,
@@ -342,6 +345,10 @@ function apply_project_changes(array &$state, array &$project, array $in): array
     if (array_key_exists('tags', $in)) {
         $set('tags', v_simple_tags($in['tags']));
     }
+    if (array_key_exists('brandColors', $in)) {
+        $project['brandColors'] = normalize_brand_colors($project['brandColors'] ?? []);
+        $set('brandColors', v_brand_colors($in['brandColors']), 'Brand colors updated');
+    }
     foreach (['leadId' => ['leads', 'lead', 'Lead'], 'inboxId' => ['inbox', 'inq', 'Inquiry'], 'proposalId' => ['proposals', 'prop', 'Proposal']] as $field => [$collection, $prefix, $label]) {
         if (array_key_exists($field, $in)) {
             $set($field, v_ref($state, $in[$field], $collection, $prefix, $label), $in[$field] ? "$label linked" : "$label unlinked");
@@ -383,11 +390,18 @@ function project_view(array $state, array $project, string $today): array
     $project['tasks'] = array_values($project['tasks'] ?? []);
     usort($project['milestones'], fn ($a, $b) => ($a['order'] ?? 0) <=> ($b['order'] ?? 0));
     usort($project['tasks'], fn ($a, $b) => ($a['order'] ?? 0) <=> ($b['order'] ?? 0));
+    $people = project_people_index();
     foreach ($project['tasks'] as &$task) {
         $task['proposalItemId'] ??= null;
+        $task['assigneeUserId'] ??= null;
+        $task['assigneeUser'] = $task['assigneeUserId'] !== null ? ($people[$task['assigneeUserId']] ?? null) : null;
         $task['overdue'] = $task['status'] !== 'done' && $task['dueDate'] !== null && $task['dueDate'] < $today;
     }
     unset($task);
+    $project['brandColors'] = normalize_brand_colors($project['brandColors'] ?? []);
+    $project['payments'] = array_values($project['payments'] ?? []);
+    usort($project['payments'], fn ($a, $b) => [$a['date'], $a['createdAt']] <=> [$b['date'], $b['createdAt']]);
+    unset($project['paymentRequests']);
     foreach ($project['milestones'] as &$milestone) {
         $linked = array_values(array_filter($project['tasks'], fn ($task) => $task['milestoneId'] === $milestone['id']));
         $milestone['taskCount'] = count($linked);
@@ -416,6 +430,140 @@ function project_view(array $state, array $project, string $today): array
         'due' => project_due_state($project, $today),
         'lead' => lead_brief($lead),
         'proposalCount' => count(array_filter($state['proposals'], fn ($p) => $p['projectId'] === $project['id'])),
+        'finance' => project_finance($state, $project),
+    ];
+}
+
+// ── Project brand, people and finance ───────────────────────────────────────
+
+const BRAND_COLOR_SLOTS = 5;
+
+function blank_brand_colors(): array
+{
+    return array_fill(0, BRAND_COLOR_SLOTS, ['label' => '', 'hex' => '']);
+}
+
+/** Always exactly five slots; empty slots are allowed. */
+function normalize_brand_colors(mixed $colors): array
+{
+    $out = blank_brand_colors();
+    foreach (array_values(is_array($colors) ? $colors : []) as $i => $color) {
+        if ($i >= BRAND_COLOR_SLOTS || !is_array($color)) {
+            break;
+        }
+        $out[$i] = ['label' => (string) ($color['label'] ?? ''), 'hex' => (string) ($color['hex'] ?? '')];
+    }
+    return $out;
+}
+
+function v_brand_colors(mixed $value): array
+{
+    if (!is_array($value) || count($value) > BRAND_COLOR_SLOTS) {
+        throw new ApiError('VALIDATION_ERROR', 'Use at most ' . BRAND_COLOR_SLOTS . ' brand colors.', 422);
+    }
+    $out = blank_brand_colors();
+    foreach (array_values($value) as $i => $color) {
+        if (!is_array($color)) {
+            throw new ApiError('VALIDATION_ERROR', 'Invalid brand color.', 422);
+        }
+        $hex = strtoupper(trim((string) ($color['hex'] ?? '')));
+        if ($hex !== '' && !str_starts_with($hex, '#')) {
+            $hex = '#' . $hex;
+        }
+        if (preg_match('/^#([0-9A-F])([0-9A-F])([0-9A-F])$/', $hex, $m)) {
+            $hex = '#' . $m[1] . $m[1] . $m[2] . $m[2] . $m[3] . $m[3];
+        }
+        if ($hex !== '' && !preg_match('/^#[0-9A-F]{6}$/', $hex)) {
+            throw new ApiError('VALIDATION_ERROR', 'Brand color ' . ($i + 1) . ' must be a HEX value like #2764FF.', 422);
+        }
+        $out[$i] = ['label' => v_string($color['label'] ?? '', 'Color label', 30), 'hex' => $hex];
+    }
+    return $out;
+}
+
+/** id => brief user, for showing assignees and actors (cached per request). */
+function project_people_index(): array
+{
+    static $index = null;
+    if ($index === null) {
+        $index = [];
+        foreach (function_exists('users_all') ? users_all() : [] as $user) {
+            $index[$user['id']] = user_brief($user);
+        }
+    }
+    return $index;
+}
+
+/** Accepts a real user id; new assignments must point at an active user. */
+function v_assignee(mixed $value, ?string $current): ?string
+{
+    if ($value === null || $value === '') {
+        return null;
+    }
+    $id = v_id($value, 'usr', 'Assignee');
+    if ($id === $current) {
+        return $id;
+    }
+    $user = project_people_index()[$id] ?? null;
+    if (!$user || $user['status'] !== 'active') {
+        throw new ApiError('VALIDATION_ERROR', 'Choose an active team member.', 422);
+    }
+    return $id;
+}
+
+/** The accepted Preventivo linked to a project (by projectId or the project's proposalId). */
+function project_accepted_proposal(array $state, array $project): ?array
+{
+    foreach ($state['proposals'] as $proposal) {
+        if ($proposal['status'] === 'accepted' && ($proposal['projectId'] === $project['id'] || $proposal['id'] === ($project['proposalId'] ?? null))) {
+            return $proposal;
+        }
+    }
+    return null;
+}
+
+/** Statuses that count as invoiced; drafts and cancelled invoices never do. */
+const INVOICED_STATUSES = ['ready', 'issued', 'paid'];
+
+/**
+ * Quoted, invoiced and paid are different numbers. Contracted = the manual project value, or the
+ * accepted Preventivo total when no value is set. Invoiced = linked invoices; Paid = recorded payments.
+ */
+function project_finance(array $state, array $project): array
+{
+    $currency = $project['currency'];
+    $accepted = project_accepted_proposal($state, $project);
+    $contracted = $project['value'];
+    $source = $contracted !== null ? 'project' : null;
+    if ($contracted === null && $accepted && $accepted['currency'] === $currency) {
+        $contracted = $accepted['totals']['total'];
+        $source = 'proposal';
+    }
+    $invoiced = 0;
+    $invoiceCount = 0;
+    foreach ($state['invoices'] ?? [] as $invoice) {
+        if (($invoice['projectId'] ?? null) === $project['id'] && in_array($invoice['status'], INVOICED_STATUSES, true) && $invoice['currency'] === $currency) {
+            $invoiced += $invoice['totals']['total'];
+            $invoiceCount++;
+        }
+    }
+    $paid = 0;
+    foreach ($project['payments'] ?? [] as $payment) {
+        if ($payment['currency'] === $currency) {
+            $paid += $payment['amount'];
+        }
+    }
+    return [
+        'currency' => $currency,
+        'contracted' => $contracted,
+        'contractedSource' => $source,
+        'acceptedProposal' => $accepted ? ['id' => $accepted['id'], 'number' => $accepted['number'], 'total' => $accepted['totals']['total'], 'currency' => $accepted['currency']] : null,
+        'invoiced' => $invoiced,
+        'invoiceCount' => $invoiceCount,
+        'paid' => $paid,
+        'outstanding' => $contracted !== null ? $contracted - $paid : null,
+        'paidPercent' => $contracted ? (int) min(100, round($paid * 100 / $contracted)) : null,
+        'overpaid' => $contracted !== null && $paid > $contracted,
     ];
 }
 
@@ -617,6 +765,12 @@ function proposal_compute(array $in, int $maxItems = 60): array
     ];
 }
 
+/** Default "Confidentiality & Intellectual Property" clause for new Preventivi (editable per document). */
+const PROPOSAL_CONFIDENTIALITY = [
+    'it' => "Il presente documento, inclusi struttura, impaginazione, contenuti, descrizioni tecniche, metodologie, architetture, specifiche, soluzioni, esempi, elementi grafici e materiali allegati, è riservato ed è destinato esclusivamente alla valutazione della proposta commerciale da parte del destinatario.\n\nSalvo quanto espressamente concordato per iscritto con Nivello, è vietata la riproduzione, distribuzione, pubblicazione, cessione a terzi, riutilizzazione commerciale, adattamento, estrazione sistematica o creazione di opere derivate dal presente documento, in tutto o in parte.\n\nÈ inoltre vietato utilizzare il documento o parti di esso per la creazione o replica di modelli, template, offerte commerciali, specifiche tecniche o materiali destinati a terzi, nonché per l'addestramento, il fine-tuning, la costruzione di dataset o altri utilizzi automatizzati mediante sistemi di intelligenza artificiale, salvo preventiva autorizzazione scritta.\n\nL'eventuale accettazione del preventivo non comporta il trasferimento della proprietà intellettuale sui materiali, sui metodi, sui componenti riutilizzabili o sul know-how preesistente di Nivello, salvo quanto diversamente previsto in forma scritta. I diritti d'uso sui deliverable finali sono regolati dagli accordi applicabili e, ove previsto, decorrono a seguito del pagamento degli importi dovuti.",
+    'en' => "This document, including its structure, layout, content, technical descriptions, methodologies, architectures, specifications, solutions, examples, graphic elements and attached materials, is confidential and is intended solely for the recipient's evaluation of this commercial proposal.\n\nUnless expressly agreed in writing with Nivello, it is prohibited to reproduce, distribute, publish, disclose to third parties, commercially reuse, adapt, systematically extract or create derivative works from this document, in whole or in part.\n\nIt is also prohibited to use this document or any part of it to create or replicate models, templates, commercial offers, technical specifications or materials intended for third parties, or for training, fine-tuning, dataset building or other automated uses by artificial intelligence systems, without prior written authorisation.\n\nAcceptance of this proposal does not transfer the intellectual property in Nivello's materials, methods, reusable components or pre-existing know-how, unless otherwise agreed in writing. Rights of use in the final deliverables are governed by the applicable agreements and, where provided, take effect once the amounts due have been paid.",
+];
+
 function blank_proposal(): array
 {
     $now = now_iso();
@@ -644,6 +798,7 @@ function blank_proposal(): array
         'scope' => '',
         'assumptions' => '',
         'terms' => '',
+        'confidentiality' => '',
         'notes' => '',
         'items' => [],
         'sections' => [],
@@ -664,7 +819,7 @@ function blank_proposal(): array
 
 function apply_proposal_fields(array $state, array &$proposal, array $in): void
 {
-    $text = ['title' => [160, true], 'clientCode' => [6, false], 'clientName' => [120, false], 'clientCompany' => [160, false], 'clientSector' => [160, false], 'clientAddress' => [500, false], 'clientPhone' => [80, false], 'intro' => [4000, false], 'scope' => [8000, false], 'assumptions' => [4000, false], 'terms' => [6000, false], 'notes' => [4000, false]];
+    $text = ['title' => [160, true], 'clientCode' => [6, false], 'clientName' => [120, false], 'clientCompany' => [160, false], 'clientSector' => [160, false], 'clientAddress' => [500, false], 'clientPhone' => [80, false], 'intro' => [4000, false], 'scope' => [8000, false], 'assumptions' => [4000, false], 'terms' => [6000, false], 'confidentiality' => [6000, false], 'notes' => [4000, false]];
     foreach ($text as $field => [$max, $required]) {
         if (array_key_exists($field, $in)) {
             $proposal[$field] = v_string($in[$field], ucfirst($field), $max, $required);
@@ -678,7 +833,12 @@ function apply_proposal_fields(array $state, array &$proposal, array $in): void
         $proposal['currency'] = v_enum($in['currency'], 'Currency', CURRENCIES);
     }
     if (array_key_exists('language', $in)) {
+        $previous = $proposal['language'];
         $proposal['language'] = v_enum($in['language'], 'Document language', ['en', 'it']);
+        // Keep the default clause in the document language unless it was customised.
+        if (!array_key_exists('confidentiality', $in) && ($proposal['confidentiality'] ?? '') === PROPOSAL_CONFIDENTIALITY[$previous]) {
+            $proposal['confidentiality'] = PROPOSAL_CONFIDENTIALITY[$proposal['language']];
+        }
     }
     if (array_key_exists('issueDate', $in)) {
         $proposal['issueDate'] = v_date($in['issueDate'], 'Issue date') ?? gmdate('Y-m-d');
