@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
@@ -52,8 +52,15 @@ export default function Header() {
   const navLabel = isItalian ? 'Navigazione principale' : 'Main navigation'
   const languageLabel = isItalian ? 'Lingua' : 'Language'
 
+  // The immersive homepage reveals this header on demand and asks the mobile menu to open with it.
+  useEffect(() => {
+    const onMenu = (event: Event) => setMenuOpen(Boolean((event as CustomEvent<{ open: boolean }>).detail?.open))
+    window.addEventListener('nivello:header-menu', onMenu)
+    return () => window.removeEventListener('nivello:header-menu', onMenu)
+  }, [])
+
   return (
-    <header className="sticky top-0 z-40 bg-stone-50/95 backdrop-blur-md dark:bg-slate-950/95">
+    <header data-site-header className="sticky top-0 z-40 bg-stone-50/95 backdrop-blur-md dark:bg-slate-950/95">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:py-3.5">
         <Link href={isItalian ? '/it/' : '/'} className="flex shrink-0 items-center gap-2" aria-label={isItalian ? 'Nivello, homepage' : 'Nivello home'}>
           <Image

@@ -1,9 +1,9 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowRight, Check } from 'lucide-react'
+import { ArrowRight, Check, X } from 'lucide-react'
 import {
   briefCopy,
   buildOptions,
@@ -20,12 +20,16 @@ import { useHydratedReducedMotion } from '@/lib/useHydratedReducedMotion'
 
 const copy = {
   en: {
+    chapter: 'Make it real',
     eyebrow: 'Start a project',
     title: 'Two quick answers, and your project is already taking shape.',
     body: 'Pick what you are building and where you are starting from. We carry it straight into the contact form, so you do not have to explain it twice.',
     step1: 'What are we building?',
     step2: 'Where are you starting from?',
     cta: 'Start this project',
+    open: 'Shape your brief',
+    close: 'Close brief',
+    drawer: 'Project brief',
     idle: 'Choose both to shape your brief.',
     partial: 'One more answer.',
     ready: 'Brief ready:',
@@ -33,12 +37,16 @@ const copy = {
     note: 'Prefer to skip this? The contact form works without it.'
   },
   it: {
+    chapter: 'Rendilo reale',
     eyebrow: 'Avvia un progetto',
     title: 'Due risposte veloci, e il progetto prende già forma.',
     body: 'Scegli cosa stai costruendo e da dove parti. Lo portiamo direttamente nel form di contatto, così non devi spiegarlo due volte.',
     step1: 'Cosa costruiamo?',
     step2: 'Da dove partiamo?',
     cta: 'Avvia questo progetto',
+    open: 'Definisci il brief',
+    close: 'Chiudi il brief',
+    drawer: 'Brief del progetto',
     idle: 'Scegli entrambe le opzioni per definire il brief.',
     partial: 'Manca una risposta.',
     ready: 'Brief pronto:',
@@ -252,10 +260,27 @@ export default function ProjectLauncher({ locale }: { locale: Locale }) {
   const headingId = useId()
   const step1Id = useId()
   const step2Id = useId()
+  const drawerId = useId()
   const [brief, setBrief] = useState<ProjectBrief>({ build: null, stage: null })
+  const [open, setOpen] = useState(false)
+  const toggleRef = useRef<HTMLButtonElement>(null)
+  const drawerRef = useRef<HTMLElement>(null)
 
   const phase = (brief.build ? 1 : 0) + (brief.stage ? 1 : 0)
   const status = phase === 2 ? `${t.ready} ${describeBrief(brief, locale)}` : phase === 1 ? t.partial : t.idle
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpen(false)
+        toggleRef.current?.focus()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    drawerRef.current?.querySelector<HTMLElement>('button')?.focus({ preventScroll: true })
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
 
   const noteStart = () => {
     if (!brief.build && !brief.stage) track('project_launcher_start')
@@ -270,122 +295,100 @@ export default function ProjectLauncher({ locale }: { locale: Locale }) {
   }
 
   return (
-    <section className="home-project-launcher" aria-labelledby={headingId}>
-      <div className="mx-auto max-w-[1200px] px-4 py-20 md:px-6 md:py-28">
-        <div className="mb-12 max-w-3xl">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
-            {t.eyebrow}
-          </p>
-          <h2
-            id={headingId}
-            className="font-display text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.75rem] dark:text-white"
+    <section id="cinematic-start" className="cin-ov cin-ov--start" data-cin-overlay="4" aria-labelledby={headingId}>
+      <div className="cin-start">
+        <p className="cin-eyebrow"><i aria-hidden="true" /><span className="cin-head__no">05</span>{t.chapter}<span className="cin-head__sep" aria-hidden="true" />{t.eyebrow}</p>
+        <h2 id={headingId} className="cin-start__title">{t.title}</h2>
+        <p className="cin-start__body">{t.body}</p>
+
+        <div className="cin-start__actions">
+          <Link
+            href={getBriefContactHref(brief, locale)}
+            onClick={() => track('project_launcher_complete', brief.build && brief.stage ? `${brief.build}_${brief.stage}` : 'partial')}
+            className={`cin-btn ${phase === 2 ? 'cin-btn--gold' : 'cin-btn--solid'}`}
           >
-            {t.title}
-          </h2>
-          <p className="mt-3 text-base leading-relaxed text-slate-500 dark:text-slate-300/80">{t.body}</p>
+            {t.cta}
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
+          <button
+            ref={toggleRef}
+            type="button"
+            className="cin-btn cin-btn--ghost cin-start__toggle"
+            aria-expanded={open}
+            aria-controls={drawerId}
+            onClick={() => setOpen(value => !value)}
+          >
+            {open ? t.close : t.open}
+          </button>
         </div>
-
-        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14">
-          <div className="project-launcher-steps" data-progress={phase}>
-            <div className={`project-launcher-step ${brief.build ? 'is-complete' : 'is-active'}`} role="group" aria-labelledby={step1Id}>
-              <p id={step1Id} className="mb-4 text-base font-semibold text-slate-900 dark:text-white">
-                <span className="project-launcher-step-number">01</span>
-                {t.step1}
-              </p>
-              <div className="grid gap-2.5 sm:grid-cols-3">
-                {buildOptions.map(option => (
-                  <OptionButton
-                    key={option}
-                    {...labels.build[option]}
-                    selected={brief.build === option}
-                    variant="build"
-                    onClick={() => toggleBuild(option)}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className={`project-launcher-step ${brief.stage ? 'is-complete' : brief.build ? 'is-active' : ''}`} role="group" aria-labelledby={step2Id}>
-              <p id={step2Id} className="mb-4 text-base font-semibold text-slate-900 dark:text-white">
-                <span className="project-launcher-step-number">02</span>
-                {t.step2}
-              </p>
-              <div className="grid gap-2.5 sm:grid-cols-3">
-                {stageOptions.map(option => (
-                  <OptionButton
-                    key={option}
-                    {...labels.stage[option]}
-                    selected={brief.stage === option}
-                    variant="stage"
-                    onClick={() => toggleStage(option)}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col lg:row-span-2">
-            <div className="project-launcher-preview px-1 sm:px-3">
-              <Blueprint brief={brief} reduced={reduced} />
-
-              <ol className="mt-4 grid grid-cols-3 items-center" aria-hidden="true">
-                {t.rail.map((label, index) => {
-                  const lit = index <= phase
-                  return (
-                    <li key={label} className="relative flex flex-col items-center gap-1.5">
-                      {index > 0 && (
-                        <span className="absolute right-1/2 top-[5px] h-px w-full bg-slate-200 dark:bg-white/10">
-                          <motion.span
-                            className="block h-full origin-left bg-[var(--brand-blue)] dark:bg-[var(--brand-gold)]"
-                            initial={false}
-                            animate={{ scaleX: index <= phase ? 1 : 0 }}
-                            transition={{ duration: reduced ? 0 : 0.4 }}
-                          />
-                        </span>
-                      )}
-                      <span
-                        className={`relative z-10 h-[11px] w-[11px] rounded-full border-2 transition-colors ${
-                          lit
-                            ? 'border-[var(--brand-blue)] bg-[var(--brand-blue)] dark:border-[var(--brand-gold)] dark:bg-[var(--brand-gold)]'
-                            : 'border-slate-300 bg-stone-50 dark:border-white/25 dark:bg-slate-950'
-                        }`}
-                      />
-                      <span
-                        className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${
-                          lit ? 'text-slate-700 dark:text-slate-200' : 'text-slate-400 dark:text-slate-500'
-                        }`}
-                      >
-                        {label}
-                      </span>
-                    </li>
-                  )
-                })}
-              </ol>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center lg:col-start-1">
-            <Link
-              href={getBriefContactHref(brief, locale)}
-              onClick={() => track('project_launcher_complete', brief.build && brief.stage ? `${brief.build}_${brief.stage}` : 'partial')}
-              className={`group inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition-all active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--brand-blue)] sm:w-auto dark:focus-visible:outline-[var(--brand-gold)] ${
-                phase === 2
-                  ? 'bg-slate-900 text-white shadow-[0_14px_34px_-14px_rgba(15,23,42,0.55)] hover:-translate-y-0.5 hover:bg-slate-800 dark:bg-[var(--brand-gold)] dark:text-slate-950 dark:shadow-none dark:hover:bg-yellow-300'
-                  : 'border border-slate-900 bg-slate-900 text-white hover:bg-slate-800 dark:border-white/20 dark:bg-transparent dark:text-white dark:hover:border-[var(--brand-gold)]/55 dark:hover:bg-white/[0.06]'
-              }`}
-            >
-              {t.cta}
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-            <div className="min-w-0">
-              <p aria-live="polite" className="min-h-5 text-sm font-medium text-slate-700 dark:text-slate-200">
-                {status}
-              </p>
-              <p className="text-xs text-slate-400 dark:text-slate-500">{t.note}</p>
-            </div>
-          </div>
-        </div>
+        <p aria-live="polite" className="cin-start__status">{status}</p>
+        <p className="cin-start__note">{t.note}</p>
       </div>
+
+      <aside ref={drawerRef} id={drawerId} className="cin-drawer" data-open={open ? 'true' : 'false'} aria-label={t.drawer}>
+        <button type="button" className="cin-drawer__close" onClick={() => { setOpen(false); toggleRef.current?.focus() }} aria-label={t.close}>
+          <X className="h-4 w-4" aria-hidden="true" />
+        </button>
+
+        <div className="project-launcher-steps" data-progress={phase}>
+          <div className={`project-launcher-step ${brief.build ? 'is-complete' : 'is-active'}`} role="group" aria-labelledby={step1Id}>
+            <p id={step1Id} className="cin-drawer__step">
+              <span className="project-launcher-step-number">01</span>
+              {t.step1}
+            </p>
+            <div className="cin-drawer__options">
+              {buildOptions.map(option => (
+                <OptionButton
+                  key={option}
+                  {...labels.build[option]}
+                  selected={brief.build === option}
+                  variant="build"
+                  onClick={() => toggleBuild(option)}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className={`project-launcher-step ${brief.stage ? 'is-complete' : brief.build ? 'is-active' : ''}`} role="group" aria-labelledby={step2Id}>
+            <p id={step2Id} className="cin-drawer__step">
+              <span className="project-launcher-step-number">02</span>
+              {t.step2}
+            </p>
+            <div className="cin-drawer__options">
+              {stageOptions.map(option => (
+                <OptionButton
+                  key={option}
+                  {...labels.stage[option]}
+                  selected={brief.stage === option}
+                  variant="stage"
+                  onClick={() => toggleStage(option)}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="cin-drawer__preview">
+          <Blueprint brief={brief} reduced={reduced} />
+          <ol className="cin-drawer__rail" aria-hidden="true">
+            {t.rail.map((label, index) => (
+              <li key={label} data-lit={index <= phase ? 'true' : 'false'}>
+                <span />
+                {label}
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <Link
+          href={getBriefContactHref(brief, locale)}
+          onClick={() => track('project_launcher_complete', brief.build && brief.stage ? `${brief.build}_${brief.stage}` : 'partial')}
+          className={`cin-btn ${phase === 2 ? 'cin-btn--gold' : 'cin-btn--solid'} cin-drawer__cta`}
+        >
+          {t.cta}
+          <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        </Link>
+      </aside>
     </section>
   )
 }

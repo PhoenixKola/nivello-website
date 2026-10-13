@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "./homepage-assembly.css";
 @import "./homepage-experience.css";
+@import "./homepage-cinematic.css";
 
 /* ─── Dark mode: applies when <html class="dark"> (managed by next-themes) ─── */
 @custom-variant dark (&:where(.dark, .dark *));

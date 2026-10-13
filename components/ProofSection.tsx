@@ -1,10 +1,12 @@
 'use client'
 
-import { useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
+import ClientLogoMarquee from '@/components/ClientLogoMarquee'
+import { cinematic } from '@/lib/cinematic/store'
 import { getProjectPath, getProjects } from '@/lib/projects'
 import type { Locale } from '@/lib/site'
 import { useHydratedReducedMotion } from '@/lib/useHydratedReducedMotion'
@@ -94,6 +96,7 @@ const quotes: Record<Locale, ProofQuote[]> = {
 
 const copy = {
   en: {
+    chapter: 'Proof',
     eyebrow: 'Client feedback',
     title: 'What it is like to build with us.',
     intro: 'Feedback from the people we built for, shown next to the work it refers to.',
@@ -104,6 +107,7 @@ const copy = {
     alt: (title: string) => `${title} website preview`
   },
   it: {
+    chapter: 'Prove',
     eyebrow: 'Feedback dei clienti',
     title: 'Com’è costruire con noi.',
     intro: 'Il feedback delle persone per cui abbiamo lavorato, accanto al progetto a cui si riferisce.',
@@ -122,8 +126,10 @@ function accentStyle(hex: string) {
   return { '--accent': hex, '--accent-dark': luminance < 0.25 ? '#94a3b8' : hex } as React.CSSProperties
 }
 
-const accentBg = 'bg-[var(--accent)] dark:bg-[var(--accent-dark)]'
-
+/**
+ * Chapter 04 — Proof. A slower, golden-hour moment: the quote is the composition, client pillars stand
+ * along the causeway in the world, and the selected client's pillar lights up.
+ */
 export default function ProofSection({ locale }: { locale: Locale }) {
   const t = copy[locale]
   const reducedMotion = useHydratedReducedMotion()
@@ -138,6 +144,10 @@ export default function ProofSection({ locale }: { locale: Locale }) {
       return project ? [{ ...quote, project }] : []
     })
   }, [locale])
+
+  useEffect(() => {
+    cinematic.set({ proofIndex: activeIndex })
+  }, [activeIndex])
 
   const active = items[activeIndex]
   const { project } = active
@@ -164,29 +174,48 @@ export default function ProofSection({ locale }: { locale: Locale }) {
   }
 
   const ease = [0.22, 0.61, 0.36, 1] as const
-  const swap = reducedMotion ? { duration: 0 } : { duration: 0.4, ease }
+  const swap = reducedMotion ? { duration: 0 } : { duration: 0.5, ease }
 
   return (
-    <section className="home-proof-section" style={accentStyle(project.color)} aria-labelledby="home-proof-heading">
-      <div className="mx-auto max-w-[1240px] px-4 py-20 md:px-6 md:py-28">
-        <div className="home-proof-chapter">
-          <span className="home-proof-index" aria-hidden="true">03</span>
-          <div className="max-w-2xl">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
-              {t.eyebrow}
-            </p>
-            <h2
-              id="home-proof-heading"
-              className="font-display text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.75rem] dark:text-white"
-            >
-              {t.title}
-            </h2>
-            <p className="mt-3 text-base leading-relaxed text-slate-500 dark:text-slate-300/80">{t.intro}</p>
-          </div>
-        </div>
+    <section id="cinematic-trust" className="cin-ov cin-ov--trust" data-cin-overlay="3" style={accentStyle(project.color)} aria-labelledby="home-proof-heading">
+      <header className="cin-head">
+        <p className="cin-eyebrow"><i aria-hidden="true" /><span className="cin-head__no">04</span>{t.chapter}<span className="cin-head__sep" aria-hidden="true" />{t.eyebrow}</p>
+        <h2 id="home-proof-heading" className="cin-head__title">{t.title}</h2>
+        <p className="cin-head__intro">{t.intro}</p>
+      </header>
 
-        {/* ── Client selector: an editorial index, not a pill row ── */}
-        <div role="tablist" aria-label={t.selector} className="home-proof-rail grid grid-cols-2 gap-x-4 sm:grid-cols-3 lg:grid-cols-6 lg:gap-x-0">
+      <div id={`${baseId}-panel`} role="tabpanel" aria-labelledby={`${baseId}-tab-${active.slug}`} className="cin-quote">
+        <AnimatePresence initial={false} mode="wait">
+          <motion.figure
+            key={active.slug}
+            initial={{ opacity: 0, y: reducedMotion ? 0 : 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: reducedMotion ? 0 : -10 }}
+            transition={swap}
+          >
+            <span className="cin-quote__mark" aria-hidden="true">&ldquo;</span>
+            <blockquote className="cin-quote__text">{active.quote}</blockquote>
+            <figcaption className="cin-quote__by">
+              <span aria-hidden="true" className="cin-quote__rule" />
+              <span>
+                <b>{active.name}</b>
+                <span> · {active.role}</span>
+              </span>
+              <Link href={getProjectPath(project.slug, locale)} className="cin-link">
+                {t.caseStudy}
+                <span className="sr-only">: {project.title}</span>
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </figcaption>
+          </motion.figure>
+        </AnimatePresence>
+        <div className="cin-quote__media" aria-hidden="true">
+          <Image src={project.shot} alt="" width={800} height={550} sizes="(max-width: 1024px) 92vw, 520px" />
+        </div>
+      </div>
+
+      <div className="cin-trust-foot">
+        <div role="tablist" aria-label={t.selector} className="cin-clients">
           {items.map((item, index) => {
             const isActive = index === activeIndex
             return (
@@ -203,132 +232,16 @@ export default function ProofSection({ locale }: { locale: Locale }) {
                 tabIndex={isActive ? 0 : -1}
                 onClick={() => setActiveIndex(index)}
                 onKeyDown={onKeyDown}
-                className={`group relative flex min-h-16 cursor-pointer flex-col items-start gap-1 border-t border-slate-300 px-1 pb-4 pt-4 text-left transition-colors active:translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-blue)] sm:px-3 dark:border-white/14 dark:focus-visible:outline-[var(--brand-gold)] ${
-                  isActive ? 'text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
-                }`}
+                className="cin-clients__tab"
+                style={accentStyle(item.project.color)}
               >
-                {isActive && (
-                  <motion.span
-                    layoutId={`${baseId}-indicator`}
-                    aria-hidden="true"
-                    className={`absolute inset-x-0 -top-px h-[3px] ${accentBg}`}
-                    style={accentStyle(item.project.color)}
-                    transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 380, damping: 34 }}
-                  />
-                )}
-                <span className="flex items-center gap-2 text-[11px] font-semibold tabular-nums tracking-[0.16em]">
-                  <span
-                    aria-hidden="true"
-                    className={`h-1.5 w-1.5 rounded-full transition-transform ${accentBg} ${isActive ? 'scale-150' : 'scale-100 opacity-60'}`}
-                    style={accentStyle(item.project.color)}
-                  />
-                  {String(index + 1).padStart(2, '0')}
-                </span>
-                <span className={`text-sm leading-snug sm:text-base ${isActive ? 'font-semibold' : 'font-medium'}`}>
-                  {item.project.title}
-                </span>
-                <span className="text-xs text-slate-400 dark:text-slate-500">{item.project.category}</span>
+                <span className="cin-clients__no">{String(index + 1).padStart(2, '0')}</span>
+                <span className="cin-clients__name">{item.project.title}</span>
               </button>
             )
           })}
         </div>
-
-        {/* ── Active proof ── */}
-        <div
-          id={`${baseId}-panel`}
-          role="tabpanel"
-          aria-labelledby={`${baseId}-tab-${active.slug}`}
-          className="home-proof-layout mt-10 grid gap-10 lg:mt-12 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-14"
-        >
-          <div className="order-1 flex min-w-0 flex-col">
-            <AnimatePresence initial={false} mode="wait">
-              <motion.figure
-                key={active.slug}
-                initial={{ opacity: 0, y: reducedMotion ? 0 : 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: reducedMotion ? 0 : -8 }}
-                transition={swap}
-                className="home-proof-quote flex min-h-[15rem] flex-col"
-              >
-                <span
-                  aria-hidden="true"
-                  className="font-display text-6xl leading-none text-[var(--accent)] sm:text-7xl dark:text-[var(--accent-dark)]"
-                  style={accentStyle(project.color)}
-                >
-                  &ldquo;
-                </span>
-                <blockquote className="-mt-4 max-w-[35rem] font-display text-2xl leading-[1.3] text-slate-900 sm:text-3xl lg:text-[1.9rem] dark:text-white">
-                  {active.quote}
-                </blockquote>
-                <figcaption className="mt-6 flex items-center gap-3">
-                  <span aria-hidden="true" className="h-px w-8 bg-slate-300 dark:bg-white/25" />
-                  <span className="text-sm">
-                    <span className="font-semibold text-slate-900 dark:text-white">{active.name}</span>
-                    <span className="text-slate-500 dark:text-slate-400"> · {active.role}</span>
-                  </span>
-                </figcaption>
-
-                <div className="mt-8 grid gap-5 border-t border-slate-200 pt-6 sm:grid-cols-2 dark:border-white/10">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">{t.delivered}</p>
-                    <ul className="mt-2.5 flex flex-wrap gap-1.5">
-                      {project.services.map(service => (
-                        <li
-                          key={service}
-                          className="bg-white/55 px-2 py-1 text-xs text-slate-600 dark:bg-white/[0.055] dark:text-slate-300"
-                        >
-                          {service}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">{t.outcome}</p>
-                    <p className="mt-2.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{project.result}</p>
-                  </div>
-                </div>
-
-                <Link
-                  href={getProjectPath(project.slug, locale)}
-                  className="group mt-6 inline-flex w-fit cursor-pointer items-center gap-2 text-sm font-semibold text-[var(--brand-blue)] hover:text-blue-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--brand-blue)] dark:text-[var(--brand-gold)] dark:hover:text-yellow-300 dark:focus-visible:outline-[var(--brand-gold)]"
-                >
-                  {t.caseStudy}
-                  <span className="sr-only">: {project.title}</span>
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </Link>
-              </motion.figure>
-            </AnimatePresence>
-          </div>
-
-          {/* project preview */}
-          <div className="order-2 min-w-0">
-            <div className="home-proof-media relative aspect-[16/11]">
-              <AnimatePresence initial={false}>
-                <motion.div
-                  key={project.slug}
-                  className="absolute inset-0"
-                  initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 1.04, clipPath: 'inset(0 0 0 100%)' }}
-                  animate={reducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1, clipPath: 'inset(0 0 0 0%)' }}
-                  exit={{ opacity: 0 }}
-                  transition={reducedMotion ? { duration: 0 } : { duration: 0.55, ease }}
-                >
-                  <Image
-                    src={project.shot}
-                    alt={t.alt(project.title)}
-                    fill
-                    sizes="(max-width: 1024px) 92vw, 520px"
-                    className="object-cover object-top"
-                  />
-                </motion.div>
-              </AnimatePresence>
-              <span
-                aria-hidden="true"
-                className={`absolute inset-x-0 bottom-0 h-1 transition-colors duration-500 motion-reduce:transition-none ${accentBg}`}
-                style={accentStyle(project.color)}
-              />
-            </div>
-          </div>
-        </div>
+        <ClientLogoMarquee locale={locale} />
       </div>
     </section>
   )

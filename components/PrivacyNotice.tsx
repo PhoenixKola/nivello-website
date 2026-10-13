@@ -45,6 +45,7 @@ export default function PrivacyNotice({ locale }: { locale: Locale }) {
 
   return (
     <section
+      data-privacy-notice
       aria-label={t.label}
       className="fixed inset-x-3 bottom-3 z-[60] mx-auto flex max-w-xl flex-col gap-3 rounded-2xl border border-slate-200 bg-white/95 px-4 py-3 text-sm text-slate-600 shadow-[0_18px_50px_-20px_rgba(15,23,42,0.35)] backdrop-blur-md sm:left-4 sm:right-auto sm:mx-0 sm:flex-row sm:items-center sm:gap-4 dark:border-white/10 dark:bg-slate-900/95 dark:text-slate-300"
     >
