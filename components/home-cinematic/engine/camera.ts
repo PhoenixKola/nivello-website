@@ -114,8 +114,8 @@ const specs: Spec[] = [
   // 06 finale: the closing mark, then the overhead reveal
   { u: 6.05, at: [0, -503], h: 14, look: [FINAL.x, FINAL_LOGO_Y - 2, FINAL.z], fov: 42, sx: 0.16, hold: true },
   { u: 6.3, at: [-18, -516], h: 34, abs: true, look: [0, 22, -578], fov: 44, sx: 0.14 },
-  { u: 6.6, at: [-8, -468], h: 140, abs: true, look: [0, 8, -540], fov: 46, sx: 0.08 },
-  { u: 7.0, at: [0, -452], h: 335, abs: true, look: [0, 0, -480], fov: 50, sx: 0, hold: true }
+  { u: 6.6, at: [-6, -470], h: 150, abs: true, look: [0, 8, -545], fov: 46, sx: 0.08 },
+  { u: 7.0, at: [0, -476], h: 330, abs: true, look: [0, 0, -507], fov: 50, sx: 0, hold: true }
 ]
 
 const frames = specs.map(spec).sort((a, b) => a.u - b.u)

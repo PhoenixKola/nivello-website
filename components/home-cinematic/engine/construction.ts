@@ -218,9 +218,19 @@ export function createConstruction(): Construction {
       const geometry = new ExtrudeGeometry(archShape, { depth: 0.9, bevelEnabled: true, bevelSize: 0.08, bevelThickness: 0.08, bevelSegments: 2, curveSegments: 14 })
       solid(s, geometry, matStone, -9.6 + i * 4.8, 0.7, -1.2)
     }
-    const swatches = [emissiveBlue, emissiveGold, emissivePurple, emissiveBlue, emissiveGold]
-    swatches.forEach((material, i) => {
-      solid(s, new BoxGeometry(3.1, 6.4 + (i % 3) * 1.2, 0.25), material, -9.6 + i * 4.8, 0.7 + (6.4 + (i % 3) * 1.2) / 2, 2.6, false)
+    // Presentation boards on stands: palette, type, layout and sketch studies in front of the arches.
+    const studies = ['palette', 'type', 'wire', 'sketch', 'palette'] as const
+    studies.forEach((kind, i) => {
+      const x = -9.6 + i * 4.8
+      const map = track(designBoardTexture(kind))
+      const faceMaterial = track(new MeshBasicMaterial({ map, toneMapped: false, color: 0xcfe0ff }))
+      const lift = 3.9 + (i % 2) * 0.5
+      solid(s, new CylinderGeometry(0.12, 0.12, lift, 6), matDark, x, 0.7 + lift / 2, 2.6, false)
+      const board = solid(s, new BoxGeometry(3.5, 4.7, 0.16), faceMaterial, x, 0.7 + lift + 2.1, 2.6)
+      board.rotation.y = (i - 2) * -0.1
+      const trim = solid(s, new BoxGeometry(3.7, 0.12, 0.22), i % 2 ? emissiveGold : emissiveBlue, x, 0.7 + lift - 0.3, 2.6, false)
+      trim.rotation.y = board.rotation.y
+      s.floaters.push({ mesh: board, y: board.position.y, phase: i * 0.9 })
     })
     s.emissive.push(emissiveBlue, emissiveGold, emissivePurple)
   }
@@ -353,7 +363,8 @@ export function createConstruction(): Construction {
         })
         if (stage.spin) stage.spin.rotation.y = time * 0.08 + (done ? 0 : 0.6 * (1 - build))
         if (stage.beam) stage.beam.opacity = smoothstep(0.82, 1, build) * 0.28 * (0.85 + 0.15 * Math.sin(time * 2))
-        stage.group.visible = true
+        // Finished design stations step aside once the build chapter begins, so they never crowd its foreground.
+        stage.group.visible = !(index < 3 && s > 3.2 && s < 4.99)
       })
       if (code && s > 2.3 && s < 5.1 && time - codeAt > 0.1) {
         codeAt = time

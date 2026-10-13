@@ -125,7 +125,7 @@ function ridgeTexture(seed: number, base: number, amp: number) {
   return texture
 }
 
-export function createSky(): Sky {
+export function createSky(low = false): Sky {
   const group = new Group()
   const uniforms: ShaderMaterial['uniforms'] = {
     uTop: { value: new Color() },
@@ -141,7 +141,7 @@ export function createSky(): Sky {
   }
   const dome = new Mesh(
     new SphereGeometry(900, 32, 24),
-    new ShaderMaterial({ vertexShader: skyVertex, fragmentShader: skyFragment, uniforms, side: BackSide, depthWrite: false, fog: false })
+    new ShaderMaterial({ vertexShader: skyVertex, fragmentShader: low ? skyFragment.replace('i < 5', 'i < 3') : skyFragment, uniforms, side: BackSide, depthWrite: false, fog: false })
   )
   dome.renderOrder = -10
   dome.frustumCulled = false

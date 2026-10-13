@@ -183,7 +183,7 @@ export type Terrain = {
   dispose(): void
 }
 
-export function createTerrain(step = 1.6): Terrain {
+export function createTerrain(step = 1.6, low = false): Terrain {
   const nx = Math.round((WORLD.xMax - WORLD.xMin) / step)
   const nz = Math.round((WORLD.zMax - WORLD.zMin) / step)
   const cols = nx + 1
@@ -326,7 +326,11 @@ export function createTerrain(step = 1.6): Terrain {
     uGlowColor: { value: Array.from({ length: GLOW_SLOTS }, () => new Color(0, 0, 0)) }
   }
 
-  const material = new ShaderMaterial({ vertexShader, fragmentShader, uniforms })
+  // Phones and weak GPUs: fewer noise octaves and no micro-relief jitter keep the ground shader cheap.
+  const lowFragment = fragmentShader
+    .replace('for (int i = 0; i < 4; i++)', 'for (int i = 0; i < 2; i++)')
+    .replace(/vec3 jitter = [\s\S]*?vec3 N = normalize\(Ng \+ jitter \* \(0\.35 \+ slope \* 0\.6\)\);/, 'vec3 N = Ng;')
+  const material = new ShaderMaterial({ vertexShader, fragmentShader: low ? lowFragment : fragmentShader, uniforms })
   const mesh = new Mesh(geometry, material)
   mesh.frustumCulled = false
 

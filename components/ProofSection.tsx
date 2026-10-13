@@ -191,9 +191,9 @@ export default function ProofSection({ locale }: { locale: Locale }) {
         <AnimatePresence initial={false} mode="wait">
           <motion.figure
             key={active.slug}
-            initial={{ opacity: 0, y: reducedMotion ? 0 : 6 }}
+            initial={{ opacity: 0, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: reducedMotion ? 0 : -4 }}
+            exit={{ opacity: 0, y: 0 }}
             transition={swap}
           >
             <span className="cin-quote__mark" aria-hidden="true">&ldquo;</span>

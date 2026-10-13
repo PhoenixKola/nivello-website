@@ -60,7 +60,11 @@ export default function CinematicWorld({ locale }: { locale: Locale }) {
             const project = projects.find(item => item.slug === quote.slug)
             return project ? [{ name: quote.name, role: quote.role, quote: quote.quote, color: project.color }] : []
           }),
-          lowPower: window.innerWidth < 760 || (navigator.hardwareConcurrency ?? 8) <= 4
+          lowPower:
+            window.innerWidth < 900 ||
+            window.matchMedia('(pointer: coarse)').matches ||
+            (navigator.hardwareConcurrency ?? 8) <= 4 ||
+            ((navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8) <= 4
         })
       )
       .then(engine => {

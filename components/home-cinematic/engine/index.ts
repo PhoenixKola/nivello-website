@@ -7,6 +7,7 @@ import {
   HalfFloatType,
   HemisphereLight,
   PMREMGenerator,
+  PointLight,
   PerspectiveCamera,
   Scene,
   Sprite,
@@ -77,33 +78,44 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
   // Soft studio reflections give metals and clearcoats believable highlights without extra lights.
   const pmrem = new PMREMGenerator(renderer)
   const envTarget = pmrem.fromScene(new RoomEnvironment(), 0.04)
-  scene.environment = envTarget.texture
-  scene.environmentIntensity = 0.3
+  if (!lowPower) {
+    scene.environment = envTarget.texture
+    scene.environmentIntensity = 0.3
+  }
   pmrem.dispose()
   const camera = new PerspectiveCamera(40, 1, 0.5, 2600)
 
-  const sky = createSky()
+  const sky = createSky(lowPower)
   scene.add(sky.group)
-  const terrain = createTerrain(lowPower ? 2.4 : 1.6)
+  const terrain = createTerrain(lowPower ? 3 : 1.6, lowPower)
   scene.add(terrain.mesh)
   const construction = createConstruction()
   scene.add(construction.group)
-  const gallery = createGallery(projects, maxAnisotropy)
+  const gallery = createGallery(projects, maxAnisotropy, lowPower)
   scene.add(gallery.group)
   const vista = createVista()
   scene.add(vista.group)
   const reviews = createReviews(reviewData)
   scene.add(reviews.group)
-  const motes = createMotes(lowPower ? 450 : 1100)
+  const motes = createMotes(lowPower ? 200 : 1100)
   scene.add(motes.points)
   const mist = createMist()
   scene.add(mist.group)
-  const scatter = createScatter(lowPower ? 600 : 1100)
+  const scatter = createScatter(lowPower ? 240 : 1100)
   scene.add(scatter.group)
   const monument = await createMonument()
   scene.add(monument.group)
   const finalMark = await createMonument({ x: FINAL.x, z: FINAL.z, size: FINAL.size, final: true })
   scene.add(finalMark.group)
+
+  // Phones: no dynamic lights at all (every light multiplies the cost of each lit surface). Emissive materials carry the glow.
+  if (lowPower) {
+    const lights: PointLight[] = []
+    scene.traverse(object => {
+      if ((object as PointLight).isPointLight) lights.push(object as PointLight)
+    })
+    lights.forEach(light => light.removeFromParent())
+  }
 
   // Visual-check hooks (only with ?cin=snap): hide layers or take over the camera.
   const debug: { override?: Pose; hide: string[] } = { hide: [] }
@@ -169,10 +181,14 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
 
   let width = 1
   let height = 1
+  // Dynamic resolution: steps the render scale down when frames run long, so the page never stutters.
+  let renderScale = lowPower ? 0.85 : 1
+  let frameSum = 0
+  let frameCount = 0
   const resize = () => {
     width = window.innerWidth
     height = window.innerHeight
-    const dpr = Math.min(window.devicePixelRatio || 1, lowPower ? 1 : 1.35)
+    const dpr = Math.min(window.devicePixelRatio || 1, lowPower ? 1 : 1.35) * renderScale
     renderer.setPixelRatio(dpr)
     renderer.setSize(width, height, false)
     composer?.setPixelRatio(dpr)
@@ -244,6 +260,23 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     time += dt
     const store = cinematic.get()
 
+    if (!snap && !automated) {
+      frameSum += dt
+      frameCount += 1
+      if (frameCount >= 40) {
+        const average = frameSum / frameCount
+        frameSum = 0
+        frameCount = 0
+        if (average > 0.024 && renderScale > 0.55) {
+          renderScale = Math.max(0.55, renderScale * 0.86)
+          resize()
+        } else if (average < 0.0155 && renderScale < (lowPower ? 0.85 : 1)) {
+          renderScale = Math.min(lowPower ? 0.85 : 1, renderScale * 1.06)
+          resize()
+        }
+      }
+    }
+
     // adaptive quality: drop post-processing once if the device clearly cannot keep up
     if (!automated && composer && sampled < 120) {
       sampled += 1
@@ -297,7 +330,9 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
       focusVel = 0
     }
     appMix += ((store.workApp ? 1 : 0) - appMix) * (1 - Math.exp(-dt * 7))
-    proofFocus += (store.proofIndex - proofFocus) * (1 - Math.exp(-dt * 5))
+    // Reviews follow the scroll continuously, so emphasis glides between monoliths instead of stepping.
+    const proofTarget = u > 4.95 && u < 6.05 ? clamp(((u - 5 - REVIEW_FROM) / REVIEW_SPAN) * reviewData.length - 0.5, 0, reviewData.length - 1) : store.proofIndex
+    proofFocus += (proofTarget - proofFocus) * (1 - Math.exp(-dt * 4))
 
     // camera
     sampleCamera(u, pose)
@@ -332,7 +367,10 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
       const slope = (reviewZ(reviewData.length - 1) - reviewZ(0)) / (l5 - l0)
       const z = reviewZ(0) + 26 + (local - l0) * slope
       const x = routeX(z) + Math.sin(time * 0.3) * 0.6
-      const target = reviewPos(clamp(Math.round(proofFocus), 0, reviewData.length - 1))
+      const pf = clamp(proofFocus, 0, reviewData.length - 1)
+      const pa = reviewPos(Math.floor(pf))
+      const pb = reviewPos(Math.min(reviewData.length - 1, Math.floor(pf) + 1))
+      const target = { x: lerp(pa.x, pb.x, pf - Math.floor(pf)), z: lerp(pa.z, pb.z, pf - Math.floor(pf)) }
       const ahead = z - 34
       pose.px = lerp(pose.px, x, rw)
       pose.py = lerp(pose.py, groundHeight(x, z) + 5.6, rw)
@@ -380,7 +418,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     camera.fov = pose.fov * (width < 720 ? 1.25 : 1)
     const sx = width < 900 ? 0 : pose.sx
     const over = smoothstep(6.4, 6.9, u)
-    const sy = (width < 900 ? 0.09 + 0.08 * gw : 0) + over * (width < 900 ? 0.14 : 0.2)
+    const sy = (width < 900 ? 0.09 + 0.08 * gw : 0) + over * (width < 900 ? 0.1 : 0.12)
     camera.setViewOffset(width, height, -sx * width, sy * height, width, height)
     camera.updateMatrixWorld()
 
@@ -477,7 +515,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     fog.density = a.fogDensity
     hemisphere.color.copy(a.ambientSky)
     hemisphere.groundColor.copy(a.ambientGround)
-    hemisphere.intensity = 1.2 + day * 0.5
+    hemisphere.intensity = (1.2 + day * 0.5) * (1 - 0.3 * gw)
     sunLight.color.copy(a.sun)
     sunLight.intensity = a.sunIntensity * 0.85
     sunLight.position.copy(camera.position).addScaledVector(sunDir, 120)
@@ -485,14 +523,14 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     // soft key from the camera side keeps the faces we are looking at readable
     fill.position.copy(camera.position).addScaledVector(upVec, 18).addScaledVector(right, -10)
     fill.target.position.copy(lookAt)
-    fill.intensity = (0.85 + 0.4 * day) * (1 - 0.45 * gw)
+    fill.intensity = (0.85 + 0.4 * day) * (1 - 0.8 * gw)
 
     renderer.toneMappingExposure = a.exposure
-    if (bloom) bloom.strength = a.bloom * 0.34 + 0.03 + 0.3 * (1 - introE) * (1 - smoothstep(0.1, 0.3, u))
+    if (bloom) bloom.strength = a.bloom * 0.34 * (1 - 0.55 * gw) + 0.03 + 0.3 * (1 - introE) * (1 - smoothstep(0.1, 0.3, u))
 
     motes.update(camera.position, time, tint, 0.55 + 0.25 * (1 - day))
     mist.update(a.fog, a.sun, time, (1 - 0.5 * gw) * (0.1 + 0.9 * smoothstep(0.45, 1, introE)))
-    construction.group.visible = u > 1.7 || Boolean(debug.override)
+    construction.group.visible = (u > 1.7 && (u < 4.5 || u > 6.1)) || Boolean(debug.override)
     gallery.group.visible = u > 3.7 || Boolean(debug.override)
     vista.group.visible = u > 4.7 || Boolean(debug.override)
     reviews.group.visible = u > 4.7 || Boolean(debug.override)

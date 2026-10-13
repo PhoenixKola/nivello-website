@@ -82,7 +82,7 @@ export type Gallery = {
   dispose(): void
 }
 
-export function createGallery(projects: GalleryProject[], maxAnisotropy: number): Gallery {
+export function createGallery(projects: GalleryProject[], maxAnisotropy: number, low = false): Gallery {
   const group = new Group()
   const disposables: { dispose(): void }[] = []
   const track = <T extends { dispose(): void }>(item: T) => {
@@ -151,7 +151,7 @@ export function createGallery(projects: GalleryProject[], maxAnisotropy: number)
   crown.rotation.x = Math.PI / 2
   crown.position.set(PLAZA.x, 41.2, PLAZA.z)
   group.add(crown)
-  const shaftMaterial = track(new MeshBasicMaterial({ map: shaft, color: 0x8fb8ff, transparent: true, opacity: 0.07, blending: AdditiveBlending, depthWrite: false, side: DoubleSide, toneMapped: false }))
+  const shaftMaterial = track(new MeshBasicMaterial({ map: shaft, color: 0x8fb8ff, transparent: true, opacity: 0.025, blending: AdditiveBlending, depthWrite: false, side: DoubleSide, toneMapped: false }))
   for (let i = 0; i < 4; i += 1) {
     const plane = new Mesh(track(new PlaneGeometry(7, 40)), shaftMaterial)
     const a = (i / 4) * Math.PI
@@ -174,7 +174,7 @@ export function createGallery(projects: GalleryProject[], maxAnisotropy: number)
     pylon: track(new BoxGeometry(0.9, 11, 0.9)),
     plinth: track(new CylinderGeometry(4.4, 5.2, 0.7, 6))
   }
-  const frameMaterial = track(new MeshStandardMaterial({ map: metal, color: 0xb4c2dc, metalness: 0.95, roughness: 0.22, envMapIntensity: 1.3 }))
+  const frameMaterial = track(new MeshStandardMaterial({ map: metal, color: 0xa4b2cc, metalness: 0.85, roughness: 0.42, envMapIntensity: 0.7 }))
   const plinthMaterial = track(new MeshStandardMaterial({ color: 0x0a1220, metalness: 0.8, roughness: 0.25 }))
   const screenGeometry = track(new PlaneGeometry(SCREEN_W, SCREEN_H))
   const glowGeometry = track(new PlaneGeometry(SCREEN_W * 1.9, SCREEN_H * 2.2))
@@ -227,10 +227,12 @@ export function createGallery(projects: GalleryProject[], maxAnisotropy: number)
       mesh.position.z = 0.1
       body.add(mesh)
       const reflectionMaterial = track(new MeshBasicMaterial({ map: material.map, alphaMap: fade, transparent: true, opacity: 0.22, toneMapped: false, depthWrite: false, side: DoubleSide }))
-      const mirror = new Mesh(screenGeometry, reflectionMaterial)
-      mirror.scale.y = -1
-      mirror.position.set(0, -(CENTER_Y) * 2 + 0.1, 0.1)
-      body.add(mirror)
+      if (!low) {
+        const mirror = new Mesh(screenGeometry, reflectionMaterial)
+        mirror.scale.y = -1
+        mirror.position.set(0, -(CENTER_Y) * 2 + 0.1, 0.1)
+        body.add(mirror)
+      }
       return { mesh, material, reflectionMaterial }
     }
 
@@ -279,14 +281,14 @@ export function createGallery(projects: GalleryProject[], maxAnisotropy: number)
         const e = w * w * (3 - 2 * w)
         const dim = 0.22 + 0.78 * e
         const mix = appMaterials[index] ? appMix : 0
-        siteMaterials[index].color.setScalar(dim * 0.82 * awake + 0.06)
+        siteMaterials[index].color.setScalar(dim * 0.95 * awake + 0.06)
         siteMaterials[index].opacity = 1 - mix * e
         const appMat = appMaterials[index]
         if (appMat) {
-          appMat.color.setScalar(dim * 0.82 * awake + 0.06)
+          appMat.color.setScalar(dim * 0.95 * awake + 0.06)
           appMat.opacity = mix * e
         }
-        portal.glow.opacity = e * 0.22
+        portal.glow.opacity = e * 0.07
         portal.frameLight.emissiveIntensity = 0.3 + 1.3 * e
         portal.reflection.forEach(m => {
           m.opacity = 0.05 + 0.2 * e
@@ -302,7 +304,7 @@ export function createGallery(projects: GalleryProject[], maxAnisotropy: number)
       })
       if (total > 0) accent.multiplyScalar(1 / total)
       light.color.copy(accent).lerp(white, 0.25)
-      light.intensity = 700 * awake
+      light.intensity = 220 * awake
 
       // light path to the focused portal
       const theta = portalAngle(focus, projects.length)
@@ -313,7 +315,7 @@ export function createGallery(projects: GalleryProject[], maxAnisotropy: number)
       pathPivot.position.set((px + sx) / 2, 0.27, (pz + sz) / 2)
       pathPivot.rotation.y = Math.atan2(-(px - sx), -(pz - sz))
       path.scale.y = Math.hypot(px - sx, pz - sz)
-      light.position.set(lerp(sx, px, 0.55), 11, lerp(sz, pz, 0.55))
+      light.position.set(lerp(sx, px, 0.45), 16, lerp(sz, pz, 0.45))
       rings.forEach((ring, i) => {
         ;(ring.material as MeshBasicMaterial).opacity = 0.35 + 0.3 * Math.sin(time * 1.2 + i)
       })

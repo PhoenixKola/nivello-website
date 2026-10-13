@@ -17,6 +17,7 @@ import {
   Shape,
   SRGBColorSpace,
   Texture,
+  TextureLoader,
   Vector2
 } from 'three'
 import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js'
@@ -368,8 +369,14 @@ export async function createMonument(options: MonumentOptions = MONUMENT): Promi
   goldLight.position.set(-P.size * 0.3, plinthHeight + 2, P.size * 0.3)
   if (!P.final) group.add(goldLight)
 
+  // A flat luminous emblem on the ground so the closing mark still reads from directly above.
+  const emblemMaterial = new MeshBasicMaterial({ map: new TextureLoader().load('/nivello-icon.png'), transparent: true, opacity: 0, depthWrite: false, toneMapped: false })
+  const emblem = new Mesh(new PlaneGeometry(P.size * 1.7, P.size * 1.7), emblemMaterial)
+  emblem.rotation.x = -Math.PI / 2
+  emblem.position.set(0, 2.2, P.size * 1.15)
+  if (P.final) group.add(emblem)
   const glow = glowTexture()
-  const disposables: { dispose(): void }[] = [smoothGeometry, material, colorMap, stone, plinthTop, haloMaterial, ringMaterial, beamMaterial, shaft, glow, ...steps.map(s => s.geometry), halo.geometry, ring.geometry]
+  const disposables: { dispose(): void }[] = [emblemMaterial, emblem.geometry, smoothGeometry, material, colorMap, stone, plinthTop, haloMaterial, ringMaterial, beamMaterial, shaft, glow, ...steps.map(s => s.geometry), halo.geometry, ring.geometry]
   beams.children.forEach(child => disposables.push((child as Mesh).geometry))
 
   return {
@@ -387,6 +394,7 @@ export async function createMonument(options: MonumentOptions = MONUMENT): Promi
       mark.rotation.y = Math.sin(time * 0.2) * 0.03 + (1 - settle) * 0.25
       const pulse = 0.88 + 0.12 * Math.sin(time * 1.6)
       material.emissiveIntensity = (0.16 + 0.7 * emerge) * pulse + finale * 0.25
+      emblemMaterial.opacity = P.final ? smoothstep(6.3, 6.9, u) * 0.95 : 0
       haloMaterial.opacity = 0.06 + 0.14 * emerge + finale * 0.12
       light.intensity = (40 + 900 * emerge) * (1 + finale * 0.4)
       goldLight.intensity = (30 + 650 * emerge) * (1 + finale * 0.4)

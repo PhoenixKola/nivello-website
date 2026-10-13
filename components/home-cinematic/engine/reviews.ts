@@ -182,8 +182,7 @@ export function createReviews(reviews: ReviewData[]): Reviews {
         const lift = e * e * (3 - 2 * e)
         item.faceMaterial.color.setScalar((0.5 + 0.4 * lift) * (0.4 + 0.6 * weight))
         item.haloMaterial.opacity = 0.05 + 0.2 * lift
-        item.body.position.y = 3 + PANEL_H / 2 + 0.4 + Math.sin(time * 0.8 + k) * 0.18 + lift * 0.5
-        item.root.scale.setScalar(0.94 + 0.06 * lift)
+        item.body.position.y = 3 + PANEL_H / 2 + 0.4 + Math.sin(time * 0.6 + k) * 0.08
       })
       const active = clamp(Math.round(focus), 0, items.length - 1)
       const p = reviewPos(active)

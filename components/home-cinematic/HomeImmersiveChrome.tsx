@@ -13,6 +13,9 @@ const copy = {
     closeNav: 'Hide navigation',
     home: 'Nivello, homepage',
     chapters: 'Story chapters',
+    contents: 'Chapters',
+    openContents: 'Open chapters',
+    closeContents: 'Close chapters',
     chapterNames: ['Arrival', 'Identity', 'Design', 'Build', 'Work', 'Proof', 'Contact'],
     skip: 'Skip intro'
   },
@@ -22,6 +25,9 @@ const copy = {
     closeNav: 'Nascondi la navigazione',
     home: 'Nivello, homepage',
     chapters: 'Capitoli',
+    contents: 'Capitoli',
+    openContents: 'Apri i capitoli',
+    closeContents: 'Chiudi i capitoli',
     chapterNames: ['Arrivo', 'Identità', 'Design', 'Sviluppo', 'Lavori', 'Prove', 'Contatti'],
     skip: 'Salta l’intro'
   }
@@ -34,6 +40,7 @@ const copy = {
 export default function HomeImmersiveChrome({ locale }: { locale: Locale }) {
   const t = copy[locale]
   const [open, setOpen] = useState(false)
+  const [toc, setToc] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const chapter = useCinematic(state => state.chapter, 0)
   const intro = useCinematic(state => state.introActive, false)
@@ -55,7 +62,10 @@ export default function HomeImmersiveChrome({ locale }: { locale: Locale }) {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && document.querySelector('[data-cin-root][data-nav="open"]')) setNav(false, true)
+      if (event.key === 'Escape') {
+        setToc(false)
+        if (document.querySelector('[data-cin-root][data-nav="open"]')) setNav(false, true)
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => {
@@ -79,7 +89,10 @@ export default function HomeImmersiveChrome({ locale }: { locale: Locale }) {
         className="cin-chrome__menu"
         aria-expanded={open}
         aria-label={open ? t.closeNav : t.openNav}
-        onClick={() => setNav(!open)}
+        onClick={() => {
+          setToc(false)
+          setNav(!open)
+        }}
         data-open={open ? 'true' : 'false'}
       >
         <span className="cin-chrome__menu-icon" aria-hidden="true">
@@ -88,6 +101,48 @@ export default function HomeImmersiveChrome({ locale }: { locale: Locale }) {
         </span>
         <span className="cin-chrome__menu-label">{t.menu}</span>
       </button>
+
+      <button
+        type="button"
+        className="cin-chrome__toc"
+        aria-expanded={toc}
+        aria-controls="cin-toc"
+        aria-label={toc ? t.closeContents : t.openContents}
+        data-open={toc ? 'true' : 'false'}
+        onClick={() => {
+          if (!toc && open) setNav(false)
+          setToc(value => !value)
+        }}
+      >
+        <span className="cin-chrome__toc-icon" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+        </span>
+      </button>
+
+      <nav id="cin-toc" className="cin-toc" aria-label={t.chapters} data-open={toc ? 'true' : 'false'}>
+        <p className="cin-toc__title">{t.contents}</p>
+        <ol>
+          {CHAPTER_IDS.map((id, index) => (
+            <li key={id}>
+              <button
+                type="button"
+                className="cin-toc__item"
+                aria-current={chapter === index ? 'step' : undefined}
+                tabIndex={toc ? 0 : -1}
+                onClick={() => {
+                  setToc(false)
+                  scrollToChapter(index, [0, 0.1, 0.08, 0.08, 0.3, 0.14, 0.62][index])
+                }}
+              >
+                <span className="cin-toc__num">{String(index + 1).padStart(2, '0')}</span>
+                {t.chapterNames[index]}
+              </button>
+            </li>
+          ))}
+        </ol>
+      </nav>
 
       <nav className="cin-rail" aria-label={t.chapters}>
         {CHAPTER_IDS.map((id, index) => (
