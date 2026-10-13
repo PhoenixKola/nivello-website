@@ -514,3 +514,11 @@ html:not(.dark) .cin-ov--trust { --cin-scrim: 246 238 228; }
   .cin-eyebrow i, .cin-work-info__category span, .cin-foot__status span, .cin-index__dot, .cin-stage-rail__node span, .cin-rail__num, .cin-scroll-cue::before { animation: none !important; }
   .cin-intro-mark { display: none !important; }
 }
+
+/* ── Seven-chapter story additions ── */
+.cin-logo { width: min(34rem, 50vw); }
+.cin-ov--logo::before { background: linear-gradient(90deg, rgb(var(--cin-scrim) / 0.55) 0%, rgb(var(--cin-scrim) / 0.2) 40%, rgb(var(--cin-scrim) / 0) 62%), linear-gradient(0deg, rgb(var(--cin-scrim) / 0.6) 0%, rgb(var(--cin-scrim) / 0) 40%); }
+@media (max-width: 899px) {
+  .cin-logo { width: calc(100% - 2 * var(--cin-pad)); bottom: calc(var(--cin-foot) + 2.2rem); }
+  .cin-logo .cin-start__body { font-size: 0.92rem; }
+}

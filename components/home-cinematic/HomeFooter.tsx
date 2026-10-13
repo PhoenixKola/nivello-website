@@ -17,7 +17,7 @@ export default function HomeFooter({ locale }: { locale: Locale }) {
   const studio = footerRoutes.filter(route => route.key !== 'contact').map(route => ({ href: route.paths[locale], label: route.labels[locale] }))
 
   return (
-    <footer id="site-footer" role="contentinfo" className="cin-ov cin-ov--footer" data-cin-overlay="5" data-active="false">
+    <footer id="site-footer" role="contentinfo" className="cin-ov cin-ov--footer" data-cin-overlay="6" data-cin-from="0.5" data-active="false">
       <div className="cin-foot">
         <div className="cin-foot__lead">
           <p className="cin-eyebrow"><i aria-hidden="true" />{t.eyebrow}</p>

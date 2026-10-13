@@ -1,5 +1,4 @@
-import { stageCenter } from '@/lib/cinematic/store'
-import { MILESTONES, MONUMENT, PLAZA, groundHeight, routeX } from './layout'
+import { FINAL, MILESTONES, MONUMENT, PLAZA, groundHeight, routeX } from './layout'
 import { clamp, smoothstep } from './noise'
 
 /**
@@ -54,13 +53,16 @@ const r = routeX
 const M = MILESTONES
 const mono = [MONUMENT.x - 22, 27, MONUMENT.z] as [number, number, number]
 
+/** Milestone camera stations: design owns 0-2, development owns 3-4. u is the global timeline. */
+const stationU = (k: number) => (k < 3 ? 2 + (k + 0.5) / 3 : 3 + (k - 3 + 0.5) / 2)
+
 const stageKeys: Spec[] = M.flatMap((m, k) => {
-  const u = 1 + stageCenter(k)
+  const u = stationU(k)
   const out: Spec[] = [
     {
       u,
-      at: [m.x - m.side * (m.r + 15), m.z + 13],
-      h: 9,
+      at: [m.x - m.side * (m.r + (k === 3 ? 28 : 15)), m.z + (k === 3 ? 22 : 13)],
+      h: k === 3 ? 12 : 9,
       look: [m.x - m.side * 1.5, groundHeight(m.x, m.z) + 8, m.z],
       fov: 38,
       sx: 0.17,
@@ -72,7 +74,7 @@ const stageKeys: Spec[] = M.flatMap((m, k) => {
   if (next) {
     const mid = (m.z + next.z) / 2
     out.push({
-      u: u + (stageCenter(k + 1) - stageCenter(k)) / 2,
+      u: (u + stationU(k + 1)) / 2,
       at: [r(mid), mid + 8],
       h: 4.5,
       look: [r(mid - 26), groundHeight(r(mid - 26), mid - 26) + 9, mid - 26],
@@ -84,31 +86,36 @@ const stageKeys: Spec[] = M.flatMap((m, k) => {
   return out
 })
 
+export const FINAL_LOGO_Y = 30
+
 const specs: Spec[] = [
+  // 00 arrival: the mountain approach
   { u: 0, at: [4, 38], h: 12, look: [2, 20, -80], fov: 42, sx: 0.14 },
-  { u: 0.17, at: [r(10), 12], h: 13, look: [r(-28), 14, -28], fov: 42, sx: 0.14, roll: 0.03 },
-  { u: 0.37, at: [r(-14), -14], h: 14, look: [r(-52), 24, -52], fov: 42, sx: 0.13, roll: -0.03 },
-  { u: 0.56, at: [r(-38), -38], h: 15, look: [r(-74), 38, -76], fov: 42, sx: 0.15, roll: 0.02 },
-  { u: 0.71, at: [r(-58), -58], h: 14, look: [r(-96) + 6, 40, -104], fov: 40, sx: 0.16 },
-  { u: 0.82, at: [r(-77), -77], h: 9, look: mono, fov: 38, sx: 0.2, hold: true },
-  { u: 0.92, at: [r(-98), -98], h: 16, look: mono, fov: 40, sx: 0.2 },
-  { u: 1.0, at: [r(-128) - 8, -128], h: 22, look: [MONUMENT.x - 14, 20, MONUMENT.z], fov: 40, sx: 0.15 },
-  { u: 1.05, at: [r(-168) - 6, -166], h: 14, look: [M[0].x, 6, M[0].z], fov: 40, sx: 0.16 },
+  { u: 0.28, at: [r(10), 12], h: 13, look: [r(-28), 14, -28], fov: 42, sx: 0.14, roll: 0.03 },
+  { u: 0.55, at: [r(-14), -14], h: 14, look: [r(-52), 24, -52], fov: 42, sx: 0.13, roll: -0.03 },
+  { u: 0.82, at: [r(-38), -38], h: 15, look: [r(-74), 38, -76], fov: 42, sx: 0.15, roll: 0.02 },
+  // 01 logo: ridge crest, the mark reveals and holds
+  { u: 1.2, at: [r(-58), -58], h: 14, look: [r(-96) + 6, 40, -104], fov: 40, sx: 0.16 },
+  { u: 1.55, at: [r(-77), -77], h: 9, look: mono, fov: 38, sx: 0.2, hold: true },
+  { u: 1.85, at: [r(-98), -98], h: 16, look: mono, fov: 40, sx: 0.2 },
+  // 02-03 design and development stations
+  { u: 1.97, at: [r(-140) - 8, -140], h: 20, look: [MONUMENT.x - 14, 14, MONUMENT.z - 20], fov: 40, sx: 0.15 },
+  { u: 2.05, at: [r(-176) - 6, -176], h: 14, look: [M[0].x, 6, M[0].z], fov: 40, sx: 0.16 },
   ...stageKeys,
-  { u: 2.0, at: [r(-324) - 2, -324], h: 9, look: [0, 7, -378], fov: 42, sx: 0.1 },
-  { u: 2.12, at: [0, -332], h: 14, look: [0, 8, PLAZA.z - 22], fov: 42, sx: 0.16 },
-  { u: 2.5, at: [0, -334], h: 10, look: [0, 8, PLAZA.z - 24], fov: 38, sx: 0.2, hold: true },
-  { u: 2.9, at: [0, -366], h: 13, look: [0, 10, -430], fov: 40, sx: 0.12 },
-  { u: 3.0, at: [r(-396), -396], h: 10, look: [0, 7, -452], fov: 42, sx: 0.08 },
-  { u: 3.2, at: [r(-420) + 4, -420], h: 6.5, look: [0, 8, -510], fov: 42, sx: 0.1 },
-  { u: 3.36, at: [r(-444), -444], h: 3.4, look: [-6, 9, -545], fov: 40, sx: 0.12, hold: true },
-  { u: 3.7, at: [r(-462), -462], h: 3.8, look: [4, 9, -562], fov: 40, sx: 0.12, hold: true },
-  { u: 4.0, at: [r(-488), -488], h: 7, look: [0, 12, -565], fov: 42, sx: 0.12 },
-  { u: 4.25, at: [-16, -512], h: 26, abs: true, look: [0, 16, -430], fov: 42, sx: 0.12, roll: 0.07 },
-  { u: 4.6, at: [-32, -452], h: 62, abs: true, look: [-18, 24, -250], fov: 44, sx: 0.12, roll: -0.04 },
-  { u: 5.0, at: [-26, -404], h: 98, abs: true, look: [-22, 34, -190], fov: 48, sx: 0.12 },
-  { u: 5.5, at: [-6, -372], h: 78, abs: true, look: [34, 0, -180], fov: 46, sx: 0.1 },
-  { u: 6.0, at: [26, -352], h: 70, abs: true, look: [64, -10, -172], fov: 46, sx: 0.08, hold: true }
+  // 04 projects: approach the dome door
+  { u: 3.9, at: [r(-324) - 2, -324], h: 9, look: [0, 7, PLAZA.z], fov: 42, sx: 0.1 },
+  { u: 4.12, at: [0, -338], h: 8, look: [0, 8, PLAZA.z - 22], fov: 42, sx: 0.12 },
+  { u: 4.3, at: [0, -366], h: 6, look: [0, 8, PLAZA.z - 24], fov: 40, sx: 0.14 },
+  { u: 4.85, at: [0, -392], h: 6, look: [r(-440), 8, -440], fov: 42, sx: 0.12 },
+  // 05 reviews: the canyon (driven procedurally by reviewsWeight)
+  { u: 5.0, at: [r(-412), -412], h: 6, look: [r(-450), 7, -450], fov: 42, sx: 0.1 },
+  { u: 5.5, at: [r(-470), -470], h: 5.5, look: [r(-500), 7, -500], fov: 42, sx: 0.1 },
+  { u: 5.95, at: [r(-533), -533], h: 6, look: [r(-570), 8, -580], fov: 42, sx: 0.1 },
+  // 06 finale: the closing mark, then the overhead reveal
+  { u: 6.05, at: [0, -503], h: 14, look: [FINAL.x, FINAL_LOGO_Y - 2, FINAL.z], fov: 42, sx: 0.16, hold: true },
+  { u: 6.3, at: [-18, -516], h: 34, abs: true, look: [0, 22, -578], fov: 44, sx: 0.14 },
+  { u: 6.6, at: [-8, -468], h: 140, abs: true, look: [0, 8, -540], fov: 46, sx: 0.08 },
+  { u: 7.0, at: [0, -452], h: 335, abs: true, look: [0, 0, -480], fov: 50, sx: 0, hold: true }
 ]
 
 const frames = specs.map(spec).sort((a, b) => a.u - b.u)
@@ -141,4 +148,5 @@ export function sampleCamera(u: number, out: Pose) {
   }
 }
 
-export const galleryWeight = (u: number) => smoothstep(2.1, 2.3, u) * (1 - smoothstep(2.8, 2.92, u))
+export const galleryWeight = (u: number) => smoothstep(4.12, 4.32, u) * (1 - smoothstep(4.82, 4.96, u))
+export const reviewsWeight = (u: number) => smoothstep(5.0, 5.18, u) * (1 - smoothstep(5.86, 5.97, u))

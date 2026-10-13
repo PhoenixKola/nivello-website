@@ -113,3 +113,24 @@ for (const [path, cta, email] of [['/', 'Start a conversation', 'office@nivello.
     await expect(footer.getByRole('link', { name: /Privacy/ })).toBeVisible()
   })
 }
+
+for (const [path, design, build, work] of [
+  ['/', 'Structure before pixels.', 'Code that becomes the product.', 'Real projects, brought on stage.'],
+  ['/it/', 'La struttura prima dei pixel.', 'Il codice che diventa prodotto.', 'Progetti reali, portati in scena.']
+]) {
+  test(`homepage tells the full story in order (${path})`, async ({ page }) => {
+    await page.goto(path)
+    const headings = await page.getByRole('heading', { level: 2 }).allInnerTexts()
+    const order = [design, build, work].map(text => headings.findIndex(item => item.trim() === text))
+    expect(order.every(index => index >= 0)).toBe(true)
+    expect(order).toEqual([...order].sort((a, b) => a - b))
+    await expect(page.locator('footer#site-footer')).toHaveCount(1)
+  })
+
+  test(`homepage has no horizontal overflow on a phone (${path})`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto(path)
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
+    expect(overflow).toBeLessThanOrEqual(1)
+  })
+}

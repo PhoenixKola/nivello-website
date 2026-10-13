@@ -1,11 +1,13 @@
-/** Scroll plan: chapter lengths in viewport heights. The last chapter (the homepage footer) carries one extra viewport so the final pose is reachable. */
-export const CHAPTER_IDS = ['arrival', 'process', 'work', 'trust', 'start', 'footer'] as const
-export const CHAPTER_LENGTHS = [1.5, 4.2, 2.8, 1.9, 1.6, 1.5] as const
+/** Scroll plan: chapter lengths in viewport heights. The last chapter (the finale) carries one extra viewport so the final pose is reachable. */
+export const CHAPTER_IDS = ['arrival', 'logo', 'design', 'development', 'projects', 'reviews', 'finale'] as const
+export const CHAPTER_LENGTHS = [1.5, 1.4, 3.0, 2.4, 3.0, 2.6, 3.0] as const
 
-/** Process timeline: local chapter progress -> five stages. */
-export const PROCESS_START = 0.05
-export const PROCESS_SPAN = 0.9
-export const stageCenter = (index: number) => PROCESS_START + (PROCESS_SPAN * (index + 0.5)) / 5
+export const CHAPTER = { arrival: 0, logo: 1, design: 2, development: 3, projects: 4, reviews: 5, finale: 6 } as const
+
+/** Reviews: scroll position within the chapter that centres review k (6 reviews). */
+export const REVIEW_FROM = 0.12
+export const REVIEW_SPAN = 0.76
+export const reviewCenter = (k: number, count = 6) => REVIEW_FROM + (REVIEW_SPAN * (k + 0.5)) / count
 
 /** Smooth-scroll to a chapter (optionally to a local progress). Used by rails and anchor cues. */
 export function scrollToChapter(index: number, local = 0.1) {

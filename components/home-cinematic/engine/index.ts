@@ -22,13 +22,14 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js'
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js'
-import { CHAPTER_IDS, PROCESS_SPAN, PROCESS_START, cinematic } from '@/lib/cinematic/store'
-import { galleryWeight, sampleCamera, type Pose } from './camera'
+import { CHAPTER_IDS, REVIEW_FROM, REVIEW_SPAN, cinematic, reviewCenter } from '@/lib/cinematic/store'
+import { galleryWeight, reviewsWeight, sampleCamera, type Pose } from './camera'
 import { createConstruction } from './construction'
 import { createMist, createMotes } from './fx'
 import { createGallery, type GalleryProject } from './gallery'
-import { MILESTONES, MONUMENT, PLAZA, SUN_DIR, groundHeight, routeX } from './layout'
+import { FINAL, MILESTONES, MONUMENT, PLAZA, SUN_DIR, groundHeight, routeX } from './layout'
 import { createMonument } from './monument'
+import { createReviews, reviewPos, reviewZ, type ReviewData } from './reviews'
 import { createScatter } from './scatter'
 import { clamp, ease, lerp, smooth, smoothstep } from './noise'
 import { createAtmosphere, evaluateAtmosphere } from './palette'
@@ -41,13 +42,13 @@ export type EngineOptions = {
   canvas: HTMLCanvasElement
   root: HTMLElement
   projects: GalleryProject[]
-  clientColors: string[]
+  reviews: ReviewData[]
   lowPower: boolean
 }
 
 export type Engine = { dispose(): void }
 
-const SUN_ELEVATION: [number, number][] = [[0, 0.12], [0.75, 0.17], [1.1, 0.34], [1.9, 0.3], [2.1, 0.5], [3.0, 0.5], [3.2, 0.1], [3.95, 0.08], [4.35, 0.12], [5, 0.55], [6, 0.2]]
+const SUN_ELEVATION: [number, number][] = [[0, 0.12], [0.9, 0.17], [1.6, 0.34], [2.6, 0.34], [3.7, 0.3], [4.0, 0.5], [4.92, 0.5], [5.1, 0.1], [5.9, 0.08], [6.3, 0.12], [7, 0.4]]
 
 function sunElevation(u: number) {
   if (u <= 0) return SUN_ELEVATION[0][1]
@@ -60,7 +61,7 @@ function sunElevation(u: number) {
 }
 
 export async function createEngine(options: EngineOptions): Promise<Engine> {
-  const { canvas, root, projects, clientColors } = options
+  const { canvas, root, projects, reviews: reviewData } = options
   // ?cin=snap renders the exact scroll position without easing or the intro (used for visual checks on software GL).
   const snap = new URLSearchParams(window.location.search).get('cin') === 'snap'
   let lowPower = options.lowPower || snap
@@ -89,8 +90,10 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
   scene.add(construction.group)
   const gallery = createGallery(projects, maxAnisotropy)
   scene.add(gallery.group)
-  const vista = createVista(clientColors)
+  const vista = createVista()
   scene.add(vista.group)
+  const reviews = createReviews(reviewData)
+  scene.add(reviews.group)
   const motes = createMotes(lowPower ? 450 : 1100)
   scene.add(motes.points)
   const mist = createMist()
@@ -99,11 +102,13 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
   scene.add(scatter.group)
   const monument = await createMonument()
   scene.add(monument.group)
+  const finalMark = await createMonument({ x: FINAL.x, z: FINAL.z, size: FINAL.size, final: true })
+  scene.add(finalMark.group)
 
   // Visual-check hooks (only with ?cin=snap): hide layers or take over the camera.
   const debug: { override?: Pose; hide: string[] } = { hide: [] }
   if (snap) {
-    ;(window as unknown as { __cin: unknown }).__cin = { debug, layout: { MILESTONES, MONUMENT, PLAZA, ground: groundHeight }, groups: { scatter: scatter.group, mist: mist.group, sky: sky.group, terrain: terrain.mesh, construction: construction.group, gallery: gallery.group, vista: vista.group, monument: monument.group, motes: motes.points } }
+    ;(window as unknown as { __cin: unknown }).__cin = { debug, layout: { MILESTONES, MONUMENT, PLAZA, ground: groundHeight }, groups: { scatter: scatter.group, mist: mist.group, sky: sky.group, terrain: terrain.mesh, construction: construction.group, gallery: gallery.group, vista: vista.group, reviews: reviews.group, monument: monument.group, finalMark: finalMark.group, motes: motes.points } }
   }
 
   const hemisphere = new HemisphereLight(0x6a8ac8, 0x10141e, 1.4)
@@ -196,6 +201,8 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
   let day = document.documentElement.classList.contains('dark') ? 0 : 1
   let focus = cinematic.get().workIndex
   let focusVel = 0
+  let lastWork = focus
+  let focusTarget = focus
   let appMix = cinematic.get().workApp ? 1 : 0
   let proofFocus = cinematic.get().proofIndex
   let time = 0
@@ -231,7 +238,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
       last = now
       return
     }
-    const dt = Math.min(0.05, (now - last) / 1000)
+    const dt = Math.max(0, Math.min(0.05, (now - last) / 1000))
     last = now
     if (!inView) return
     time += dt
@@ -276,10 +283,17 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     // gallery focus (critically damped so the camera glides between portals)
     const k = 22
     const c = 2 * Math.sqrt(k)
-    focusVel += ((store.workIndex - focus) * k - focusVel * c) * dt
+    if (store.workIndex !== lastWork) {
+      const n = projects.length
+      let d = (((store.workIndex - lastWork) % n) + n) % n
+      if (d > n / 2) d -= n
+      focusTarget += d
+      lastWork = store.workIndex
+    }
+    focusVel += ((focusTarget - focus) * k - focusVel * c) * dt
     focus += focusVel * dt
     if (snap) {
-      focus = store.workIndex
+      focus = focusTarget
       focusVel = 0
     }
     appMix += ((store.workApp ? 1 : 0) - appMix) * (1 - Math.exp(-dt * 7))
@@ -290,25 +304,50 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     const gw = galleryWeight(u)
     if (gw > 0.001) {
       gallery.portalAt(focus, portal)
-      const dolly = clamp(Math.abs(focusVel) * 1.1, 0, 7)
-      const d = (20.5 + dolly) * (width < 900 ? 1.55 : 1)
-      const gx = portal.x + portal.inward[0] * d - portal.right[0] * (width < 900 ? 0 : 3.4) + portal.right[0] * Math.sin(time * 0.25) * 0.5
-      const gz = portal.z + portal.inward[1] * d - portal.right[1] * (width < 900 ? 0 : 3.4) + portal.right[1] * Math.sin(time * 0.25) * 0.5
-      const gy = portal.y + 1.6 + Math.sin(time * 0.31) * 0.25
+      const mobile = width < 900
+      // Inside the chamber: the camera orbits near the centre and turns to face the chosen exhibit.
+      const dirX = portal.x - PLAZA.x
+      const dirZ = portal.z - PLAZA.z
+      const len = Math.hypot(dirX, dirZ) || 1
+      const orbit = mobile ? 0 : 9.5 - clamp(Math.abs(focusVel) * 1.2, 0, 4)
+      const sway = Math.sin(time * 0.25) * 0.8
+      const gx = PLAZA.x + (dirX / len) * orbit
+      const gz = PLAZA.z + (dirZ / len) * orbit
       pose.px = lerp(pose.px, gx, gw)
-      pose.py = lerp(pose.py, gy, gw)
+      pose.py = lerp(pose.py, 5.9 + Math.sin(time * 0.31) * 0.2, gw)
       pose.pz = lerp(pose.pz, gz, gw)
-      pose.lx = lerp(pose.lx, portal.x, gw)
-      pose.ly = lerp(pose.ly, portal.y - 0.2, gw)
-      pose.lz = lerp(pose.lz, portal.z, gw)
+      pose.lx = lerp(pose.lx, portal.x + portal.right[0] * sway, gw)
+      pose.ly = lerp(pose.ly, portal.y - 0.1, gw)
+      pose.lz = lerp(pose.lz, portal.z + portal.right[1] * sway, gw)
       pose.fov = lerp(pose.fov, 38 + clamp(Math.abs(focusVel) * 1.4, 0, 5), gw)
       pose.sx = lerp(pose.sx, 0.14, gw)
+      pose.roll = lerp(pose.roll, 0, gw)
     }
-    const proofW = smoothstep(3.1, 3.4, u) * (1 - smoothstep(3.8, 4.0, u))
-    if (proofW > 0.001) {
-      const p = vista.pillarAt(proofFocus)
-      pose.lx += (p.x - pose.lx) * 0.18 * proofW
-      pose.px += Math.sin(proofFocus * 0.9) * 1.4 * proofW
+    const rw = reviewsWeight(u)
+    if (rw > 0.001) {
+      // Through the canyon: forward motion is scroll; the active monolith draws the gaze.
+      const local = clamp(u - 5)
+      const l0 = reviewCenter(0)
+      const l5 = reviewCenter(reviewData.length - 1)
+      const slope = (reviewZ(reviewData.length - 1) - reviewZ(0)) / (l5 - l0)
+      const z = reviewZ(0) + 26 + (local - l0) * slope
+      const x = routeX(z) + Math.sin(time * 0.3) * 0.6
+      const target = reviewPos(clamp(Math.round(proofFocus), 0, reviewData.length - 1))
+      const ahead = z - 34
+      pose.px = lerp(pose.px, x, rw)
+      pose.py = lerp(pose.py, groundHeight(x, z) + 5.6, rw)
+      pose.pz = lerp(pose.pz, z, rw)
+      pose.lx = lerp(pose.lx, lerp(routeX(ahead), target.x, 0.42), rw)
+      pose.ly = lerp(pose.ly, 8, rw)
+      pose.lz = lerp(pose.lz, lerp(ahead, target.z, 0.42), rw)
+      pose.fov = lerp(pose.fov, 42, rw)
+      pose.sx = lerp(pose.sx, 0.12, rw)
+      pose.roll = lerp(pose.roll, 0, rw)
+    }
+    if (width < 900) {
+      // portrait screens have no side room for type: centre the mark instead of offsetting it
+      const lw = smoothstep(1.25, 1.5, u) * (1 - smoothstep(1.85, 2.0, u))
+      pose.lx = lerp(pose.lx, MONUMENT.x, lw * 0.92)
     }
     if (debug.override) Object.assign(pose, debug.override)
     const intro = (1 - introE) * (1 - smoothstep(0.02, 0.14, u))
@@ -340,7 +379,8 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     camera.rotateZ(pose.roll)
     camera.fov = pose.fov * (width < 720 ? 1.25 : 1)
     const sx = width < 900 ? 0 : pose.sx
-    const sy = width < 900 ? 0.09 + 0.08 * gw : 0
+    const over = smoothstep(6.4, 6.9, u)
+    const sy = (width < 900 ? 0.09 + 0.08 * gw : 0) + over * (width < 900 ? 0.14 : 0.2)
     camera.setViewOffset(width, height, -sx * width, sy * height, width, height)
     camera.updateMatrixWorld()
 
@@ -349,14 +389,21 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     const front = lerp(8, frontBase, introE)
     const frontLerped = lerp(front, -900, smoothstep(1.0, 1.5, u))
 
-    // process stage 0..5
-    const s = u < 1 ? 0 : u > 2 ? 5 : clamp((u - 1 - PROCESS_START) / PROCESS_SPAN) * 5
+    // build progress 0..5: design (chapter 2) raises stages 0-2, development (chapter 3) raises stages 3-4
+    const s = u < 2 ? 0 : u < 3 ? (u - 2) * 3 : u < 4 ? 3 + (u - 3) * 2 : 5
     const awake = smoothstep(0.6, 1.0, u)
     construction.update(s, time, awake)
-    gallery.update(time, focus, appMix, 1)
-    monument.update(u, time, smoothstep(4.35, 4.95, u), 0.28 * smoothstep(0.55, 1, introE) * (1 - smoothstep(0.3, 0.6, u)))
-    const proofWeight = smoothstep(3.0, 3.25, u) * (1 - smoothstep(4.1, 4.4, u))
+    gallery.update(time, focus, appMix, 0.25 + 0.75 * gw)
+    const logoBeat = smoothstep(1.0, 1.5, u) * (1 - smoothstep(1.9, 2.3, u))
+    monument.update(u, time, logoBeat * 0.6, 0.28 * smoothstep(0.55, 1, introE) * (1 - smoothstep(0.7, 1.0, u)))
+    finalMark.update(u, time, smoothstep(5.95, 6.4, u), 0)
+    const proofWeight = smoothstep(5.0, 5.2, u) * (1 - smoothstep(6.0, 6.3, u))
     vista.update(time, proofFocus, proofWeight, camera.position, sunDir)
+    reviews.update(time, proofFocus, smoothstep(4.9, 5.15, u) * (1 - 0.7 * smoothstep(5.95, 6.25, u)))
+    if (u > 4.95 && u < 6.05) {
+      const idx = clamp(Math.floor(((u - 5 - REVIEW_FROM) / REVIEW_SPAN) * reviewData.length), 0, reviewData.length - 1)
+      cinematic.set({ proofIndex: idx })
+    }
 
     // accent colour of the focused project tints the hall
     const accentMix = gw
@@ -374,7 +421,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     tu.uFogColor.value.copy(a.fog)
     tu.uFogDensity.value = a.fogDensity
     tu.uFront.value = frontLerped
-    tu.uTopo.value = smoothstep(0.9, 1.15, u) * (1 - smoothstep(1.35, 2.05, u)) + 0.25 * gw
+    tu.uTopo.value = smoothstep(1.8, 2.1, u) * (1 - smoothstep(3.0, 3.9, u)) + 0.25 * gw
     tu.uWarm.value = smoothstep(1.2, 2.0, u)
     tu.uShock.value.set(0, 10, introE * 240)
     tu.uShockAmp.value = Math.pow(1 - introE, 0.6) * (1 - smoothstep(0.1, 0.3, u))
@@ -382,7 +429,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     const glow = tu.uGlow.value as Vector4[]
     const glowColor = tu.uGlowColor.value as Color[]
     for (let i = 0; i < GLOW_SLOTS; i += 1) glow[i].set(0, 0, 0, 0)
-    const emerge = smoothstep(0.35, 0.86, u)
+    const emerge = smoothstep(0.8, 1.5, u)
     glow[0].set(MONUMENT.x, monument.top * 0.6, MONUMENT.z + 14, 46)
     glowColor[0].copy(blue).lerp(gold, 0.45).multiplyScalar(0.3 * emerge + 0.05)
     construction.glows.forEach((g, i) => {
@@ -445,9 +492,11 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
 
     motes.update(camera.position, time, tint, 0.55 + 0.25 * (1 - day))
     mist.update(a.fog, a.sun, time, (1 - 0.5 * gw) * (0.1 + 0.9 * smoothstep(0.45, 1, introE)))
-    construction.group.visible = u > 0.45 || Boolean(debug.override)
-    gallery.group.visible = (u > 1.7 && u < 3.3) || Boolean(debug.override)
-    vista.group.visible = u > 2.5 || Boolean(debug.override)
+    construction.group.visible = u > 1.7 || Boolean(debug.override)
+    gallery.group.visible = u > 3.7 || Boolean(debug.override)
+    vista.group.visible = u > 4.7 || Boolean(debug.override)
+    reviews.group.visible = u > 4.7 || Boolean(debug.override)
+    finalMark.group.visible = u > 4.9 || Boolean(debug.override)
     monument.group.visible = true
     if (snap) {
       const groups = (window as unknown as { __cin: { groups: Record<string, { visible: boolean }> } }).__cin.groups
@@ -458,18 +507,22 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
 
     // chapter + DOM overlays
     const chapter = Math.min(CHAPTER_IDS.length - 1, Math.floor(u + 0.0001))
-    cinematic.set({ chapter, processStage: Math.min(4, Math.floor(s)) })
+    const beat = chapter === 2 ? Math.min(2, Math.floor((u - 2) * 3)) : chapter === 3 ? Math.min(1, Math.floor((u - 3) * 2)) : 0
+    cinematic.set({ chapter, processStage: beat })
+    const lastChapter = CHAPTER_IDS.length - 1
     overlays.forEach(el => {
       const index = Number(el.dataset.cinOverlay)
+      const from = Number(el.dataset.cinFrom ?? 0)
+      const to = Number(el.dataset.cinTo ?? 1)
       const local = u - index
-      const fadeIn = index === 0 ? 1 : smoothstep(0, 0.06, local)
-      const fadeOut = index === 0 ? 1 - smoothstep(0.2, 0.38, local) : index === CHAPTER_IDS.length - 1 ? 1 : 1 - smoothstep(0.94, 1, local)
-      const o = local < -0.001 || local > 1.001 ? 0 : fadeIn * fadeOut
+      const fadeIn = from <= 0 && index === 0 ? 1 : smoothstep(from, from + 0.06, local)
+      const fadeOut = to >= 1 ? (index === lastChapter ? 1 : 1 - smoothstep(0.94, 1, local)) : 1 - smoothstep(to - 0.07, to, local)
+      const o = local < from - 0.001 || local > to + 0.001 ? 0 : fadeIn * fadeOut
       el.style.opacity = o.toFixed(3)
       el.style.visibility = o > 0.01 ? 'visible' : 'hidden'
       el.style.pointerEvents = o > 0.55 ? 'auto' : 'none'
       el.dataset.active = o > 0.5 ? 'true' : 'false'
-      const travel = index === CHAPTER_IDS.length - 1 ? 0 : (1 - fadeIn) * 26 - (1 - fadeOut) * 16
+      const travel = index === lastChapter ? 0 : (1 - fadeIn) * 26 - (1 - fadeOut) * 16
       el.style.transform = `translate3d(0, ${travel.toFixed(1)}px, 0)`
     })
     let wipe = -1
@@ -521,6 +574,8 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
       construction.dispose()
       gallery.dispose()
       vista.dispose()
+      reviews.dispose()
+      finalMark.dispose()
       motes.dispose()
       mist.dispose()
       scatter.dispose()

@@ -54,12 +54,13 @@ export const MILESTONES = [
 ].map(m => ({ ...m, x: routeX(m.z) + m.side * 19 }))
 
 export const PLAZA = { x: 0, z: -378, r: 36 }
-export const LAKE = { x: 0, z: -482, rx: 120, rz: 62, level: -2.4 }
+export const LAKE = { x: 0, z: -490, rx: 30, rz: 62, level: -2.4 }
+export const FINAL = { x: 0, z: -585, size: 30 }
 export const SUN_DIR: [number, number, number] = [-0.42, 0.34, -0.84]
 
 const WIDTH_KEYS: [number, number][] = [
-  [70, 26], [20, 22], [-40, 24], [-70, 24], [-95, 50], [-150, 90], [-180, 70], [-300, 58], [-340, 54], [-378, 48], [-420, 70],
-  [-480, 120], [-540, 80], [-600, 60]
+  [70, 26], [20, 22], [-40, 24], [-70, 24], [-95, 50], [-150, 90], [-180, 70], [-300, 58], [-340, 54], [-378, 48], [-420, 38],
+  [-480, 34], [-540, 36], [-600, 46]
 ]
 
 function keyed(table: [number, number][], z: number) {
@@ -113,6 +114,9 @@ export function groundHeight(x: number, z: number) {
   const dg = Math.hypot(x - PLAZA.x, z - PLAZA.z)
   h = lerp(h, 0, smoothstep(PLAZA.r + 14, PLAZA.r - 4, dg))
   h += smoothstep(PLAZA.r + 4, PLAZA.r + 5.5, dg) * smoothstep(PLAZA.r + 10, PLAZA.r + 8, dg) * 1.4
+
+  // Pad for the closing logo at the end of the canyon.
+  h = lerp(h, 0.6, smoothstep(FINAL.size * 0.9 + 8, FINAL.size * 0.5, Math.hypot(x - FINAL.x, z - FINAL.z)))
 
   // Lake with a causeway that carries the route.
   const dl = Math.hypot((x - LAKE.x) / LAKE.rx, (z - LAKE.z) / LAKE.rz)

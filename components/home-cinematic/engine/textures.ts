@@ -223,3 +223,132 @@ export function metalTexture() {
   ctx.putImageData(image, 0, 0)
   return finish(canvas)
 }
+
+/** Design-studio boards: wireframe layout, type specimen, palette and a UI sketch. */
+export function designBoardTexture(kind: 'wire' | 'type' | 'palette' | 'sketch') {
+  const W = 360
+  const H = 480
+  const { canvas, ctx } = make(W, H)
+  ctx.fillStyle = '#081426'
+  ctx.fillRect(0, 0, W, H)
+  ctx.strokeStyle = 'rgba(21,155,255,0.16)'
+  ctx.lineWidth = 1
+  for (let i = 0; i <= W; i += 24) {
+    ctx.beginPath()
+    ctx.moveTo(i, 0)
+    ctx.lineTo(i, H)
+    ctx.stroke()
+  }
+  for (let i = 0; i <= H; i += 24) {
+    ctx.beginPath()
+    ctx.moveTo(0, i)
+    ctx.lineTo(W, i)
+    ctx.stroke()
+  }
+  ctx.strokeStyle = 'rgba(120,200,255,0.9)'
+  ctx.fillStyle = 'rgba(120,200,255,0.9)'
+  ctx.lineWidth = 3
+  if (kind === 'wire') {
+    ctx.strokeRect(28, 28, W - 56, 52)
+    ctx.strokeRect(28, 104, W - 56, 150)
+    ctx.beginPath()
+    ctx.moveTo(28, 104)
+    ctx.lineTo(W - 28, 254)
+    ctx.moveTo(W - 28, 104)
+    ctx.lineTo(28, 254)
+    ctx.stroke()
+    for (let i = 0; i < 3; i += 1) ctx.strokeRect(28 + i * 100, 282, 92, 92)
+    ctx.fillStyle = '#ffbf43'
+    ctx.fillRect(28, 402, 120, 36)
+  } else if (kind === 'type') {
+    ctx.fillStyle = '#f2f6ff'
+    ctx.font = '700 190px Georgia, serif'
+    ctx.fillText('Aa', 34, 220)
+    ctx.fillStyle = '#ffbf43'
+    ctx.fillRect(34, 250, 150, 6)
+    ctx.fillStyle = 'rgba(190,210,245,0.85)'
+    ctx.font = '600 26px Inter, system-ui, sans-serif'
+    ctx.fillText('Heading / 48', 34, 306)
+    ctx.font = '400 22px Inter, system-ui, sans-serif'
+    ctx.fillText('Body copy for reading, 18 / 28', 34, 346)
+    ctx.fillText('Small caption text, 13 / 20', 34, 380)
+  } else if (kind === 'palette') {
+    const colors = ['#159bff', '#ffbf43', '#7c3aed', '#e040a8', '#0b1d3a', '#f4f7fd']
+    colors.forEach((c, i) => {
+      ctx.fillStyle = c
+      ctx.fillRect(28 + (i % 2) * 160, 40 + Math.floor(i / 2) * 140, 144, 124)
+    })
+  } else {
+    ctx.beginPath()
+    ctx.moveTo(40, 380)
+    ctx.bezierCurveTo(90, 120, 180, 420, 320, 90)
+    ctx.stroke()
+    ctx.setLineDash([10, 10])
+    ctx.strokeRect(40, 40, 140, 90)
+    ctx.beginPath()
+    ctx.arc(250, 250, 56, 0, Math.PI * 2)
+    ctx.stroke()
+    ctx.setLineDash([])
+    ctx.fillStyle = '#ffbf43'
+    ;[[40, 380], [320, 90], [180, 260]].forEach(([x, y]) => ctx.fillRect(x - 7, y - 7, 14, 14))
+  }
+  return finish(canvas, false)
+}
+
+/** Scrolling code wall. Call draw(time) to advance; the texture uploads only when it is called. */
+export function codeScreen() {
+  const W = 512
+  const H = 320
+  const { canvas, ctx } = make(W, H)
+  const lines = [
+    'const brief = await client.listen()',
+    'const plan = design.structure(brief)',
+    '',
+    'export async function build(plan) {',
+    '  const layout = compose(plan.pages)',
+    '  const ui = style(layout, brand)',
+    '  await test(ui, { a11y: true })',
+    '  return ship(ui, { fast: true })',
+    '}',
+    '',
+    'route("/", home)',
+    'route("/work", projects)',
+    'route("/contact", form)',
+    '',
+    'if (performance.score < 95) {',
+    '  optimise(images, fonts, scripts)',
+    '}',
+    '',
+    'deploy({ region: "eu", ssl: true })',
+    'monitor.start()  // always improving'
+  ]
+  const colorFor = (line: string) => (line.includes('//') ? '#6f86aa' : /^(export|const|if|await|return)/.test(line.trim()) ? '#7cc4ff' : line.includes('(') ? '#ffd27a' : '#cfe0ff')
+  const texture = finish(canvas, false)
+  return {
+    texture,
+    draw(time: number) {
+      ctx.fillStyle = '#050c1a'
+      ctx.fillRect(0, 0, W, H)
+      ctx.fillStyle = '#0f1d38'
+      ctx.fillRect(0, 0, W, 26)
+      ctx.fillStyle = '#ffbf43'
+      ctx.beginPath()
+      ctx.arc(16, 13, 4, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.font = '600 16px ui-monospace, Menlo, Consolas, monospace'
+      const lh = 22
+      const total = lines.length * lh
+      const offset = (time * 26) % total
+      for (let i = 0; i < lines.length * 2; i += 1) {
+        const line = lines[i % lines.length]
+        const y = 52 + i * lh - offset
+        if (y < 30 || y > H) continue
+        ctx.fillStyle = 'rgba(111,134,170,0.55)'
+        ctx.fillText(String((i % 99) + 1).padStart(2, ' '), 10, y)
+        ctx.fillStyle = colorFor(line)
+        ctx.fillText(line, 44, y)
+      }
+      texture.needsUpdate = true
+    }
+  }
+}

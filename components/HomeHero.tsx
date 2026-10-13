@@ -46,6 +46,7 @@ export default function HomeHero({ locale }: { locale: Locale }) {
       id="cinematic-arrival"
       className="cin-ov cin-ov--arrival"
       data-cin-overlay="0"
+      data-cin-to="0.62"
       aria-labelledby="home-hero-heading"
     >
       <div className="cin-hero">
@@ -65,7 +66,7 @@ export default function HomeHero({ locale }: { locale: Locale }) {
         </div>
         <p className="cin-hero__points">{t.points.join('  ·  ')}</p>
       </div>
-      <a href="#cinematic-process" className="cin-scroll-cue" onClick={event => jumpToChapter(event, 1, 0.06)}>
+      <a href="#cinematic-logo" className="cin-scroll-cue" onClick={event => jumpToChapter(event, 1, 0.1)}>
         {t.scroll}<ArrowDown className="h-3.5 w-3.5" aria-hidden="true" />
       </a>
     </section>

@@ -16,21 +16,23 @@ import {
   SRGBColorSpace,
   Texture,
   TextureLoader,
-  TorusGeometry
+  CubicBezierCurve3,
+  TorusGeometry,
+  TubeGeometry,
+  Vector3
 } from 'three'
-import { PLAZA, groundHeight } from './layout'
+import { PLAZA } from './layout'
 import { clamp, lerp } from './noise'
-import { glowTexture, metalTexture, shaftTexture, stoneTexture } from './textures'
+import { glowTexture, metalTexture, shaftTexture } from './textures'
 
 export type GalleryProject = { shot: string; appShot?: string; color: string }
 
-export const PORTAL_RADIUS = 39
+export const PORTAL_RADIUS = 27
 const SCREEN_W = 9.6
 const SCREEN_H = 5.4
 const CENTER_Y = 4.4
-const ARC = (70 * Math.PI) / 180
-
-export const portalAngle = (f: number, count: number) => lerp(-ARC, ARC, count > 1 ? f / (count - 1) : 0.5)
+/** Portals ring the chamber; with six the door gaps (front and back) fall between two projects. */
+export const portalAngle = (f: number, count: number) => (f - (count - 1) / 2) * ((Math.PI * 2) / count)
 
 type Portal = {
   group: Group
@@ -98,8 +100,6 @@ export function createGallery(projects: GalleryProject[], maxAnisotropy: number)
     return track(texture)
   }
 
-  const stone = track(stoneTexture(21, [96, 110, 134]))
-  stone.repeat.set(4, 6)
   const metal = track(metalTexture())
   const glow = track(glowTexture())
   const shaft = track(shaftTexture())
@@ -126,39 +126,37 @@ export function createGallery(projects: GalleryProject[], maxAnisotropy: number)
     rings.push(ring)
   })
 
-  // Colonnade framing the space, open toward the entrance and the exit.
-  const pillarMaterial = track(new MeshStandardMaterial({ map: stone, color: 0x9fb2d0, metalness: 0.2, roughness: 0.7 }))
-  const capMaterial = track(new MeshStandardMaterial({ color: 0x0b1424, emissive: 0x159bff, emissiveIntensity: 1.1 }))
-  const pillarGeometry = track(new BoxGeometry(1.4, 26, 1.4))
-  const capGeometry = track(new BoxGeometry(1.7, 0.3, 1.7))
-  for (let i = 0; i < 22; i += 1) {
-    const a = (i / 22) * Math.PI * 2
-    const sx = Math.sin(a)
-    const cz = Math.cos(a)
-    if (Math.abs(sx) < 0.22) continue
-    const radius = PLAZA.r + 12 + (i % 2) * 3
-    const x = PLAZA.x + sx * radius
-    const z = PLAZA.z + cz * radius
-    const pillar = new Mesh(pillarGeometry, pillarMaterial)
-    pillar.position.set(x, groundHeight(x, z) + 13, z)
-    pillar.rotation.y = a
-    const cap = new Mesh(capGeometry, capMaterial)
-    cap.position.set(x, groundHeight(x, z) + 26.1, z)
-    group.add(pillar, cap)
+  // The chamber: a cylindrical hall with a ribbed dome, open at the entrance and exit.
+  const DR = PLAZA.r - 1.5
+  const profile = new CubicBezierCurve3(new Vector3(DR, 0, 0), new Vector3(DR, 26, 0), new Vector3(DR * 0.55, 41, 0), new Vector3(2.5, 41, 0))
+  const ribGeometry = track(new TubeGeometry(profile, 28, 0.3, 6))
+  const ribMaterial = track(new MeshStandardMaterial({ color: 0x0b1424, metalness: 0.9, roughness: 0.25, emissive: 0x159bff, emissiveIntensity: 0.55, envMapIntensity: 1.2 }))
+  const ribCount = 28
+  for (let i = 0; i < ribCount; i += 1) {
+    const a = (i / ribCount) * Math.PI * 2
+    if (Math.abs(Math.sin(a)) < 0.22) continue
+    const rib = new Mesh(ribGeometry, ribMaterial)
+    rib.position.set(PLAZA.x, 0.2, PLAZA.z)
+    rib.rotation.y = -a + Math.PI / 2
+    group.add(rib)
   }
-
-  // Oculus: a luminous ring far above, throwing shafts down into the hall.
-  const oculus = new Mesh(track(new TorusGeometry(24, 0.38, 10, 128)), track(new MeshBasicMaterial({ color: 0x8fd0ff, toneMapped: false })))
-  oculus.rotation.x = Math.PI / 2
-  oculus.position.set(PLAZA.x, 30, PLAZA.z - 6)
-  group.add(oculus)
+  ;[0.3, 0.55, 0.78].forEach((t, i) => {
+    const p = profile.getPoint(t)
+    const hoop = new Mesh(track(new TorusGeometry(p.x, 0.16, 6, 96)), ringMaterial(i % 2 ? 0xffbf43 : 0x159bff, 0.55))
+    hoop.rotation.x = Math.PI / 2
+    hoop.position.set(PLAZA.x, p.y + 0.2, PLAZA.z)
+    group.add(hoop)
+  })
+  const crown = new Mesh(track(new TorusGeometry(2.8, 0.3, 8, 48)), track(new MeshBasicMaterial({ color: 0x8fd0ff, toneMapped: false })))
+  crown.rotation.x = Math.PI / 2
+  crown.position.set(PLAZA.x, 41.2, PLAZA.z)
+  group.add(crown)
   const shaftMaterial = track(new MeshBasicMaterial({ map: shaft, color: 0x8fb8ff, transparent: true, opacity: 0.07, blending: AdditiveBlending, depthWrite: false, side: DoubleSide, toneMapped: false }))
-  for (let i = 0; i < 5; i += 1) {
-    const plane = new Mesh(track(new PlaneGeometry(9, 34)), shaftMaterial)
-    const a = (i / 5) * Math.PI * 2
-    plane.position.set(PLAZA.x + Math.sin(a) * 12, 16, PLAZA.z - 6 + Math.cos(a) * 12)
+  for (let i = 0; i < 4; i += 1) {
+    const plane = new Mesh(track(new PlaneGeometry(7, 40)), shaftMaterial)
+    const a = (i / 4) * Math.PI
+    plane.position.set(PLAZA.x, 21, PLAZA.z)
     plane.rotation.y = a
-    plane.rotation.z = Math.sin(a) * 0.1
     group.add(plane)
   }
 
@@ -275,7 +273,9 @@ export function createGallery(projects: GalleryProject[], maxAnisotropy: number)
       let total = 0
       accent.setRGB(0, 0, 0)
       portals.forEach((portal, index) => {
-        const w = clamp(1 - Math.abs(focus - index))
+        const n = projects.length
+        const diff = ((((focus - index) % n) + n * 1.5) % n) - n / 2
+        const w = clamp(1 - Math.abs(diff))
         const e = w * w * (3 - 2 * w)
         const dim = 0.22 + 0.78 * e
         const mix = appMaterials[index] ? appMix : 0
@@ -305,12 +305,11 @@ export function createGallery(projects: GalleryProject[], maxAnisotropy: number)
       light.intensity = 700 * awake
 
       // light path to the focused portal
-      const f = clamp(focus, 0, projects.length - 1)
-      const theta = portalAngle(f, projects.length)
-      const px = PLAZA.x + Math.sin(theta) * (PORTAL_RADIUS - 3)
-      const pz = PLAZA.z - Math.cos(theta) * (PORTAL_RADIUS - 3)
+      const theta = portalAngle(focus, projects.length)
+      const px = PLAZA.x + Math.sin(theta) * (PORTAL_RADIUS - 5)
+      const pz = PLAZA.z - Math.cos(theta) * (PORTAL_RADIUS - 5)
       const sx = PLAZA.x
-      const sz = PLAZA.z + PLAZA.r - 6
+      const sz = PLAZA.z
       pathPivot.position.set((px + sx) / 2, 0.27, (pz + sz) / 2)
       pathPivot.rotation.y = Math.atan2(-(px - sx), -(pz - sz))
       path.scale.y = Math.hypot(px - sx, pz - sz)
@@ -320,7 +319,7 @@ export function createGallery(projects: GalleryProject[], maxAnisotropy: number)
       })
     },
     portalAt(f, out) {
-      const theta = portalAngle(clamp(f, 0, projects.length - 1), projects.length)
+      const theta = portalAngle(f, projects.length)
       out.x = PLAZA.x + Math.sin(theta) * PORTAL_RADIUS
       out.z = PLAZA.z - Math.cos(theta) * PORTAL_RADIUS
       out.y = 0.3 + CENTER_Y

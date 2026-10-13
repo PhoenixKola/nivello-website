@@ -2,24 +2,20 @@ import {
   AdditiveBlending,
   CanvasTexture,
   Color,
-  CylinderGeometry,
   DoubleSide,
   Group,
   Mesh,
   MeshBasicMaterial,
-  MeshStandardMaterial,
   PlaneGeometry,
-  PointLight,
-  RingGeometry,
   ShaderMaterial,
   Sprite,
   SpriteMaterial,
   SRGBColorSpace,
   Vector3
 } from 'three'
-import { LAKE, groundHeight, routeX } from './layout'
-import { clamp, fbm } from './noise'
-import { glowTexture, mistTexture, shaftTexture } from './textures'
+import { LAKE } from './layout'
+import { fbm } from './noise'
+import { mistTexture, shaftTexture } from './textures'
 
 const waterVertex = /* glsl */ `
   varying vec3 vPos;
@@ -110,11 +106,10 @@ export type Vista = {
   waterUniforms: ShaderMaterial['uniforms']
   rays: Sprite
   update(time: number, focus: number, weight: number, camera: Vector3, sunDir: Vector3): void
-  pillarAt(index: number): { x: number; y: number; z: number }
   dispose(): void
 }
 
-export function createVista(colors: string[]): Vista {
+export function createVista(): Vista {
   const group = new Group()
   const disposables: { dispose(): void }[] = []
   const track = <T extends { dispose(): void }>(item: T) => {
@@ -139,43 +134,12 @@ export function createVista(colors: string[]): Vista {
   water.position.set(LAKE.x, LAKE.level, LAKE.z)
   group.add(water)
 
-  // Client pillars along the causeway.
-  const baseMaterial = track(new MeshStandardMaterial({ color: 0x151f33, metalness: 0.6, roughness: 0.35 }))
-  const pillars = colors.map((hex, index) => {
-    const z = -428 - index * 14
-    const side = index % 2 ? 1 : -1
-    const x = routeX(z) + side * 10
-    const y = groundHeight(x, z)
-    const color = new Color(hex)
-    const hsl = { h: 0, s: 0, l: 0 }
-    color.getHSL(hsl)
-    if (hsl.l < 0.36) color.setHSL(hsl.h, Math.max(hsl.s, 0.4), 0.55)
-
-    const root = new Group()
-    root.position.set(x, Math.max(y, LAKE.level) , z)
-    group.add(root)
-    const shaft = new Mesh(track(new CylinderGeometry(0.55, 0.9, 11, 6)), baseMaterial)
-    shaft.position.y = 5.5
-    const lampMaterial = track(new MeshBasicMaterial({ color, toneMapped: false }))
-    const lamp = new Mesh(track(new CylinderGeometry(0.75, 0.55, 1.4, 6)), lampMaterial)
-    lamp.position.y = 11.7
-    const halo = new Mesh(track(new PlaneGeometry(12, 12)), track(new MeshBasicMaterial({ map: glowTexture(), color, transparent: true, opacity: 0.3, blending: AdditiveBlending, depthWrite: false, toneMapped: false, side: DoubleSide })))
-    halo.position.y = 11.7
-    root.add(shaft, lamp, halo)
-
-    const ring = new Mesh(track(new RingGeometry(0.96, 1, 64)), track(new MeshBasicMaterial({ color, transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false, side: DoubleSide, toneMapped: false })))
-    ring.rotation.x = -Math.PI / 2
-    ring.position.y = LAKE.level - root.position.y + 0.12
-    root.add(ring)
-    return { root, halo, haloMaterial: halo.material as MeshBasicMaterial, lamp: lampMaterial, ring }
-  })
-
   const mistMaterial = track(new MeshBasicMaterial({ map: track(mistTexture(3)), color: 0xffd9aa, transparent: true, opacity: 0.22, blending: AdditiveBlending, depthWrite: false, side: DoubleSide, toneMapped: false }))
   const mists: Mesh[] = []
   for (let i = 0; i < 9; i += 1) {
-    const plane = new Mesh(track(new PlaneGeometry(90, 34)), mistMaterial)
+    const plane = new Mesh(track(new PlaneGeometry(60, 30)), mistMaterial)
     plane.rotation.x = -Math.PI / 2
-    plane.position.set(LAKE.x + (i - 4) * 28 + Math.sin(i * 2.3) * 12, LAKE.level + 0.8 + (i % 3) * 0.7, LAKE.z + Math.cos(i * 1.7) * 36)
+    plane.position.set(LAKE.x + Math.sin(i * 2.3) * 12, LAKE.level + 0.8 + (i % 3) * 0.7, LAKE.z + (i - 4) * 14)
     group.add(plane)
     mists.push(plane)
   }
@@ -189,38 +153,18 @@ export function createVista(colors: string[]): Vista {
   const shaftMaterial = track(new MeshBasicMaterial({ map: track(shaftTexture()), color: 0xffcf90, transparent: true, opacity: 0.1, blending: AdditiveBlending, depthWrite: false, side: DoubleSide, toneMapped: false }))
   for (let i = 0; i < 5; i += 1) {
     const plane = new Mesh(track(new PlaneGeometry(26, 120)), shaftMaterial)
-    plane.position.set(-50 + i * 24, 50, -520 - i * 6)
+    plane.position.set(-24 + i * 12, 50, -520 - i * 8)
     plane.rotation.z = 0.5
     plane.rotation.y = 0.2
     group.add(plane)
   }
 
-  const light = new PointLight(0xffc680, 0, 60, 1.6)
-  group.add(light)
-
   return {
     group,
     waterUniforms,
     rays,
-    pillarAt(index) {
-      const p = pillars[clamp(Math.round(index), 0, pillars.length - 1)]
-      return { x: p.root.position.x, y: p.root.position.y + 11, z: p.root.position.z }
-    },
-    update(time, focus, weight, camera, sunDir) {
+    update(time, _focus, weight, camera, sunDir) {
       waterUniforms.uTime.value = time
-      pillars.forEach((pillar, index) => {
-        const e = clamp(1 - Math.abs(focus - index))
-        pillar.haloMaterial.opacity = 0.12 + 0.38 * e
-        pillar.halo.scale.setScalar(0.8 + e * 1.4)
-        const phase = (time * 0.45 + index * 0.2) % 1
-        const ringMaterial = pillar.ring.material as MeshBasicMaterial
-        ringMaterial.opacity = e * (1 - phase) * 0.9
-        pillar.ring.scale.setScalar(2 + phase * 14)
-      })
-      const active = pillars[clamp(Math.round(focus), 0, pillars.length - 1)]
-      light.position.set(active.root.position.x, active.root.position.y + 12, active.root.position.z + 3)
-      light.color.copy(active.lamp.color)
-      light.intensity = 600 * weight
       mistMaterial.opacity = 0.1 + 0.16 * weight
       mists.forEach((mist, i) => {
         mist.position.x += Math.sin(time * 0.05 + i) * 0.01

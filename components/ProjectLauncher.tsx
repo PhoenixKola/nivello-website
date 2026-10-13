@@ -295,9 +295,9 @@ export default function ProjectLauncher({ locale }: { locale: Locale }) {
   }
 
   return (
-    <section id="cinematic-start" className="cin-ov cin-ov--start" data-cin-overlay="4" aria-labelledby={headingId}>
+    <section id="cinematic-start" className="cin-ov cin-ov--start" data-cin-overlay="6" data-cin-to="0.5" aria-labelledby={headingId}>
       <div className="cin-start">
-        <p className="cin-eyebrow"><i aria-hidden="true" /><span className="cin-head__no">05</span><span className="cin-head__name">{t.chapter}</span><span className="cin-head__sep" aria-hidden="true" /><span className="cin-head__kind">{t.eyebrow}</span></p>
+        <p className="cin-eyebrow"><i aria-hidden="true" /><span className="cin-head__no">07</span><span className="cin-head__name">{t.chapter}</span><span className="cin-head__sep" aria-hidden="true" /><span className="cin-head__kind">{t.eyebrow}</span></p>
         <h2 id={headingId} className="cin-start__title">{t.title}</h2>
         <p className="cin-start__body">{t.body}</p>
 

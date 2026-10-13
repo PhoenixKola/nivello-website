@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useId, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import ClientLogoMarquee from '@/components/ClientLogoMarquee'
-import { cinematic } from '@/lib/cinematic/store'
+import { reviewCenter, scrollToChapter, useCinematic } from '@/lib/cinematic/store'
 import { getProjectPath, getProjects } from '@/lib/projects'
 import type { Locale } from '@/lib/site'
 import { useHydratedReducedMotion } from '@/lib/useHydratedReducedMotion'
@@ -15,7 +15,7 @@ type ProofQuote = { slug: string; name: string; role: string; quote: string }
 
 // Only feedback that matches the project facts in lib/projects.ts is shown.
 // Le Camelie and Consteam are left out until their wording is verified.
-const quotes: Record<Locale, ProofQuote[]> = {
+export const proofQuotes: Record<Locale, ProofQuote[]> = {
   en: [
     {
       slug: 'rombo-nord',
@@ -135,25 +135,29 @@ export default function ProofSection({ locale }: { locale: Locale }) {
   const reducedMotion = useHydratedReducedMotion()
   const baseId = useId()
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
-  const [activeIndex, setActiveIndex] = useState(0)
+  const live = useCinematic(state => state.mode === 'live', false)
+  const storeIndex = useCinematic(state => state.proofIndex, 0)
+  const [localIndex, setLocalIndex] = useState(0)
 
   const items = useMemo(() => {
     const projects = getProjects(locale)
-    return quotes[locale].flatMap(quote => {
+    return proofQuotes[locale].flatMap(quote => {
       const project = projects.find(p => p.slug === quote.slug)
       return project ? [{ ...quote, project }] : []
     })
   }, [locale])
 
-  useEffect(() => {
-    cinematic.set({ proofIndex: activeIndex })
-  }, [activeIndex])
-
+  // In the live world the scroll position owns the selection; picking a client scrolls the canyon to it.
+  const activeIndex = Math.min(live ? storeIndex : localIndex, items.length - 1)
+  const select = (index: number) => {
+    if (live) scrollToChapter(5, reviewCenter(index, items.length))
+    else setLocalIndex(index)
+  }
   const active = items[activeIndex]
   const { project } = active
 
   const focusTab = (index: number) => {
-    setActiveIndex(index)
+    select(index)
     tabRefs.current[index]?.focus()
   }
 
@@ -176,9 +180,9 @@ export default function ProofSection({ locale }: { locale: Locale }) {
   const swap = reducedMotion ? { duration: 0 } : { duration: 0.42, ease: [0.4, 0, 0.2, 1] as const }
 
   return (
-    <section id="cinematic-trust" className="cin-ov cin-ov--trust" data-cin-overlay="3" style={accentStyle(project.color)} aria-labelledby="home-proof-heading">
+    <section id="cinematic-trust" className="cin-ov cin-ov--trust" data-cin-overlay="5" style={accentStyle(project.color)} aria-labelledby="home-proof-heading">
       <header className="cin-head">
-        <p className="cin-eyebrow"><i aria-hidden="true" /><span className="cin-head__no">04</span><span className="cin-head__name">{t.chapter}</span><span className="cin-head__sep" aria-hidden="true" /><span className="cin-head__kind">{t.eyebrow}</span></p>
+        <p className="cin-eyebrow"><i aria-hidden="true" /><span className="cin-head__no">06</span><span className="cin-head__name">{t.chapter}</span><span className="cin-head__sep" aria-hidden="true" /><span className="cin-head__kind">{t.eyebrow}</span></p>
         <h2 id="home-proof-heading" className="cin-head__title">{t.title}</h2>
         <p className="cin-head__intro">{t.intro}</p>
       </header>
@@ -229,7 +233,7 @@ export default function ProofSection({ locale }: { locale: Locale }) {
                 aria-selected={isActive}
                 aria-controls={`${baseId}-panel`}
                 tabIndex={isActive ? 0 : -1}
-                onClick={() => setActiveIndex(index)}
+                onClick={() => select(index)}
                 onKeyDown={onKeyDown}
                 className="cin-clients__tab"
                 style={accentStyle(item.project.color)}

@@ -1,5 +1,7 @@
 import HomeFooter from '@/components/home-cinematic/HomeFooter'
-import HomeBuildPipeline from '@/components/HomeBuildPipeline'
+import HomeDesignStage from '@/components/HomeDesignStage'
+import HomeDevelopmentStage from '@/components/HomeDevelopmentStage'
+import HomeLogoReveal from '@/components/HomeLogoReveal'
 import HomeHero from '@/components/HomeHero'
 import HomeProjectStage from '@/components/HomeProjectStage'
 import ProofSection from '@/components/ProofSection'
@@ -35,7 +37,9 @@ export default function HomePage({ locale }: { locale: Locale }) {
           <CinematicWorld locale={locale} />
           <div className="cin-overlays">
             <HomeHero locale={locale} />
-            <HomeBuildPipeline locale={locale} />
+            <HomeLogoReveal locale={locale} />
+            <HomeDesignStage locale={locale} />
+            <HomeDevelopmentStage locale={locale} />
             <HomeProjectStage locale={locale} />
             <ProofSection locale={locale} />
             <ProjectLauncher locale={locale} />

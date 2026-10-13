@@ -19,11 +19,15 @@ import {
   PlaneGeometry,
   PointLight,
   Shape,
-  TorusGeometry
+  TorusGeometry,
+  TubeGeometry,
+  CatmullRomCurve3,
+  SphereGeometry,
+  Vector3
 } from 'three'
 import { MILESTONES, groundHeight } from './layout'
 import { smoothstep } from './noise'
-import { blueprintTexture, facadeTextures, glowTexture, shaftTexture, stoneTexture } from './textures'
+import { blueprintTexture, codeScreen, designBoardTexture, facadeTextures, glowTexture, shaftTexture, stoneTexture } from './textures'
 
 type Uniforms = { uBuild: { value: number }; uBase: { value: number }; uHeight: { value: number }; uEdge: { value: Color } }
 
@@ -88,7 +92,7 @@ export function createConstruction(): Construction {
   type Stage = {
     group: Group
     uniforms: Uniforms
-    arcs?: Mesh[]
+    floaters: { mesh: Mesh; y: number; phase: number }[]
     beam?: MeshBasicMaterial
     spin?: Group
     height: number
@@ -98,6 +102,9 @@ export function createConstruction(): Construction {
     markers: Mesh[]
   }
   const stages: Stage[] = []
+  let code: ReturnType<typeof codeScreen> | undefined
+  let codeAt = 0
+  const packets: { mesh: Mesh; curve: CatmullRomCurve3; offset: number }[] = []
 
   const begin = (index: number, height: number) => {
     const m = MILESTONES[index]
@@ -107,7 +114,7 @@ export function createConstruction(): Construction {
     group.rotation.y = -m.side * 0.85
     root.add(group)
     const uniforms: Uniforms = { uBuild: { value: 0 }, uBase: { value: base }, uHeight: { value: height }, uEdge: { value: gold } }
-    const stage: Stage = { group, uniforms, height, topLight: height, emissive: [], lines: [], markers: [] }
+    const stage: Stage = { group, uniforms, height, topLight: height, emissive: [], lines: [], markers: [], floaters: [] }
     stages.push(stage)
     return stage
   }
@@ -144,27 +151,23 @@ export function createConstruction(): Construction {
     stage.group.add(blob)
   }
 
-  // ── 01 Intro: a signal mast that calls the project into being ────────────
+  // ── 01 Concept: floating design boards over a drafting table ───────────
   {
     const s = begin(0, 17)
-    shadowBlob(s, 12)
-    solid(s, new CylinderGeometry(6.2, 7, 1.3, 8), matStone, 0, 0.65)
-    solid(s, new CylinderGeometry(4.2, 5, 0.9, 8), matDark, 0, 1.75)
-    solid(s, new CylinderGeometry(0.55, 1.5, 13, 10), matStone, 0, 8.2)
-    solid(s, new TorusGeometry(3.1, 0.28, 8, 40), emissiveBlue, 0, 9.5, 0, false).rotation.x = Math.PI / 2
-    solid(s, new TorusGeometry(2.1, 0.22, 8, 40), emissiveBlue, 0, 12.2, 0, false).rotation.x = Math.PI / 2
-    const emitter = solid(s, new OctahedronGeometry(1.15, 0), emissiveGold, 0, 15.6, 0, false)
-    s.markers.push(emitter)
-    s.arcs = []
-    for (let i = 0; i < 3; i += 1) {
-      const arcMaterial = track(new MeshBasicMaterial({ color: i === 1 ? gold : 0x6cc6ff, transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false, side: DoubleSide, toneMapped: false }))
-      const arc = new Mesh(track(new TorusGeometry(3.4 + i * 2.1, 0.07, 6, 48, Math.PI * 0.8)), arcMaterial)
-      arc.position.y = 15.6
-      arc.rotation.set(0, -Math.PI / 2 + 0.3, 0)
-      arc.rotation.z = Math.PI / 2 - Math.PI * 0.4
-      s.group.add(arc)
-      s.arcs.push(arc)
-    }
+    shadowBlob(s, 14)
+    solid(s, new CylinderGeometry(7, 7.8, 1.1, 8), matDark, 0, 0.55)
+    solid(s, new CylinderGeometry(5.2, 6, 0.6, 8), matStone, 0, 1.4)
+    const kinds = ['wire', 'type', 'palette', 'sketch'] as const
+    kinds.forEach((kind, i) => {
+      const map = track(designBoardTexture(kind))
+      const material = track(new MeshBasicMaterial({ map, toneMapped: false, color: 0xbad4ff }))
+      const angle = -0.9 + i * 0.6
+      const board = solid(s, new BoxGeometry(4.2, 5.6, 0.2), material, Math.sin(angle) * 6.5, 7 + (i % 2) * 2.6, -Math.cos(angle) * 4.2)
+      board.rotation.y = -angle * 0.8
+      s.floaters.push({ mesh: board, y: board.position.y, phase: i * 1.3 })
+    })
+    const cursor = solid(s, new OctahedronGeometry(0.7, 0), emissiveGold, 0, 12.5, 0, false)
+    s.markers.push(cursor)
     s.emissive.push(emissiveBlue, emissiveGold)
   }
 
@@ -257,6 +260,33 @@ export function createConstruction(): Construction {
     counter.position.set(-3.8, 27.4, 0)
     crane.add(mast, jib, counter)
     s.emissive.push(emissiveGold)
+
+    // Development bay: code scrolls across the wall and feeds luminous cables into the rising site.
+    const wall = codeScreen()
+    code = wall
+    disposables.push(wall.texture)
+    const screenMaterial = () => constructible(new MeshBasicMaterial({ map: wall.texture, toneMapped: false, color: 0xcfd8ee }), s.uniforms, 'solid')
+    ;[[-15.5, 5.8, 13, 0.32, 8.2, 5.2], [-7, 6.4, 14.5, 0.06, 9.2, 5.8], [1.8, 5.8, 13, -0.22, 8.2, 5.2]].forEach(([x, y, z, ry, w, h]) => {
+      const frame = solid(s, new BoxGeometry(w + 0.5, h + 0.5, 0.35), matDark, x, y, z, false)
+      frame.rotation.y = ry
+      const face = new Mesh(track(new PlaneGeometry(w, h)), screenMaterial())
+      face.position.set(x + Math.sin(ry) * 0.2, y, z + Math.cos(ry) * 0.2)
+      face.rotation.y = ry
+      s.group.add(face)
+    })
+    solid(s, new BoxGeometry(24, 0.9, 4.2), matDark, -6.5, 0.45, 16.5, false)
+    solid(s, new BoxGeometry(21, 0.12, 3.4), emissiveBlue, -6.5, 0.95, 16.5, false)
+    const cable = new CatmullRomCurve3([new Vector3(-6.5, 0.7, 14.5), new Vector3(-4, 0.5, 8), new Vector3(0.5, 0.5, 3), new Vector3(3.5, 0.5, 0)])
+    const cableMaterial = track(constructible(new MeshBasicMaterial({ color: 0xffbf43, toneMapped: false }), s.uniforms, 'solid'))
+    const tube = new Mesh(track(new TubeGeometry(cable, 40, 0.14, 6, false)), cableMaterial)
+    s.group.add(tube)
+    const packetMaterial = track(new MeshBasicMaterial({ color: 0xfff1c9, toneMapped: false }))
+    const packetGeometry = track(new SphereGeometry(0.34, 10, 8))
+    for (let i = 0; i < 4; i += 1) {
+      const packet = new Mesh(packetGeometry, packetMaterial)
+      s.group.add(packet)
+      packets.push({ mesh: packet, curve: cable, offset: i / 4 })
+    }
   }
 
   // ── 05 Launch: the finished spire, beam on ───────────────────────────────
@@ -315,10 +345,8 @@ export function createConstruction(): Construction {
           const base = material.emissiveMap ? 0.95 : material === emissiveBlue ? 1.0 : material === emissivePurple ? 0.9 : 1.2
           material.emissiveIntensity = base * (0.35 + 0.65 * awake)
         })
-        stage.arcs?.forEach((arc, i) => {
-          const phase = (time * 0.9 + i * 0.33) % 1
-          ;(arc.material as MeshBasicMaterial).opacity = build * (1 - phase) * 0.9
-          arc.scale.setScalar(0.7 + phase * 0.9)
+        stage.floaters.forEach(f => {
+          f.mesh.position.y = f.y + Math.sin(time * 0.9 + f.phase) * 0.35
         })
         stage.markers.forEach(marker => {
           marker.rotation.y = time * 0.8
@@ -326,6 +354,15 @@ export function createConstruction(): Construction {
         if (stage.spin) stage.spin.rotation.y = time * 0.08 + (done ? 0 : 0.6 * (1 - build))
         if (stage.beam) stage.beam.opacity = smoothstep(0.82, 1, build) * 0.28 * (0.85 + 0.15 * Math.sin(time * 2))
         stage.group.visible = true
+      })
+      if (code && s > 2.3 && s < 5.1 && time - codeAt > 0.1) {
+        codeAt = time
+        code.draw(time)
+      }
+      const dev = smoothstep(3.1, 3.7, s)
+      packets.forEach(p => {
+        p.mesh.visible = dev > 0.05 && s < 4.2
+        p.mesh.position.copy(p.curve.getPoint((((time * 0.3 + p.offset) % 1) + 1) % 1))
       })
       const active = Math.min(4, Math.max(0, Math.floor(s)))
       const m = MILESTONES[active]

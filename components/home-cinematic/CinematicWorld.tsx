@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { cinematic } from '@/lib/cinematic/store'
+import { proofQuotes } from '@/components/ProofSection'
 import { getProjects } from '@/lib/projects'
 import type { Locale } from '@/lib/site'
 
@@ -55,7 +56,10 @@ export default function CinematicWorld({ locale }: { locale: Locale }) {
           canvas,
           root,
           projects: projects.map(project => ({ shot: project.shot, appShot: project.appShot, color: project.color })),
-          clientColors: projects.map(project => project.color),
+          reviews: proofQuotes[locale].flatMap(quote => {
+            const project = projects.find(item => item.slug === quote.slug)
+            return project ? [{ name: quote.name, role: quote.role, quote: quote.quote, color: project.color }] : []
+          }),
           lowPower: window.innerWidth < 760 || (navigator.hardwareConcurrency ?? 8) <= 4
         })
       )
