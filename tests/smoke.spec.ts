@@ -120,7 +120,8 @@ for (const [path, design, build, work] of [
 ]) {
   test(`homepage tells the full story in order (${path})`, async ({ page }) => {
     await page.goto(path)
-    const headings = await page.getByRole('heading', { level: 2 }).allInnerTexts()
+    // textContent, not innerText: chapter overlays are visibility-hidden until the page settles into its static or live layout
+    const headings = await page.locator('h2').evaluateAll(nodes => nodes.map(node => node.textContent ?? ''))
     const order = [design, build, work].map(text => headings.findIndex(item => item.trim() === text))
     expect(order.every(index => index >= 0)).toBe(true)
     expect(order).toEqual([...order].sort((a, b) => a - b))
