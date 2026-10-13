@@ -6,6 +6,7 @@ import {
   FogExp2,
   HalfFloatType,
   HemisphereLight,
+  PMREMGenerator,
   PerspectiveCamera,
   Scene,
   Sprite,
@@ -16,6 +17,7 @@ import {
   WebGLRenderTarget,
   WebGLRenderer
 } from 'three'
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js'
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
@@ -46,7 +48,7 @@ export type EngineOptions = {
 export type Engine = { dispose(): void }
 
 const INTRO_KEY = 'nivello-cinematic-intro-v2'
-const SUN_ELEVATION: [number, number][] = [[0, 0.12], [0.75, 0.17], [1.1, 0.34], [1.9, 0.3], [2.1, 0.5], [3.0, 0.5], [3.2, 0.1], [3.95, 0.08], [4.35, 0.12], [5, 0.55]]
+const SUN_ELEVATION: [number, number][] = [[0, 0.12], [0.75, 0.17], [1.1, 0.34], [1.9, 0.3], [2.1, 0.5], [3.0, 0.5], [3.2, 0.1], [3.95, 0.08], [4.35, 0.12], [5, 0.55], [6, 0.2]]
 
 function sunElevation(u: number) {
   if (u <= 0) return SUN_ELEVATION[0][1]
@@ -72,6 +74,12 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
 
   const scene = new Scene()
   scene.fog = new FogExp2(0x112233, 0.004)
+  // Soft studio reflections give metals and clearcoats believable highlights without extra lights.
+  const pmrem = new PMREMGenerator(renderer)
+  const envTarget = pmrem.fromScene(new RoomEnvironment(), 0.04)
+  scene.environment = envTarget.texture
+  scene.environmentIntensity = 0.42
+  pmrem.dispose()
   const camera = new PerspectiveCamera(40, 1, 0.5, 2600)
 
   const sky = createSky()
@@ -184,7 +192,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
   } catch {
     seen = false
   }
-  const introDuration = seen ? 0.9 : 4.2
+  const introDuration = seen ? 0.9 : 4.8
   let introT = snap ? 1 : 0
   cinematic.set({ introActive: !snap })
   root.dataset.intro = snap ? 'done' : 'playing'
@@ -319,12 +327,13 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     if (intro > 0.001) {
       const g = groundHeight(introPose.px, introPose.pz)
       pose.px = lerp(pose.px, introPose.px, intro)
-      pose.py = lerp(pose.py, g + 1.1, intro)
+      pose.py = lerp(pose.py, g + 0.8, intro)
       pose.pz = lerp(pose.pz, introPose.pz, intro)
       pose.lx = lerp(pose.lx, introPose.lx, intro)
       pose.ly = lerp(pose.ly, g + 0.1, intro)
       pose.lz = lerp(pose.lz, introPose.lz, intro)
-      pose.fov = lerp(pose.fov, 52, intro)
+      pose.fov = lerp(pose.fov, 56, intro)
+      pose.roll = lerp(pose.roll, 0.08, intro)
     }
 
     pointer.x += (pointer.tx - pointer.x) * (1 - Math.exp(-dt * 3))
@@ -357,7 +366,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     const awake = smoothstep(0.6, 1.0, u)
     construction.update(s, time, awake)
     gallery.update(time, focus, appMix, 1)
-    monument.update(u, time, smoothstep(4.35, 4.95, u))
+    monument.update(u, time, smoothstep(4.35, 4.95, u), 0.28 * smoothstep(0.55, 1, introE) * (1 - smoothstep(0.3, 0.6, u)))
     const proofWeight = smoothstep(3.0, 3.25, u) * (1 - smoothstep(4.1, 4.4, u))
     vista.update(time, proofFocus, proofWeight, camera.position, sunDir)
 
@@ -379,6 +388,8 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     tu.uFront.value = frontLerped
     tu.uTopo.value = smoothstep(0.9, 1.15, u) * (1 - smoothstep(1.35, 2.05, u)) + 0.25 * gw
     tu.uWarm.value = smoothstep(1.2, 2.0, u)
+    tu.uShock.value.set(0, 10, introE * 240)
+    tu.uShockAmp.value = Math.pow(1 - introE, 0.6) * (1 - smoothstep(0.1, 0.3, u))
 
     const glow = tu.uGlow.value as Vector4[]
     const glowColor = tu.uGlowColor.value as Color[]
@@ -409,7 +420,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     su.uSun.value.copy(a.sun)
     su.uSunDir.value.copy(sunDir)
     su.uSunPower.value = clamp(a.sunIntensity * 0.45, 0.2, 1.5)
-    su.uStars.value = a.stars
+    su.uStars.value = a.stars + (1 - introE) * 0.6
     su.uClouds.value = a.clouds
     sky.ridgeMaterials.forEach(material => {
       const mixAmount = material.userData.mix as number
@@ -442,7 +453,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     fill.intensity = (0.85 + 0.4 * day) * (1 - 0.45 * gw)
 
     renderer.toneMappingExposure = a.exposure
-    if (bloom) bloom.strength = a.bloom * 0.62 + 0.06
+    if (bloom) bloom.strength = a.bloom * 0.62 + 0.06 + 0.55 * (1 - introE) * (1 - smoothstep(0.1, 0.3, u))
 
     motes.update(camera.position, time, tint, 0.55 + 0.25 * (1 - day))
     mist.update(a.fog, a.sun, time, 1 - 0.5 * gw)
@@ -469,6 +480,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
       el.style.opacity = o.toFixed(3)
       el.style.visibility = o > 0.01 ? 'visible' : 'hidden'
       el.style.pointerEvents = o > 0.55 ? 'auto' : 'none'
+      el.dataset.active = o > 0.5 ? 'true' : 'false'
       el.style.transform = `translate3d(0, ${((1 - fadeIn) * 26 - (1 - fadeOut) * 16).toFixed(1)}px, 0)`
     })
     let wipe = -1
@@ -526,6 +538,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
       monument.dispose()
       pulseMaterial.dispose()
       composer?.dispose()
+      envTarget.dispose()
       renderer.dispose()
       renderer.forceContextLoss()
       overlays.forEach(el => {

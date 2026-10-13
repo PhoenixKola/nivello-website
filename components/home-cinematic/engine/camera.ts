@@ -106,7 +106,9 @@ const specs: Spec[] = [
   { u: 4.0, at: [r(-488), -488], h: 7, look: [0, 12, -565], fov: 42, sx: 0.12 },
   { u: 4.25, at: [-16, -512], h: 26, abs: true, look: [0, 16, -430], fov: 42, sx: 0.12, roll: 0.07 },
   { u: 4.6, at: [-32, -452], h: 62, abs: true, look: [-18, 24, -250], fov: 44, sx: 0.12, roll: -0.04 },
-  { u: 5.0, at: [-26, -404], h: 98, abs: true, look: [-22, 34, -190], fov: 48, sx: 0.12 }
+  { u: 5.0, at: [-26, -404], h: 98, abs: true, look: [-22, 34, -190], fov: 48, sx: 0.12 },
+  { u: 5.5, at: [-6, -372], h: 78, abs: true, look: [34, 0, -180], fov: 46, sx: 0.1 },
+  { u: 6.0, at: [26, -352], h: 70, abs: true, look: [64, -10, -172], fov: 46, sx: 0.08, hold: true }
 ]
 
 const frames = specs.map(spec).sort((a, b) => a.u - b.u)

@@ -1,6 +1,6 @@
-/** Scroll plan: chapter lengths in viewport heights. The last chapter carries one extra viewport so the final pose is reachable. */
-export const CHAPTER_IDS = ['arrival', 'process', 'work', 'trust', 'start'] as const
-export const CHAPTER_LENGTHS = [1.5, 4.2, 2.8, 1.9, 1.6] as const
+/** Scroll plan: chapter lengths in viewport heights. The last chapter (the homepage footer) carries one extra viewport so the final pose is reachable. */
+export const CHAPTER_IDS = ['arrival', 'process', 'work', 'trust', 'start', 'footer'] as const
+export const CHAPTER_LENGTHS = [1.5, 4.2, 2.8, 1.9, 1.6, 1.5] as const
 
 /** Process timeline: local chapter progress -> five stages. */
 export const PROCESS_START = 0.05

@@ -102,3 +102,14 @@ test('the 404 page offers the other language home, not a missing page', async ({
   await expect(page.locator('header a[href="/it/"]').first()).toBeAttached()
   await expect(page.locator('a[href*="_not-found"]')).toHaveCount(0)
 })
+
+for (const [path, cta, email] of [['/', 'Start a conversation', 'office@nivello.it'], ['/it/', 'Iniziamo a parlarne', 'office@nivello.it']]) {
+  test(`homepage footer renders once with working links (${path})`, async ({ page }) => {
+    await page.goto(path)
+    await expect(page.locator('footer#site-footer')).toHaveCount(1)
+    const footer = page.locator('footer#site-footer')
+    await expect(footer.getByRole('link', { name: cta })).toHaveAttribute('href', /contact\/$/)
+    await expect(footer.getByRole('link', { name: email })).toHaveAttribute('href', `mailto:${email}`)
+    await expect(footer.getByRole('link', { name: /Privacy/ })).toBeVisible()
+  })
+}

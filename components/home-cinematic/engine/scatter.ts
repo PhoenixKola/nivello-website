@@ -22,7 +22,7 @@ export function createScatter(count: number) {
   for (let i = 0; i < sp.count; i += 1) sp.setX(i, sp.getX(i) + noise2(sp.getY(i) * 0.8, 3) * 0.18)
   spireGeometry.computeVertexNormals()
 
-  const material = new MeshStandardMaterial({ color: 0xffffff, roughness: 0.92, metalness: 0.04, flatShading: true })
+  const material = new MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, metalness: 0.05, flatShading: true, envMapIntensity: 0.25 })
   const rocks = new InstancedMesh(rockGeometry, material, count)
   const spires = new InstancedMesh(spireGeometry, material, Math.floor(count * 0.07))
   rocks.instanceMatrix.setUsage(DynamicDrawUsage)

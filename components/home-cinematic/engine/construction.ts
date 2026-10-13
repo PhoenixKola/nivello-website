@@ -128,8 +128,8 @@ export function createConstruction(): Construction {
     return mesh
   }
 
-  const matStone = track(new MeshStandardMaterial({ map: stone, color: 0xe4ecfa, metalness: 0.1, roughness: 0.8, emissive: 0x15233b, emissiveIntensity: 0.7 }))
-  const matDark = track(new MeshStandardMaterial({ color: 0x0f1a2c, metalness: 0.6, roughness: 0.34 }))
+  const matStone = track(new MeshStandardMaterial({ map: stone, color: 0xe4ecfa, metalness: 0.12, roughness: 0.62, emissive: 0x15233b, emissiveIntensity: 0.7 }))
+  const matDark = track(new MeshStandardMaterial({ color: 0x0f1a2c, metalness: 0.8, roughness: 0.24, envMapIntensity: 1.2 }))
   const emissiveBlue = track(new MeshStandardMaterial({ color: 0x0b2a55, emissive: blue, emissiveIntensity: 1.8, metalness: 0.3, roughness: 0.3 }))
   const emissiveGold = track(new MeshStandardMaterial({ color: 0x4a3410, emissive: gold, emissiveIntensity: 2.2, metalness: 0.3, roughness: 0.3 }))
   const emissivePurple = track(new MeshStandardMaterial({ color: 0x241048, emissive: purple, emissiveIntensity: 1.6, metalness: 0.3, roughness: 0.3 }))
@@ -230,7 +230,7 @@ export function createConstruction(): Construction {
       [-5, -2, 7, 22, 7], [3.5, 1, 6.5, 30, 6], [-1.5, 6.5, 6, 15, 6], [8.5, -5.5, 5.5, 19, 5.5], [-9.5, 5, 5, 11, 5]
     ]
     towers.forEach(([x, z, w, h, d], i) => {
-      const material = track(new MeshStandardMaterial({ map: facade.map, emissiveMap: facade.emissive, emissive: 0xffffff, emissiveIntensity: 1.6, color: 0xb9c8e0, metalness: 0.55, roughness: 0.28 }))
+      const material = track(new MeshStandardMaterial({ map: facade.map, emissiveMap: facade.emissive, emissive: 0xffffff, emissiveIntensity: 1.6, color: 0xb9c8e0, metalness: 0.7, roughness: 0.2 }))
       solid(s, scaleUV(new BoxGeometry(w, h, d), Math.max(1, w / 5), Math.max(1, h / 9)), material, x, h / 2, z)
       solid(s, new BoxGeometry(w * 1.04, 0.5, d * 1.04), matDark, x, h + 0.25, z, false)
       if (i === 1) solid(s, new CylinderGeometry(0.1, 0.1, 6, 6), matDark, x, h + 3.5, z, false)
@@ -263,7 +263,7 @@ export function createConstruction(): Construction {
   {
     const s = begin(4, 34)
     shadowBlob(s, 20)
-    const tierMaterial = () => track(new MeshStandardMaterial({ map: facade.map, emissiveMap: facade.emissive, emissive: 0xffffff, emissiveIntensity: 1.7, color: 0xc7d6ee, metalness: 0.6, roughness: 0.25 }))
+    const tierMaterial = () => track(new MeshStandardMaterial({ map: facade.map, emissiveMap: facade.emissive, emissive: 0xffffff, emissiveIntensity: 1.7, color: 0xc7d6ee, metalness: 0.7, roughness: 0.2 }))
     const tiers: [number, number, number][] = [[8, 6.4, 7], [6.2, 4.8, 7], [4.4, 3.2, 7]]
     let y = 0
     tiers.forEach(([rb, rt, h]) => {

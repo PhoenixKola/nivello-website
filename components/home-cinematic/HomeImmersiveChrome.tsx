@@ -13,7 +13,7 @@ const copy = {
     closeNav: 'Hide navigation',
     home: 'Nivello, homepage',
     chapters: 'Story chapters',
-    chapterNames: ['Arrival', 'Process', 'Work', 'Proof', 'Start'],
+    chapterNames: ['Arrival', 'Process', 'Work', 'Proof', 'Start', 'Contact'],
     skip: 'Skip intro'
   },
   it: {
@@ -22,7 +22,7 @@ const copy = {
     closeNav: 'Nascondi la navigazione',
     home: 'Nivello, homepage',
     chapters: 'Capitoli',
-    chapterNames: ['Arrivo', 'Metodo', 'Lavori', 'Prove', 'Inizia'],
+    chapterNames: ['Arrivo', 'Metodo', 'Lavori', 'Prove', 'Inizia', 'Contatti'],
     skip: 'Salta l’intro'
   }
 } satisfies Record<Locale, Record<string, unknown>>
@@ -96,7 +96,7 @@ export default function HomeImmersiveChrome({ locale }: { locale: Locale }) {
             type="button"
             className="cin-rail__item"
             aria-current={chapter === index ? 'step' : undefined}
-            onClick={() => scrollToChapter(index, index === 0 ? 0 : index === 1 ? 0.06 : 0.12)}
+            onClick={() => scrollToChapter(index, index === 0 ? 0 : index === 1 ? 0.06 : index === 5 ? 0.5 : 0.12)}
           >
             <span className="cin-rail__label">{t.chapterNames[index]}</span>
             <span className="cin-rail__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>

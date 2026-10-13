@@ -48,6 +48,8 @@ const fragmentShader = /* glsl */ `
   uniform float uTopo;
   uniform float uWarm;
   uniform float uDay;
+  uniform vec3 uShock;
+  uniform float uShockAmp;
   uniform sampler2D uRoute;
   uniform vec2 uRouteRange;
   uniform vec3 uBlue;
@@ -151,6 +153,11 @@ const fragmentShader = /* glsl */ `
     float topoAmt = wave * 0.9 + uTopo * 0.55;
     col += mix(uBlue, vec3(1.0), 0.25) * (contour * 0.5 + major * 0.9) * topoAmt * smoothstep(0.2, 0.6, awake + wave) * 0.55 * clamp(1.0 - dist * 0.004, 0.0, 1.0);
     col += uGold * wave * 0.28 * (0.4 + albedo.r * 2.0) * exp(-rd / 40.0);
+
+    // Ignition shock-wave expanding from the first pulse.
+    float sd = length(P.xz - uShock.xy);
+    float shock = exp(-pow((sd - uShock.z) / 4.5, 2.0)) * uShockAmp;
+    col += mix(uGold, uBlue, smoothstep(0.0, 160.0, sd)) * shock * 1.5;
 
     // Warm accent that grows as projects launch.
     col += uGold * uWarm * 0.025 * (n1 + 0.2);
@@ -310,6 +317,8 @@ export function createTerrain(): Terrain {
     uTopo: { value: 0 },
     uWarm: { value: 0 },
     uDay: { value: 0 },
+    uShock: { value: new Vector3(0, 10, 0) },
+    uShockAmp: { value: 0 },
     uRoute: { value: routeTexture },
     uRouteRange: { value: new Vector2(WORLD.zMax, WORLD.zMin) },
     uBlue: { value: new Color(0x159bff) },

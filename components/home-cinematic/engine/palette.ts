@@ -31,7 +31,8 @@ const beats: Beat[] = [
   { u: 3.2, skyTop: 0x2b4a86, skyMid: 0xe08e5e, skyHorizon: 0xffd28a, fog: 0xe0a275, fogDensity: 0.0029, sun: 0xffc070, sunIntensity: 3.0, ambientSky: 0xc89478, ambientGround: 0x3a2a30, exposure: 1.0, bloom: 0.7, stars: 0, clouds: 0.9, grade: 0xffaa3c, gradeAmount: 0.14 },
   { u: 3.95, skyTop: 0x1d2d66, skyMid: 0xc4607a, skyHorizon: 0xff9a58, fog: 0xb0708a, fogDensity: 0.0032, sun: 0xff9a4a, sunIntensity: 2.1, ambientSky: 0x8a6a98, ambientGround: 0x2a2236, exposure: 1.0, bloom: 0.85, stars: 0.1, clouds: 0.85, grade: 0xff7a5a, gradeAmount: 0.12 },
   { u: 4.35, skyTop: 0x090f33, skyMid: 0x3a2a6a, skyHorizon: 0xff7e5a, fog: 0x45386f, fogDensity: 0.0030, sun: 0xff8a50, sunIntensity: 1.1, ambientSky: 0x4a4a90, ambientGround: 0x14142c, exposure: 1.0, bloom: 1.0, stars: 0.5, clouds: 0.7, grade: 0x7c3aed, gradeAmount: 0.12 },
-  { u: 5.0, skyTop: 0x02030f, skyMid: 0x0a1440, skyHorizon: 0x2c4c9c, fog: 0x0e1a46, fogDensity: 0.0020, sun: 0x6a8aff, sunIntensity: 0.6, ambientSky: 0x28408c, ambientGround: 0x0a1030, exposure: 1.0, bloom: 1.35, stars: 1, clouds: 0.5, grade: 0x159bff, gradeAmount: 0.1 }
+  { u: 5.0, skyTop: 0x02030f, skyMid: 0x0a1440, skyHorizon: 0x2c4c9c, fog: 0x0e1a46, fogDensity: 0.0020, sun: 0x6a8aff, sunIntensity: 0.6, ambientSky: 0x28408c, ambientGround: 0x0a1030, exposure: 1.0, bloom: 1.35, stars: 1, clouds: 0.5, grade: 0x159bff, gradeAmount: 0.1 },
+  { u: 6.0, skyTop: 0x03061a, skyMid: 0x14214f, skyHorizon: 0xd98a52, fog: 0x1a2750, fogDensity: 0.0026, sun: 0xff9a5a, sunIntensity: 0.9, ambientSky: 0x2c3f86, ambientGround: 0x0c1230, exposure: 1.0, bloom: 1.25, stars: 0.9, clouds: 0.5, grade: 0xffa04a, gradeAmount: 0.1 }
 ]
 
 const scratch = new Color()

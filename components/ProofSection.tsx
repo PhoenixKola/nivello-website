@@ -173,8 +173,7 @@ export default function ProofSection({ locale }: { locale: Locale }) {
     }
   }
 
-  const ease = [0.22, 0.61, 0.36, 1] as const
-  const swap = reducedMotion ? { duration: 0 } : { duration: 0.5, ease }
+  const swap = reducedMotion ? { duration: 0 } : { duration: 0.42, ease: [0.4, 0, 0.2, 1] as const }
 
   return (
     <section id="cinematic-trust" className="cin-ov cin-ov--trust" data-cin-overlay="3" style={accentStyle(project.color)} aria-labelledby="home-proof-heading">
@@ -188,9 +187,9 @@ export default function ProofSection({ locale }: { locale: Locale }) {
         <AnimatePresence initial={false} mode="wait">
           <motion.figure
             key={active.slug}
-            initial={{ opacity: 0, y: reducedMotion ? 0 : 18 }}
+            initial={{ opacity: 0, y: reducedMotion ? 0 : 6 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: reducedMotion ? 0 : -10 }}
+            exit={{ opacity: 0, y: reducedMotion ? 0 : -4 }}
             transition={swap}
           >
             <span className="cin-quote__mark" aria-hidden="true">&ldquo;</span>

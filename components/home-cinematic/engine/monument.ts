@@ -9,6 +9,7 @@ import {
   Group,
   Mesh,
   MeshBasicMaterial,
+  MeshPhysicalMaterial,
   MeshStandardMaterial,
   PlaneGeometry,
   PointLight,
@@ -182,9 +183,9 @@ function loadImage(src: string) {
 
 export type Monument = {
   group: Group
-  material: MeshStandardMaterial
+  material: MeshPhysicalMaterial
   top: number
-  update(u: number, time: number, finale: number): void
+  update(u: number, time: number, finale: number, teaser?: number): void
   dispose(): void
 }
 
@@ -279,21 +280,24 @@ export async function createMonument(): Promise<Monument> {
   }
   geometry.setAttribute('uv', new BufferAttribute(uv, 2))
 
-  const material = new MeshStandardMaterial({
+  const material = new MeshPhysicalMaterial({
     map: colorMap,
     emissiveMap: colorMap,
     emissive: new Color(0xffffff),
     emissiveIntensity: 0.2,
-    metalness: 0.35,
-    roughness: 0.32
+    metalness: 0.22,
+    roughness: 0.3,
+    clearcoat: 0.85,
+    clearcoatRoughness: 0.1,
+    envMapIntensity: 1.1
   })
   const mark = new Mesh(geometry, material)
 
   const group = new Group()
   const baseY = groundHeight(MONUMENT.x, MONUMENT.z)
   const plinthHeight = 3.4
-  const stone = new MeshStandardMaterial({ color: 0x1b2638, metalness: 0.45, roughness: 0.38 })
-  const plinthTop = new MeshStandardMaterial({ color: 0x0a101c, metalness: 0.7, roughness: 0.22, emissive: 0x0c2a55, emissiveIntensity: 0.6 })
+  const stone = new MeshStandardMaterial({ color: 0x1b2638, metalness: 0.7, roughness: 0.3, envMapIntensity: 1.2 })
+  const plinthTop = new MeshStandardMaterial({ color: 0x0a101c, metalness: 0.9, roughness: 0.16, emissive: 0x0c2a55, emissiveIntensity: 0.6 })
   const steps = [
     new Mesh(new CylinderGeometry(MONUMENT.size * 0.36, MONUMENT.size * 0.42, 1.4, 8), stone),
     new Mesh(new CylinderGeometry(MONUMENT.size * 0.3, MONUMENT.size * 0.35, 1.2, 8), stone),
@@ -352,7 +356,7 @@ export async function createMonument(): Promise<Monument> {
     group,
     material,
     top: baseY + plinthHeight + MONUMENT.size,
-    update(u, time, finale) {
+    update(u, time, finale, teaser = 0) {
       const emerge = ease.inOut(smoothstep(0.35, 0.86, u))
       const settle = ease.out(smoothstep(0.2, 1.0, u))
       mark.position.y = plinthHeight + MONUMENT.size / 2 + 1.2 - (1 - emerge) * 10
@@ -362,7 +366,7 @@ export async function createMonument(): Promise<Monument> {
       haloMaterial.opacity = 0.12 + 0.3 * emerge + finale * 0.3
       light.intensity = (60 + 2500 * emerge) * (1 + finale)
       goldLight.intensity = (40 + 1800 * emerge) * (1 + finale)
-      const beam = Math.max(0.3 - 0.18 * emerge, finale)
+      const beam = Math.max(0.3 - 0.18 * emerge + teaser, finale)
       beamMaterial.opacity = Math.min(1, beam * 0.9)
       beams.scale.x = beams.scale.z = 0.6 + beam * 1.6
       beams.rotation.y = time * 0.05

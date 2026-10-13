@@ -109,7 +109,7 @@ export function createGallery(projects: GalleryProject[], maxAnisotropy: number)
   group.add(floorGroup)
   const floor = new Mesh(
     track(new CircleGeometry(PLAZA.r - 2, 96)),
-    track(new MeshStandardMaterial({ color: 0x070d18, metalness: 0.9, roughness: 0.2, emissive: 0x050c1c, emissiveIntensity: 0.6 }))
+    track(new MeshStandardMaterial({ color: 0x070d18, metalness: 0.95, roughness: 0.12, emissive: 0x050c1c, emissiveIntensity: 0.6 }))
   )
   floor.rotation.x = -Math.PI / 2
   floor.position.set(PLAZA.x, 0.2, PLAZA.z)
@@ -176,7 +176,7 @@ export function createGallery(projects: GalleryProject[], maxAnisotropy: number)
     pylon: track(new BoxGeometry(0.9, 11, 0.9)),
     plinth: track(new CylinderGeometry(4.4, 5.2, 0.7, 6))
   }
-  const frameMaterial = track(new MeshStandardMaterial({ map: metal, color: 0x9aa9c4, metalness: 0.85, roughness: 0.3 }))
+  const frameMaterial = track(new MeshStandardMaterial({ map: metal, color: 0xb4c2dc, metalness: 0.95, roughness: 0.22, envMapIntensity: 1.3 }))
   const plinthMaterial = track(new MeshStandardMaterial({ color: 0x0a1220, metalness: 0.8, roughness: 0.25 }))
   const screenGeometry = track(new PlaneGeometry(SCREEN_W, SCREEN_H))
   const glowGeometry = track(new PlaneGeometry(SCREEN_W * 1.9, SCREEN_H * 2.2))
