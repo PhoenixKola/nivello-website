@@ -178,7 +178,7 @@ export default function ProofSection({ locale }: { locale: Locale }) {
   return (
     <section id="cinematic-trust" className="cin-ov cin-ov--trust" data-cin-overlay="3" style={accentStyle(project.color)} aria-labelledby="home-proof-heading">
       <header className="cin-head">
-        <p className="cin-eyebrow"><i aria-hidden="true" /><span className="cin-head__no">04</span>{t.chapter}<span className="cin-head__sep" aria-hidden="true" />{t.eyebrow}</p>
+        <p className="cin-eyebrow"><i aria-hidden="true" /><span className="cin-head__no">04</span><span className="cin-head__name">{t.chapter}</span><span className="cin-head__sep" aria-hidden="true" /><span className="cin-head__kind">{t.eyebrow}</span></p>
         <h2 id="home-proof-heading" className="cin-head__title">{t.title}</h2>
         <p className="cin-head__intro">{t.intro}</p>
       </header>

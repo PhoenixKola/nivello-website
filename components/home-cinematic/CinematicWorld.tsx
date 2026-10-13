@@ -97,6 +97,11 @@ export default function CinematicWorld({ locale }: { locale: Locale }) {
           <Image src="/nivello-icon.png" alt="" width={320} height={320} loading="eager" />
         </span>
       </div>
+      <div className="cin-intro-mark">
+        <span className="cin-intro-mark__glow" />
+        <Image src="/nivello-icon.png" alt="" width={168} height={168} priority />
+        <span className="cin-intro-mark__line" />
+      </div>
       <div className="cin-grade" />
       <div className="cin-vignette" />
       <div className="cin-grain" />

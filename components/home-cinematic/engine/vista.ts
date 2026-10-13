@@ -210,7 +210,7 @@ export function createVista(colors: string[]): Vista {
       waterUniforms.uTime.value = time
       pillars.forEach((pillar, index) => {
         const e = clamp(1 - Math.abs(focus - index))
-        pillar.haloMaterial.opacity = 0.18 + 0.7 * e
+        pillar.haloMaterial.opacity = 0.12 + 0.38 * e
         pillar.halo.scale.setScalar(0.8 + e * 1.4)
         const phase = (time * 0.45 + index * 0.2) % 1
         const ringMaterial = pillar.ring.material as MeshBasicMaterial
@@ -220,13 +220,13 @@ export function createVista(colors: string[]): Vista {
       const active = pillars[clamp(Math.round(focus), 0, pillars.length - 1)]
       light.position.set(active.root.position.x, active.root.position.y + 12, active.root.position.z + 3)
       light.color.copy(active.lamp.color)
-      light.intensity = 1600 * weight
+      light.intensity = 600 * weight
       mistMaterial.opacity = 0.1 + 0.16 * weight
       mists.forEach((mist, i) => {
         mist.position.x += Math.sin(time * 0.05 + i) * 0.01
       })
       rays.position.copy(camera).addScaledVector(sunDir, 900)
-      ;(rays.material as SpriteMaterial).opacity = 0.62 * weight
+      ;(rays.material as SpriteMaterial).opacity = 0.36 * weight
       shaftMaterial.opacity = 0.14 * weight
     },
     dispose() {

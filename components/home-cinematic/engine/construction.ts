@@ -44,7 +44,7 @@ function constructible<T extends Material>(material: T, uniforms: Uniforms, kind
     if (kind === 'solid') {
       shader.fragmentShader = shader.fragmentShader.replace(
         '#include <emissivemap_fragment>',
-        '#include <emissivemap_fragment>\n  totalEmissiveRadiance += uEdge * smoothstep(0.9, 0.0, cutY - vBY) * step(uBuild, 0.995) * 3.0;'
+        '#include <emissivemap_fragment>\n  totalEmissiveRadiance += uEdge * smoothstep(0.9, 0.0, cutY - vBY) * step(uBuild, 0.995) * 1.6;'
       )
     }
   }
@@ -128,7 +128,7 @@ export function createConstruction(): Construction {
     return mesh
   }
 
-  const matStone = track(new MeshStandardMaterial({ map: stone, color: 0xe4ecfa, metalness: 0.12, roughness: 0.62, emissive: 0x15233b, emissiveIntensity: 0.7 }))
+  const matStone = track(new MeshStandardMaterial({ map: stone, color: 0xe4ecfa, metalness: 0.12, roughness: 0.62, emissive: 0x15233b, emissiveIntensity: 0.35 }))
   const matDark = track(new MeshStandardMaterial({ color: 0x0f1a2c, metalness: 0.8, roughness: 0.24, envMapIntensity: 1.2 }))
   const emissiveBlue = track(new MeshStandardMaterial({ color: 0x0b2a55, emissive: blue, emissiveIntensity: 1.8, metalness: 0.3, roughness: 0.3 }))
   const emissiveGold = track(new MeshStandardMaterial({ color: 0x4a3410, emissive: gold, emissiveIntensity: 2.2, metalness: 0.3, roughness: 0.3 }))
@@ -312,7 +312,7 @@ export function createConstruction(): Construction {
           material.opacity = 0.9 * (1 - smoothstep(0.9, 1, build))
         })
         stage.emissive.forEach(material => {
-          const base = material.emissiveMap ? 1.6 : material === emissiveBlue ? 1.8 : material === emissivePurple ? 1.6 : 2.2
+          const base = material.emissiveMap ? 0.95 : material === emissiveBlue ? 1.0 : material === emissivePurple ? 0.9 : 1.2
           material.emissiveIntensity = base * (0.35 + 0.65 * awake)
         })
         stage.arcs?.forEach((arc, i) => {
@@ -324,13 +324,13 @@ export function createConstruction(): Construction {
           marker.rotation.y = time * 0.8
         })
         if (stage.spin) stage.spin.rotation.y = time * 0.08 + (done ? 0 : 0.6 * (1 - build))
-        if (stage.beam) stage.beam.opacity = smoothstep(0.82, 1, build) * 0.5 * (0.85 + 0.15 * Math.sin(time * 2))
+        if (stage.beam) stage.beam.opacity = smoothstep(0.82, 1, build) * 0.28 * (0.85 + 0.15 * Math.sin(time * 2))
         stage.group.visible = true
       })
       const active = Math.min(4, Math.max(0, Math.floor(s)))
       const m = MILESTONES[active]
       light.position.set(m.x - m.side * 6, stages[active].group.position.y + stages[active].height * 0.65, m.z + 8)
-      light.intensity = 900 * awake
+      light.intensity = 380 * awake
     },
     dispose() {
       disposables.forEach(item => item.dispose())

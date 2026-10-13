@@ -17,7 +17,7 @@ const skipLabel: Record<Locale, string> = {
 // Shared document shell for both root layouts, so each locale can emit its own <html lang>.
 export default function SiteShell({ lang, children }: { lang: Locale; children: React.ReactNode }) {
   return (
-    <html lang={lang} data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang={lang} className="dark" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body
         suppressHydrationWarning
         className={`${inter.variable} ${fraunces.variable} bg-stone-50 text-slate-900 antialiased dark:bg-slate-950/95 dark:text-slate-50`}

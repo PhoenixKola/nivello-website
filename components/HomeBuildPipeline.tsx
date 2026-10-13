@@ -53,7 +53,7 @@ export default function HomeBuildPipeline({ locale }: { locale: Locale }) {
   return (
     <section id="cinematic-process" className="cin-ov cin-ov--process" data-cin-overlay="1" aria-labelledby="home-process-heading">
       <header className="cin-head">
-        <p className="cin-eyebrow"><i aria-hidden="true" /><span className="cin-head__no">02</span>{t.chapter}<span className="cin-head__sep" aria-hidden="true" />{t.eyebrow}</p>
+        <p className="cin-eyebrow"><i aria-hidden="true" /><span className="cin-head__no">02</span><span className="cin-head__name">{t.chapter}</span><span className="cin-head__sep" aria-hidden="true" /><span className="cin-head__kind">{t.eyebrow}</span></p>
         <h2 id="home-process-heading" className="cin-head__title">{t.title}</h2>
         <p className="cin-head__intro">{t.intro}</p>
       </header>

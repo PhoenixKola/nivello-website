@@ -47,7 +47,6 @@ export type EngineOptions = {
 
 export type Engine = { dispose(): void }
 
-const INTRO_KEY = 'nivello-cinematic-intro-v2'
 const SUN_ELEVATION: [number, number][] = [[0, 0.12], [0.75, 0.17], [1.1, 0.34], [1.9, 0.3], [2.1, 0.5], [3.0, 0.5], [3.2, 0.1], [3.95, 0.08], [4.35, 0.12], [5, 0.55], [6, 0.2]]
 
 function sunElevation(u: number) {
@@ -78,13 +77,13 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
   const pmrem = new PMREMGenerator(renderer)
   const envTarget = pmrem.fromScene(new RoomEnvironment(), 0.04)
   scene.environment = envTarget.texture
-  scene.environmentIntensity = 0.42
+  scene.environmentIntensity = 0.3
   pmrem.dispose()
   const camera = new PerspectiveCamera(40, 1, 0.5, 2600)
 
   const sky = createSky()
   scene.add(sky.group)
-  const terrain = createTerrain()
+  const terrain = createTerrain(lowPower ? 2.4 : 1.6)
   scene.add(terrain.mesh)
   const construction = createConstruction()
   scene.add(construction.group)
@@ -124,7 +123,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     const target = new WebGLRenderTarget(size.x, size.y, { type: HalfFloatType, samples: 4 })
     composer = new EffectComposer(renderer, target)
     composer.addPass(new RenderPass(scene, camera))
-    bloom = new UnrealBloomPass(new Vector2(size.x / 2, size.y / 2), 0.7, 0.62, 1.0)
+    bloom = new UnrealBloomPass(new Vector2(size.x / 2, size.y / 2), 0.4, 0.5, 1.15)
     composer.addPass(bloom)
     composer.addPass(new OutputPass())
   }
@@ -186,13 +185,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
   }
 
   // Intro
-  let seen = false
-  try {
-    seen = window.sessionStorage.getItem(INTRO_KEY) === '1'
-  } catch {
-    seen = false
-  }
-  const introDuration = seen ? 0.9 : 4.8
+  const introDuration = window.innerWidth < 760 ? 3 : 4.8
   let introT = snap ? 1 : 0
   cinematic.set({ introActive: !snap })
   root.dataset.intro = snap ? 'done' : 'playing'
@@ -264,15 +257,10 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
       if (introT >= 1) {
         cinematic.set({ introActive: false })
         root.dataset.intro = 'done'
-        try {
-          window.sessionStorage.setItem(INTRO_KEY, '1')
-        } catch {
-          // storage unavailable; the intro simply replays next visit
-        }
       }
     }
     const introE = ease.inOut(introT)
-    if (introT > 0.38 && root.dataset.intro === 'playing') root.dataset.intro = 'text'
+    if (introT > 0.36 && root.dataset.intro === 'playing') root.dataset.intro = 'text'
 
     updateScroll()
     u += (targetU - u) * (snap ? 1 : 1 - Math.exp(-dt * 6.5))
@@ -303,7 +291,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     if (gw > 0.001) {
       gallery.portalAt(focus, portal)
       const dolly = clamp(Math.abs(focusVel) * 1.1, 0, 7)
-      const d = (18.2 + dolly) * (width < 900 ? 1.55 : 1)
+      const d = (20.5 + dolly) * (width < 900 ? 1.55 : 1)
       const gx = portal.x + portal.inward[0] * d - portal.right[0] * (width < 900 ? 0 : 3.4) + portal.right[0] * Math.sin(time * 0.25) * 0.5
       const gz = portal.z + portal.inward[1] * d - portal.right[1] * (width < 900 ? 0 : 3.4) + portal.right[1] * Math.sin(time * 0.25) * 0.5
       const gy = portal.y + 1.6 + Math.sin(time * 0.31) * 0.25
@@ -314,7 +302,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
       pose.ly = lerp(pose.ly, portal.y - 0.2, gw)
       pose.lz = lerp(pose.lz, portal.z, gw)
       pose.fov = lerp(pose.fov, 38 + clamp(Math.abs(focusVel) * 1.4, 0, 5), gw)
-      pose.sx = lerp(pose.sx, 0.22, gw)
+      pose.sx = lerp(pose.sx, 0.14, gw)
     }
     const proofW = smoothstep(3.1, 3.4, u) * (1 - smoothstep(3.8, 4.0, u))
     if (proofW > 0.001) {
@@ -352,7 +340,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     camera.rotateZ(pose.roll)
     camera.fov = pose.fov * (width < 720 ? 1.25 : 1)
     const sx = width < 900 ? 0 : pose.sx
-    const sy = width < 900 ? 0.09 : 0
+    const sy = width < 900 ? 0.09 + 0.08 * gw : 0
     camera.setViewOffset(width, height, -sx * width, sy * height, width, height)
     camera.updateMatrixWorld()
 
@@ -396,20 +384,20 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     for (let i = 0; i < GLOW_SLOTS; i += 1) glow[i].set(0, 0, 0, 0)
     const emerge = smoothstep(0.35, 0.86, u)
     glow[0].set(MONUMENT.x, monument.top * 0.6, MONUMENT.z + 14, 46)
-    glowColor[0].copy(blue).lerp(gold, 0.45).multiplyScalar(0.55 * emerge + 0.1)
+    glowColor[0].copy(blue).lerp(gold, 0.45).multiplyScalar(0.3 * emerge + 0.05)
     construction.glows.forEach((g, i) => {
       const build = g.build()
       glow[1 + i].set(g.x, g.y, g.z, g.r)
-      glowColor[1 + i].copy(i % 2 ? blue : gold).multiplyScalar(0.7 * build)
+      glowColor[1 + i].copy(i % 2 ? blue : gold).multiplyScalar(0.38 * build)
     })
     glow[6].set(PLAZA.x, 6, PLAZA.z - 16, 34)
-    glowColor[6].copy(tint).multiplyScalar(0.8 * accentMix)
+    glowColor[6].copy(tint).multiplyScalar(0.4 * accentMix)
     const pulseZ = clamp(front + 6, -330, 40)
     glow[7].set(routeX(pulseZ), groundHeight(routeX(pulseZ), pulseZ) + 2, pulseZ, 16)
-    glowColor[7].copy(gold).multiplyScalar(1.2 * (1 - smoothstep(0.25, 0.9, u)))
+    glowColor[7].copy(gold).multiplyScalar(0.8 * (1 - smoothstep(0.25, 0.9, u)))
     pulse.position.set(routeX(pulseZ), groundHeight(routeX(pulseZ), pulseZ) + 1.2, pulseZ)
-    pulse.scale.setScalar(5 + Math.sin(time * 5) * 0.8)
-    pulseMaterial.opacity = (1 - smoothstep(0.25, 0.9, u)) * (introT < 0.02 ? 0.5 + introT * 25 : 1)
+    pulse.scale.setScalar((2.2 + 2.8 * introE) + Math.sin(time * 5) * 0.5)
+    pulseMaterial.opacity = 0.75 * (1 - smoothstep(0.25, 0.9, u)) * (introT < 0.02 ? 0.5 + introT * 25 : 1)
 
     sky.update(camera.position, time)
     const su = sky.uniforms
@@ -444,7 +432,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     hemisphere.groundColor.copy(a.ambientGround)
     hemisphere.intensity = 1.2 + day * 0.5
     sunLight.color.copy(a.sun)
-    sunLight.intensity = a.sunIntensity * 1.1
+    sunLight.intensity = a.sunIntensity * 0.85
     sunLight.position.copy(camera.position).addScaledVector(sunDir, 120)
     sunLight.target.position.copy(camera.position)
     // soft key from the camera side keeps the faces we are looking at readable
@@ -453,10 +441,10 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     fill.intensity = (0.85 + 0.4 * day) * (1 - 0.45 * gw)
 
     renderer.toneMappingExposure = a.exposure
-    if (bloom) bloom.strength = a.bloom * 0.62 + 0.06 + 0.55 * (1 - introE) * (1 - smoothstep(0.1, 0.3, u))
+    if (bloom) bloom.strength = a.bloom * 0.34 + 0.03 + 0.3 * (1 - introE) * (1 - smoothstep(0.1, 0.3, u))
 
     motes.update(camera.position, time, tint, 0.55 + 0.25 * (1 - day))
-    mist.update(a.fog, a.sun, time, 1 - 0.5 * gw)
+    mist.update(a.fog, a.sun, time, (1 - 0.5 * gw) * (0.1 + 0.9 * smoothstep(0.45, 1, introE)))
     construction.group.visible = u > 0.45 || Boolean(debug.override)
     gallery.group.visible = (u > 1.7 && u < 3.3) || Boolean(debug.override)
     vista.group.visible = u > 2.5 || Boolean(debug.override)
@@ -481,7 +469,8 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
       el.style.visibility = o > 0.01 ? 'visible' : 'hidden'
       el.style.pointerEvents = o > 0.55 ? 'auto' : 'none'
       el.dataset.active = o > 0.5 ? 'true' : 'false'
-      el.style.transform = `translate3d(0, ${((1 - fadeIn) * 26 - (1 - fadeOut) * 16).toFixed(1)}px, 0)`
+      const travel = index === CHAPTER_IDS.length - 1 ? 0 : (1 - fadeIn) * 26 - (1 - fadeOut) * 16
+      el.style.transform = `translate3d(0, ${travel.toFixed(1)}px, 0)`
     })
     let wipe = -1
     for (let boundary = 1; boundary < CHAPTER_IDS.length; boundary += 1) {
@@ -490,7 +479,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     }
     rootStyle.setProperty('--cin-wipe', wipe.toFixed(3))
     rootStyle.setProperty('--cin-wipe-o', wipe < 0 ? '0' : String(Math.sin(wipe * Math.PI)))
-    rootStyle.setProperty('--cin-fade', String(clamp(1 - time * 2.2)))
+    rootStyle.setProperty('--cin-fade', '0')
     rootStyle.setProperty('--cin-u', u.toFixed(3))
     rootStyle.setProperty('--cin-grade', `#${a.grade.clone().lerp(tint, accentMix * 0.7).getHexString()}`)
     rootStyle.setProperty('--cin-accent', `#${tint.getHexString()}`)

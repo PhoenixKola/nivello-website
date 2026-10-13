@@ -83,6 +83,13 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
     cinematic.set({ workIndex: activeIndex, workApp: showingApp })
   }, [activeIndex, showingApp])
 
+  useEffect(() => {
+    const tab = tabRefs.current[activeIndex]
+    const list = tab?.parentElement
+    if (!tab || !list) return
+    list.scrollTo({ left: tab.offsetLeft - (list.clientWidth - tab.offsetWidth) / 2, behavior: 'smooth' })
+  }, [activeIndex])
+
   const select = useCallback((index: number) => {
     setActiveIndex(index)
     setAppMode(false)
@@ -130,7 +137,7 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
   return (
     <section id="cinematic-work" className="cin-ov cin-ov--work" data-cin-overlay="2" style={sectionStyle} aria-labelledby="home-work-heading">
       <header className="cin-head">
-        <p className="cin-eyebrow"><i aria-hidden="true" /><span className="cin-head__no">03</span>{t.chapter}<span className="cin-head__sep" aria-hidden="true" />{t.eyebrow}</p>
+        <p className="cin-eyebrow"><i aria-hidden="true" /><span className="cin-head__no">03</span><span className="cin-head__name">{t.chapter}</span><span className="cin-head__sep" aria-hidden="true" /><span className="cin-head__kind">{t.eyebrow}</span></p>
         <h2 id="home-work-heading" className="cin-head__title">{t.title}</h2>
         <p className="cin-head__intro">{t.intro}</p>
       </header>

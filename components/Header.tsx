@@ -144,6 +144,7 @@ export default function Header() {
 
           <button
             type="button"
+            data-header-menu-button
             onClick={() => setMenuOpen(v => !v)}
             aria-label={menuOpen ? (isItalian ? 'Chiudi menu' : 'Close menu') : isItalian ? 'Apri menu' : 'Open menu'}
             aria-expanded={menuOpen}

@@ -14,7 +14,9 @@ const noScript = `
   html:has(.cin) [data-site-header]{position:sticky!important;transform:none!important;visibility:visible!important}
   .cin .cin-pin{position:relative!important;height:auto!important;overflow:visible!important}
   .cin .cin-spacers,.cin .cin-canvas{display:none!important}
-  .cin .cin-foot>*{opacity:1!important;transform:none!important}
+  .cin .cin-foot>*,.cin .cin-hero>*{opacity:1!important;transform:none!important}
+  .cin .cin-fallback{opacity:1!important}
+  .cin .cin-intro-mark{display:none!important}
   .cin .cin-ov{position:relative!important;opacity:1!important;visibility:visible!important;transform:none!important}
 `
 

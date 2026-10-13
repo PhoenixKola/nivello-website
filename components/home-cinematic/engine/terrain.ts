@@ -141,7 +141,7 @@ const fragmentShader = /* glsl */ `
     float pulse = 0.65 + 0.9 * pow(0.5 + 0.5 * sin(P.z * 0.11 - uTime * 2.4), 5.0);
     vec3 routeColor = mix(uBlue, uGold, smoothstep(0.02, 0.55, rc));
     float lit = smoothstep(-6.0, 6.0, P.z - uFront - 6.0);
-    col += routeColor * (core * 3.0 * pulse + halo * 0.34) * lit;
+    col += routeColor * (core * 2.0 * pulse + halo * 0.26) * lit;
     col += vec3(1.0, 0.82, 0.5) * core * core * 0.55 * lit;
     col += routeColor * exp(-pow(rd / 14.0, 2.0)) * 0.16 * lit;
 
@@ -157,7 +157,7 @@ const fragmentShader = /* glsl */ `
     // Ignition shock-wave expanding from the first pulse.
     float sd = length(P.xz - uShock.xy);
     float shock = exp(-pow((sd - uShock.z) / 4.5, 2.0)) * uShockAmp;
-    col += mix(uGold, uBlue, smoothstep(0.0, 160.0, sd)) * shock * 1.5;
+    col += mix(uGold, uBlue, smoothstep(0.0, 160.0, sd)) * shock * 0.8;
 
     // Warm accent that grows as projects launch.
     col += uGold * uWarm * 0.025 * (n1 + 0.2);
@@ -183,8 +183,7 @@ export type Terrain = {
   dispose(): void
 }
 
-export function createTerrain(): Terrain {
-  const step = 1.6
+export function createTerrain(step = 1.6): Terrain {
   const nx = Math.round((WORLD.xMax - WORLD.xMin) / step)
   const nz = Math.round((WORLD.zMax - WORLD.zMin) / step)
   const cols = nx + 1

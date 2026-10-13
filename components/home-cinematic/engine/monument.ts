@@ -19,6 +19,7 @@ import {
   Texture,
   Vector2
 } from 'three'
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js'
 import { MONUMENT, groundHeight } from './layout'
 import { ease, smoothstep } from './noise'
 import { glowTexture, shaftTexture } from './textures'
@@ -199,6 +200,17 @@ export async function createMonument(): Promise<Monument> {
   const data = ctx.getImageData(0, 0, SIZE, SIZE)
   const alpha = new Uint8Array(SIZE * SIZE)
   for (let i = 0; i < alpha.length; i += 1) alpha[i] = data.data[i * 4 + 3]
+  const soft = new Float32Array(alpha)
+  for (let pass = 0; pass < 2; pass += 1) {
+    const prev = soft.slice()
+    for (let y = 1; y < SIZE - 1; y += 1) {
+      for (let x = 1; x < SIZE - 1; x += 1) {
+        const i = y * SIZE + x
+        soft[i] = (prev[i] * 4 + prev[i - 1] * 2 + prev[i + 1] * 2 + prev[i - SIZE] * 2 + prev[i + SIZE] * 2 + prev[i - SIZE - 1] + prev[i - SIZE + 1] + prev[i + SIZE - 1] + prev[i + SIZE + 1]) / 16
+      }
+    }
+  }
+  const smoothAlpha = new Uint8Array(soft)
 
   // Dilate colour into transparent texels so bevels and side walls keep the gradient.
   const rgb = new Uint8ClampedArray(data.data)
@@ -236,7 +248,7 @@ export async function createMonument(): Promise<Monument> {
   colorMap.colorSpace = SRGBColorSpace
   colorMap.anisotropy = 4
 
-  const loops = traceContours(alpha, SIZE).map(loop => simplify(chaikin(loop, 1), 0.12))
+  const loops = traceContours(smoothAlpha, SIZE).map(loop => simplify(chaikin(loop, 2), 0.08))
   const withMeta = loops.map((loop, index) => ({
     loop,
     area: Math.abs(area(loop)),
@@ -259,15 +271,16 @@ export async function createMonument(): Promise<Monument> {
   })
 
   const depth = MONUMENT.size * 0.1
-  const geometry = new ExtrudeGeometry(shapes, {
+  const raw = new ExtrudeGeometry(shapes, {
     depth,
     bevelEnabled: true,
     bevelThickness: MONUMENT.size * 0.022,
     bevelSize: MONUMENT.size * 0.012,
-    bevelSegments: 4,
-    curveSegments: 6
+    bevelSegments: 7,
+    curveSegments: 10
   })
-  geometry.translate(0, 0, -depth / 2)
+  raw.translate(0, 0, -depth / 2)
+  const geometry = raw
   const pos = geometry.attributes.position
   const nor = geometry.attributes.normal
   const uv = new Float32Array(pos.count * 2)
@@ -279,6 +292,10 @@ export async function createMonument(): Promise<Monument> {
     uv[i * 2 + 1] = v
   }
   geometry.setAttribute('uv', new BufferAttribute(uv, 2))
+  geometry.deleteAttribute('normal')
+  const smoothGeometry = mergeVertices(geometry, 1e-3)
+  smoothGeometry.computeVertexNormals()
+  geometry.dispose()
 
   const material = new MeshPhysicalMaterial({
     map: colorMap,
@@ -287,11 +304,11 @@ export async function createMonument(): Promise<Monument> {
     emissiveIntensity: 0.2,
     metalness: 0.22,
     roughness: 0.3,
-    clearcoat: 0.85,
+    clearcoat: 0.6,
     clearcoatRoughness: 0.1,
-    envMapIntensity: 1.1
+    envMapIntensity: 0.55
   })
-  const mark = new Mesh(geometry, material)
+  const mark = new Mesh(smoothGeometry, material)
 
   const group = new Group()
   const baseY = groundHeight(MONUMENT.x, MONUMENT.z)
@@ -349,7 +366,7 @@ export async function createMonument(): Promise<Monument> {
   group.add(goldLight)
 
   const glow = glowTexture()
-  const disposables: { dispose(): void }[] = [geometry, material, colorMap, stone, plinthTop, haloMaterial, ringMaterial, beamMaterial, shaft, glow, ...steps.map(s => s.geometry), halo.geometry, ring.geometry]
+  const disposables: { dispose(): void }[] = [smoothGeometry, material, colorMap, stone, plinthTop, haloMaterial, ringMaterial, beamMaterial, shaft, glow, ...steps.map(s => s.geometry), halo.geometry, ring.geometry]
   beams.children.forEach(child => disposables.push((child as Mesh).geometry))
 
   return {
@@ -362,12 +379,12 @@ export async function createMonument(): Promise<Monument> {
       mark.position.y = plinthHeight + MONUMENT.size / 2 + 1.2 - (1 - emerge) * 10
       mark.rotation.y = Math.sin(time * 0.2) * 0.03 + (1 - settle) * 0.25
       const pulse = 0.88 + 0.12 * Math.sin(time * 1.6)
-      material.emissiveIntensity = (0.12 + 1.25 * emerge) * pulse + finale * 0.9
-      haloMaterial.opacity = 0.12 + 0.3 * emerge + finale * 0.3
-      light.intensity = (60 + 2500 * emerge) * (1 + finale)
-      goldLight.intensity = (40 + 1800 * emerge) * (1 + finale)
+      material.emissiveIntensity = (0.16 + 0.7 * emerge) * pulse + finale * 0.25
+      haloMaterial.opacity = 0.06 + 0.14 * emerge + finale * 0.12
+      light.intensity = (40 + 900 * emerge) * (1 + finale * 0.4)
+      goldLight.intensity = (30 + 650 * emerge) * (1 + finale * 0.4)
       const beam = Math.max(0.3 - 0.18 * emerge + teaser, finale)
-      beamMaterial.opacity = Math.min(1, beam * 0.9)
+      beamMaterial.opacity = Math.min(0.6, beam * 0.5)
       beams.scale.x = beams.scale.z = 0.6 + beam * 1.6
       beams.rotation.y = time * 0.05
       const pulseT = (time * 0.28) % 1

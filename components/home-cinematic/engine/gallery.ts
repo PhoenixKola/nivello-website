@@ -24,11 +24,11 @@ import { glowTexture, metalTexture, shaftTexture, stoneTexture } from './texture
 
 export type GalleryProject = { shot: string; appShot?: string; color: string }
 
-export const PORTAL_RADIUS = 25
+export const PORTAL_RADIUS = 39
 const SCREEN_W = 9.6
 const SCREEN_H = 5.4
 const CENTER_Y = 4.4
-const ARC = (60 * Math.PI) / 180
+const ARC = (70 * Math.PI) / 180
 
 export const portalAngle = (f: number, count: number) => lerp(-ARC, ARC, count > 1 ? f / (count - 1) : 0.5)
 
@@ -128,7 +128,7 @@ export function createGallery(projects: GalleryProject[], maxAnisotropy: number)
 
   // Colonnade framing the space, open toward the entrance and the exit.
   const pillarMaterial = track(new MeshStandardMaterial({ map: stone, color: 0x9fb2d0, metalness: 0.2, roughness: 0.7 }))
-  const capMaterial = track(new MeshStandardMaterial({ color: 0x0b1424, emissive: 0x159bff, emissiveIntensity: 2.4 }))
+  const capMaterial = track(new MeshStandardMaterial({ color: 0x0b1424, emissive: 0x159bff, emissiveIntensity: 1.1 }))
   const pillarGeometry = track(new BoxGeometry(1.4, 26, 1.4))
   const capGeometry = track(new BoxGeometry(1.7, 0.3, 1.7))
   for (let i = 0; i < 22; i += 1) {
@@ -152,7 +152,7 @@ export function createGallery(projects: GalleryProject[], maxAnisotropy: number)
   oculus.rotation.x = Math.PI / 2
   oculus.position.set(PLAZA.x, 30, PLAZA.z - 6)
   group.add(oculus)
-  const shaftMaterial = track(new MeshBasicMaterial({ map: shaft, color: 0x8fb8ff, transparent: true, opacity: 0.16, blending: AdditiveBlending, depthWrite: false, side: DoubleSide, toneMapped: false }))
+  const shaftMaterial = track(new MeshBasicMaterial({ map: shaft, color: 0x8fb8ff, transparent: true, opacity: 0.07, blending: AdditiveBlending, depthWrite: false, side: DoubleSide, toneMapped: false }))
   for (let i = 0; i < 5; i += 1) {
     const plane = new Mesh(track(new PlaneGeometry(9, 34)), shaftMaterial)
     const a = (i / 5) * Math.PI * 2
@@ -217,9 +217,9 @@ export function createGallery(projects: GalleryProject[], maxAnisotropy: number)
     body.add(top, bottom, left, right, inner)
     ;[-1, 1].forEach(side => {
       const pylon = new Mesh(frameGeometry.pylon, frameMaterial)
-      pylon.position.set(side * (SCREEN_W / 2 + 2.2), 0.4, -0.2)
+      pylon.position.set(side * (SCREEN_W / 2 + 1.7), 0.4, -0.2)
       const lamp = new Mesh(track(new BoxGeometry(0.5, 0.5, 0.5)), frameLight)
-      lamp.position.set(side * (SCREEN_W / 2 + 2.2), 6.1, -0.2)
+      lamp.position.set(side * (SCREEN_W / 2 + 1.7), 6.1, -0.2)
       body.add(pylon, lamp)
     })
 
@@ -279,15 +279,15 @@ export function createGallery(projects: GalleryProject[], maxAnisotropy: number)
         const e = w * w * (3 - 2 * w)
         const dim = 0.22 + 0.78 * e
         const mix = appMaterials[index] ? appMix : 0
-        siteMaterials[index].color.setScalar(dim * (1 - 0.0) * awake + 0.08)
+        siteMaterials[index].color.setScalar(dim * 0.82 * awake + 0.06)
         siteMaterials[index].opacity = 1 - mix * e
         const appMat = appMaterials[index]
         if (appMat) {
-          appMat.color.setScalar(dim * awake + 0.08)
+          appMat.color.setScalar(dim * 0.82 * awake + 0.06)
           appMat.opacity = mix * e
         }
-        portal.glow.opacity = e * 0.55
-        portal.frameLight.emissiveIntensity = 0.5 + 2.6 * e
+        portal.glow.opacity = e * 0.22
+        portal.frameLight.emissiveIntensity = 0.3 + 1.3 * e
         portal.reflection.forEach(m => {
           m.opacity = 0.05 + 0.2 * e
         })
@@ -302,7 +302,7 @@ export function createGallery(projects: GalleryProject[], maxAnisotropy: number)
       })
       if (total > 0) accent.multiplyScalar(1 / total)
       light.color.copy(accent).lerp(white, 0.25)
-      light.intensity = 2200 * awake
+      light.intensity = 700 * awake
 
       // light path to the focused portal
       const f = clamp(focus, 0, projects.length - 1)
