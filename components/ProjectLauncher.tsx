@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, Check, X } from 'lucide-react'
+import { useCinematic } from '@/lib/cinematic/store'
 import {
   briefCopy,
   buildOptions,
@@ -258,6 +259,7 @@ export default function ProjectLauncher({ locale }: { locale: Locale }) {
   const labels = briefCopy[locale]
   const reduced = useHydratedReducedMotion()
   const headingId = useId()
+  const footerHidden = useCinematic(state => state.footerHidden, true)
   const step1Id = useId()
   const step2Id = useId()
   const drawerId = useId()
@@ -295,9 +297,9 @@ export default function ProjectLauncher({ locale }: { locale: Locale }) {
   }
 
   return (
-    <section id="cinematic-start" className="cin-ov cin-ov--start" data-cin-overlay="6" data-cin-to="0.5" aria-labelledby={headingId}>
+    <section id="cinematic-start" className="cin-ov cin-ov--start" data-cin-overlay="8" data-footer={footerHidden ? 'hidden' : 'shown'} aria-labelledby={headingId}>
       <div className="cin-start">
-        <p className="cin-eyebrow"><i aria-hidden="true" /><span className="cin-head__no">07</span><span className="cin-head__name">{t.chapter}</span><span className="cin-head__sep" aria-hidden="true" /><span className="cin-head__kind">{t.eyebrow}</span></p>
+        <p className="cin-eyebrow"><i aria-hidden="true" /><span className="cin-head__no">09</span><span className="cin-head__name">{t.chapter}</span><span className="cin-head__sep" aria-hidden="true" /><span className="cin-head__kind">{t.eyebrow}</span></p>
         <h2 id={headingId} className="cin-start__title">{t.title}</h2>
         <p className="cin-start__body">{t.body}</p>
 

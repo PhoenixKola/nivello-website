@@ -100,7 +100,7 @@ export function createMotes(count: number): Motes {
 }
 
 /** Layered mist sheets hugging the canyon floor: cheap volumetric depth. */
-export function createMist(): { group: Group; update(fog: Color, sun: Color, time: number, amount: number): void; dispose(): void } {
+export function createMist(low = false): { group: Group; update(fog: Color, sun: Color, time: number, amount: number): void; dispose(): void } {
   const group = new Group()
   const texture = mistTexture(8)
   const material = new MeshBasicMaterial({ map: texture, transparent: true, opacity: 0.2, depthWrite: false, side: DoubleSide, toneMapped: false })
@@ -112,7 +112,8 @@ export function createMist(): { group: Group; update(fog: Color, sun: Color, tim
     [-150, -330, 8],
     [-380, -520, 6]
   ]
-  zones.forEach(([from, to, count]) => {
+  zones.forEach(([from, to, fullCount]) => {
+    const count = low ? Math.max(2, Math.round(fullCount * 0.35)) : fullCount
     for (let i = 0; i < count; i += 1) {
       const z = from + ((to - from) * (i + rand() * 0.6)) / count
       const x = routeX(z) + (rand() - 0.5) * 36
@@ -130,7 +131,7 @@ export function createMist(): { group: Group; update(fog: Color, sun: Color, tim
     group,
     update(fog, sun, time, amount) {
       material.color.copy(fog).lerp(sun, 0.12)
-      material.opacity = 0.16 * amount
+      material.opacity = 0.1 * amount
       sheets.forEach(sheet => {
         sheet.mesh.position.x = sheet.baseX + Math.sin(time * 0.05 + sheet.drift) * 3
       })

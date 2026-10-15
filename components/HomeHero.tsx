@@ -14,7 +14,7 @@ const copy = {
     primary: 'View our work',
     secondary: 'Book a call',
     points: ['Italian & English', 'Development to launch', 'React / Next.js', 'EU-friendly'],
-    scroll: 'Follow the route'
+    scroll: 'Scroll to experience the page'
   },
   it: {
     eyebrow: 'Dall’idea alla realtà',
@@ -24,7 +24,7 @@ const copy = {
     primary: 'Guarda i lavori',
     secondary: 'Prenota una call',
     points: ['Italiano e inglese', 'Dallo sviluppo al lancio', 'React / Next.js', 'Mercato europeo'],
-    scroll: 'Segui il percorso'
+    scroll: 'Scorri per vivere l’esperienza'
   }
 } satisfies Record<Locale, {
   eyebrow: string
@@ -66,7 +66,7 @@ export default function HomeHero({ locale }: { locale: Locale }) {
         </div>
         <p className="cin-hero__points">{t.points.join('  ·  ')}</p>
       </div>
-      <a href="#cinematic-logo" className="cin-scroll-cue" onClick={event => jumpToChapter(event, 1, 0.1)}>
+      <a href="#cinematic-logo" className="cin-scroll-cue" onClick={event => jumpToChapter(event, 1, 0.55)}>
         {t.scroll}<ArrowDown className="h-3.5 w-3.5" aria-hidden="true" />
       </a>
     </section>

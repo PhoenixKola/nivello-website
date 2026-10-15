@@ -14,6 +14,14 @@ export type CinematicState = {
   workIndex: number
   workApp: boolean
   proofIndex: number
+  /** Review under close inspection in the tunnel, or -1 while travelling. */
+  reviewFocus: number
+  /** True while a single project is open inside the cylinder (scrolling is locked until Back). */
+  workDetail: boolean
+  /** The camera is inside the cylinder (hotspots and look-around are live). */
+  inChamber: boolean
+  /** Closing footer folded away so the summit view is unobstructed. */
+  footerHidden: boolean
   briefBuild: string | null
   briefStage: string | null
   introActive: boolean
@@ -26,6 +34,10 @@ const state: CinematicState = {
   workIndex: 0,
   workApp: false,
   proofIndex: 0,
+  reviewFocus: -1,
+  workDetail: false,
+  inChamber: false,
+  footerHidden: true,
   briefBuild: null,
   briefStage: null,
   introActive: false
@@ -52,6 +64,9 @@ export const cinematic = {
     }
   }
 }
+
+/** The visitor is inside a project or a review: the rail holds still until they go Back. */
+export const isLocked = () => state.workDetail || state.reviewFocus >= 0
 
 export function useCinematic<T extends string | number | boolean | null>(selector: (state: CinematicState) => T, serverValue: T): T {
   return useSyncExternalStore(cinematic.subscribe, () => selector(state), () => serverValue)

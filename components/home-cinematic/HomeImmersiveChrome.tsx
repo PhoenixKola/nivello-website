@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { CHAPTER_IDS, cinematic, scrollToChapter, useCinematic } from '@/lib/cinematic/store'
+import { List } from 'lucide-react'
+import { CHAPTER_ANCHORS, CHAPTER_IDS, cinematic, scrollToChapter, useCinematic } from '@/lib/cinematic/store'
 import type { Locale } from '@/lib/site'
 
 const copy = {
@@ -16,7 +17,7 @@ const copy = {
     contents: 'Chapters',
     openContents: 'Open chapters',
     closeContents: 'Close chapters',
-    chapterNames: ['Arrival', 'Identity', 'Design', 'Build', 'Work', 'Proof', 'Contact'],
+    chapterNames: ['Arrival', 'Identity', 'Planning', 'Design', 'Development', 'Building', 'Projects', 'Reviews', 'Contact'],
     skip: 'Skip intro'
   },
   it: {
@@ -28,7 +29,7 @@ const copy = {
     contents: 'Capitoli',
     openContents: 'Apri i capitoli',
     closeContents: 'Chiudi i capitoli',
-    chapterNames: ['Arrivo', 'Identità', 'Design', 'Sviluppo', 'Lavori', 'Prove', 'Contatti'],
+    chapterNames: ['Arrivo', 'Identità', 'Pianificazione', 'Design', 'Sviluppo', 'Realizzazione', 'Progetti', 'Recensioni', 'Contatti'],
     skip: 'Salta l’intro'
   }
 } satisfies Record<Locale, Record<string, unknown>>
@@ -45,6 +46,12 @@ export default function HomeImmersiveChrome({ locale }: { locale: Locale }) {
   const chapter = useCinematic(state => state.chapter, 0)
   const intro = useCinematic(state => state.introActive, false)
   const mode = useCinematic(state => state.mode, 'pending')
+
+  // Going anywhere releases a project or review that is held open.
+  const travel = useCallback((index: number) => {
+    cinematic.set({ workDetail: false, reviewFocus: -1 })
+    scrollToChapter(index, CHAPTER_ANCHORS[index])
+  }, [])
 
   const setNav = useCallback((next: boolean, restoreFocus = false) => {
     const root = document.querySelector<HTMLElement>('[data-cin-root]')
@@ -74,6 +81,18 @@ export default function HomeImmersiveChrome({ locale }: { locale: Locale }) {
       if (root) delete root.dataset.nav
     }
   }, [setNav])
+
+  // Tapping anywhere outside the contents list (or its button) closes it.
+  useEffect(() => {
+    if (!toc) return
+    const onPointer = (event: PointerEvent) => {
+      const target = event.target as Element | null
+      if (target?.closest('.cin-toc, .cin-chrome__toc')) return
+      setToc(false)
+    }
+    document.addEventListener('pointerdown', onPointer, true)
+    return () => document.removeEventListener('pointerdown', onPointer, true)
+  }, [toc])
 
   if (mode === 'static') return null
 
@@ -115,11 +134,13 @@ export default function HomeImmersiveChrome({ locale }: { locale: Locale }) {
         }}
       >
         <span className="cin-chrome__toc-icon" aria-hidden="true">
-          <i />
-          <i />
-          <i />
+          <List size={20} strokeWidth={1.75} />
         </span>
       </button>
+
+      <p className="cin-stagebar" aria-hidden="true">
+        <b>{String(chapter + 1).padStart(2, '0')}</b>/{String(CHAPTER_IDS.length).padStart(2, '0')}<span>{t.chapterNames[chapter]}</span>
+      </p>
 
       <nav id="cin-toc" className="cin-toc" aria-label={t.chapters} data-open={toc ? 'true' : 'false'}>
         <p className="cin-toc__title">{t.contents}</p>
@@ -133,7 +154,7 @@ export default function HomeImmersiveChrome({ locale }: { locale: Locale }) {
                 tabIndex={toc ? 0 : -1}
                 onClick={() => {
                   setToc(false)
-                  scrollToChapter(index, [0, 0.1, 0.08, 0.08, 0.3, 0.14, 0.62][index])
+                  travel(index)
                 }}
               >
                 <span className="cin-toc__num">{String(index + 1).padStart(2, '0')}</span>
@@ -151,7 +172,7 @@ export default function HomeImmersiveChrome({ locale }: { locale: Locale }) {
             type="button"
             className="cin-rail__item"
             aria-current={chapter === index ? 'step' : undefined}
-            onClick={() => scrollToChapter(index, [0, 0.1, 0.08, 0.08, 0.3, 0.14, 0.62][index])}
+            onClick={() => travel(index)}
           >
             <span className="cin-rail__label">{t.chapterNames[index]}</span>
             <span className="cin-rail__num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
-import { cinematic, scrollToChapter, useCinematic } from '@/lib/cinematic/store'
+import { BEAT_STOPS, cinematic, scrollToChapter, useCinematic } from '@/lib/cinematic/store'
 
 export type Beat = { kicker: string; title: string; body: string }
 
@@ -31,7 +31,7 @@ export default function ChapterBeats({ id, chapter, number, name, kind, title, i
   const shown = current === chapter ? active : 0
 
   const go = (index: number) => {
-    if (live) scrollToChapter(chapter, (index + 0.5) / beats.length)
+    if (live) scrollToChapter(chapter, BEAT_STOPS[chapter]?.[index] ?? (index + 0.5) / beats.length)
   }
 
   const onRailKey = (event: React.KeyboardEvent<HTMLElement>) => {

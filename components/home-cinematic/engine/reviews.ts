@@ -2,7 +2,6 @@ import {
   AdditiveBlending,
   BoxGeometry,
   CanvasTexture,
-  Color,
   DoubleSide,
   Group,
   Mesh,
@@ -10,21 +9,47 @@ import {
   MeshStandardMaterial,
   PlaneGeometry,
   PointLight,
-  SRGBColorSpace
+  Raycaster,
+  RingGeometry,
+  SRGBColorSpace,
+  Vector3
 } from 'three'
-import { groundHeight, routeX } from './layout'
+import type { SceneCopy } from './i18n'
+import { REVIEW_SPACING, TUNNEL, groundHeight } from './layout'
+import { createSign } from './signs'
 import { clamp } from './noise'
 import { glowTexture } from './textures'
 
-export type ReviewData = { name: string; role: string; quote: string; color: string }
+export type ReviewData = { slug: string; name: string; role: string; quote: string; color: string; title: string }
 
-const PANEL_W = 7.4
-const PANEL_H = 10.6
-export const reviewZ = (k: number) => -456 - 16 * k
-export const reviewSide = (k: number) => (k % 2 ? 1 : -1)
-export const reviewPos = (k: number) => {
-  const z = reviewZ(k)
-  return { x: routeX(z) + reviewSide(k) * 12.5, z }
+/** Logos for the review cards. `invert` flips a white logo so it reads on the light card. */
+const LOGOS: Record<string, { src: string; invert?: boolean }> = {
+  'rombo-nord': { src: '/client-logos/rombo-nord.webp' },
+  'le-camelie': { src: '/client-logos/le-camelie.webp' },
+  'gjergj-jozef-kola': { src: '/client-logos/gjergj-jozef-kola.png' },
+  consteam: { src: '/client-logos/consteam.webp', invert: true },
+  'your-assist-in-italy': { src: '/client-logos/your-assist-in-italy.svg' },
+  progreen: { src: '/client-logos/progreen.webp' }
+}
+
+const FRAME_W = 5.2
+const FRAME_H = 6.6
+const EYE_Y = 4.9
+// Paintings follow each other along both walls with only a narrow brass pier between them.
+const PAIR_SPACING = REVIEW_SPACING
+const FIRST_OFFSET = 12
+const END_MARGIN = 14
+
+/** Corridor geometry derived from the number of reviews: two per section, one on each wall, so more reviews just lengthen it. */
+export function reviewLayout(count: number) {
+  const pairs = Math.max(1, Math.ceil(count / 2))
+  const length = FIRST_OFFSET + (pairs - 1) * PAIR_SPACING + END_MARGIN
+  const zEnd = TUNNEL.z0 - length
+  const frame = (k: number) => {
+    const side = k % 2 ? 1 : -1
+    return { side, x: side * (TUNNEL.halfWidth - 0.3), y: EYE_Y, z: TUNNEL.z0 - FIRST_OFFSET - Math.floor(k / 2) * PAIR_SPACING }
+  }
+  return { pairs, length, zEnd, frame }
 }
 
 function wrap(ctx: CanvasRenderingContext2D, text: string, maxWidth: number) {
@@ -42,153 +67,305 @@ function wrap(ctx: CanvasRenderingContext2D, text: string, maxWidth: number) {
   return lines
 }
 
-function star(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
-  ctx.beginPath()
-  for (let i = 0; i < 10; i += 1) {
-    const rad = i % 2 ? r * 0.42 : r
-    const a = -Math.PI / 2 + (i * Math.PI) / 5
-    ctx.lineTo(cx + Math.cos(a) * rad, cy + Math.sin(a) * rad)
+const CARD_W = 780
+const CARD_H = 990
+
+/** A review painting: client logo, stars, the opening line, who said it, and a clear "open" affordance. */
+function paintCard(canvas: HTMLCanvasElement, review: ReviewData, accent: string, logo: HTMLImageElement | null) {
+  const ctx = canvas.getContext('2d')!
+  const bg = ctx.createLinearGradient(0, 0, 0, CARD_H)
+  bg.addColorStop(0, '#fbf8f1')
+  bg.addColorStop(1, '#efe6d3')
+  ctx.fillStyle = bg
+  ctx.fillRect(0, 0, CARD_W, CARD_H)
+  ctx.fillStyle = accent
+  ctx.fillRect(0, 0, CARD_W, 14)
+
+  // logo
+  const boxW = 520
+  const boxH = 190
+  const bx = (CARD_W - boxW) / 2
+  const by = 70
+  if (logo && logo.naturalWidth) {
+    const scale = Math.min(boxW / logo.naturalWidth, boxH / logo.naturalHeight)
+    const w = logo.naturalWidth * scale
+    const h = logo.naturalHeight * scale
+    const x = bx + (boxW - w) / 2
+    const y = by + (boxH - h) / 2
+    const info = LOGOS[review.slug]
+    if (info?.invert) {
+      const buffer = document.createElement('canvas')
+      buffer.width = Math.max(1, Math.round(w))
+      buffer.height = Math.max(1, Math.round(h))
+      const bctx = buffer.getContext('2d')!
+      bctx.drawImage(logo, 0, 0, buffer.width, buffer.height)
+      const data = bctx.getImageData(0, 0, buffer.width, buffer.height)
+      for (let i = 0; i < data.data.length; i += 4) {
+        data.data[i] = 255 - data.data[i]
+        data.data[i + 1] = 255 - data.data[i + 1]
+        data.data[i + 2] = 255 - data.data[i + 2]
+      }
+      bctx.putImageData(data, 0, 0)
+      ctx.drawImage(buffer, x, y, w, h)
+    } else {
+      ctx.drawImage(logo, x, y, w, h)
+    }
+  } else {
+    ctx.fillStyle = '#2a3550'
+    ctx.font = '800 54px Inter, system-ui, sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText(review.title, CARD_W / 2, by + boxH / 2 + 18)
+    ctx.textAlign = 'left'
   }
+
+  ctx.fillStyle = 'rgba(184,134,27,0.55)'
+  ctx.fillRect(CARD_W / 2 - 60, 300, 120, 3)
+
+  // Reviews carry no rating data, so there are no stars: an ornament separates the logo from the words instead.
+  ctx.strokeStyle = 'rgba(184,134,27,0.55)'
+  ctx.lineWidth = 3
+  ctx.beginPath()
+  ctx.moveTo(CARD_W / 2 - 150, 354)
+  ctx.lineTo(CARD_W / 2 - 24, 354)
+  ctx.moveTo(CARD_W / 2 + 24, 354)
+  ctx.lineTo(CARD_W / 2 + 150, 354)
+  ctx.stroke()
+  ctx.fillStyle = '#c99a2e'
+  ctx.beginPath()
+  ctx.moveTo(CARD_W / 2, 336)
+  ctx.lineTo(CARD_W / 2 + 14, 354)
+  ctx.lineTo(CARD_W / 2, 372)
+  ctx.lineTo(CARD_W / 2 - 14, 354)
   ctx.closePath()
   ctx.fill()
-}
 
-/** One testimonial monolith face: monogram avatar, stars, quote, attribution. */
-function panelTexture(review: ReviewData, color: Color) {
-  const W = 512
-  const H = Math.round((W * PANEL_H) / PANEL_W)
-  const canvas = document.createElement('canvas')
-  canvas.width = W
-  canvas.height = H
-  const ctx = canvas.getContext('2d')!
-  const accent = `#${color.getHexString()}`
-  const bg = ctx.createLinearGradient(0, 0, 0, H)
-  bg.addColorStop(0, '#0e1930')
-  bg.addColorStop(1, '#070d1c')
-  ctx.fillStyle = bg
-  ctx.fillRect(0, 0, W, H)
-  ctx.fillStyle = accent
-  ctx.fillRect(0, 0, W, 8)
-  ctx.strokeStyle = 'rgba(160,190,235,0.18)'
-  ctx.lineWidth = 2
-  ctx.strokeRect(14, 14, W - 28, H - 28)
+  // opening line
+  ctx.fillStyle = '#1c2433'
+  ctx.font = 'italic 44px Georgia, "Times New Roman", serif'
+  const first = review.quote.split(/(?<=[.!?])\s/)[0]
+  const preview = first.length > 120 ? `${first.slice(0, 114).replace(/\s+\S*$/, '').replace(/[ ,;]+$/, '')}…` : first
+  wrap(ctx, `“${preview}”`, CARD_W - 130)
+    .slice(0, 6)
+    .forEach((line, i) => ctx.fillText(line, 66, 456 + i * 62))
 
-  ctx.beginPath()
-  ctx.arc(86, 100, 46, 0, Math.PI * 2)
+  // who
   ctx.fillStyle = accent
-  ctx.globalAlpha = 0.22
-  ctx.fill()
-  ctx.globalAlpha = 1
-  ctx.lineWidth = 3
+  ctx.fillRect(66, CARD_H - 190, 72, 5)
+  ctx.fillStyle = '#1c2433'
+  ctx.font = '800 40px Inter, system-ui, sans-serif'
+  ctx.fillText(review.name, 66, CARD_H - 130)
+  ctx.fillStyle = '#5a6479'
+  ctx.font = '600 27px Inter, system-ui, sans-serif'
+  ctx.fillText(review.role.toUpperCase(), 66, CARD_H - 82)
+
+  // affordance: a ring with a plus, meaning "open this review"
   ctx.strokeStyle = accent
+  ctx.lineWidth = 5
+  ctx.beginPath()
+  ctx.arc(CARD_W - 100, CARD_H - 112, 40, 0, Math.PI * 2)
   ctx.stroke()
-  ctx.fillStyle = '#f4f7fd'
-  ctx.font = '600 50px Georgia, serif'
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'middle'
-  ctx.fillText(review.name.replace(/^(The|I)\s/i, '').charAt(0).toUpperCase(), 86, 104)
-
-  ctx.textAlign = 'left'
-  ctx.fillStyle = '#ffbf43'
-  for (let i = 0; i < 5; i += 1) star(ctx, 168 + i * 34, 82, 14)
-  ctx.fillStyle = '#e8eefb'
-  ctx.font = '700 28px Inter, system-ui, sans-serif'
-  ctx.textBaseline = 'alphabetic'
-  ctx.fillText(review.name, 160, 132)
-
-  ctx.fillStyle = accent
-  ctx.font = '700 120px Georgia, serif'
-  ctx.globalAlpha = 0.5
-  ctx.fillText('“', 36, 270)
-  ctx.globalAlpha = 1
-  ctx.fillStyle = '#f1f5fd'
-  ctx.font = 'italic 34px Georgia, serif'
-  const lines = wrap(ctx, review.quote, W - 90)
-  const shown = lines.slice(0, 9)
-  if (lines.length > 9) shown[8] = `${shown[8].replace(/[ ,.;]+$/, '')}…`
-  shown.forEach((line, i) => ctx.fillText(line, 46, 318 + i * 46))
-
-  ctx.fillStyle = 'rgba(190,205,235,0.75)'
-  ctx.font = '600 22px Inter, system-ui, sans-serif'
-  ctx.fillText(review.role.toUpperCase(), 46, H - 52)
-  const texture = new CanvasTexture(canvas)
-  texture.colorSpace = SRGBColorSpace
-  texture.anisotropy = 4
-  return texture
+  ctx.beginPath()
+  ctx.moveTo(CARD_W - 120, CARD_H - 112)
+  ctx.lineTo(CARD_W - 80, CARD_H - 112)
+  ctx.moveTo(CARD_W - 100, CARD_H - 132)
+  ctx.lineTo(CARD_W - 100, CARD_H - 92)
+  ctx.stroke()
 }
 
 export type Reviews = {
   group: Group
-  update(time: number, focus: number, weight: number): void
+  pick(raycaster: Raycaster): number
+  hotspotAnchor(index: number, out: Vector3): void
+  update(time: number, active: number, focusAmount: number, weight: number): void
+  /** The corridor sign and every painting's text, repainted in place when the locale changes. */
+  setLocale(copy: SceneCopy, reviews: ReviewData[]): void
   dispose(): void
 }
 
-/** Testimonial monoliths line both walls of the canyon; the active one rises toward the route and lights up. */
-export function createReviews(reviews: ReviewData[]): Reviews {
+/**
+ * The review corridor: a warm museum gallery that starts right at the cylinder's exit bulkhead. Each section holds a
+ * pair of framed paintings, one on each wall, and ends in a doorway of light that opens onto the climb.
+ */
+export function createReviews(initial: ReviewData[], copy: SceneCopy, low = false): Reviews {
+  let reviews = initial
   const group = new Group()
   const disposables: { dispose(): void }[] = []
   const track = <T extends { dispose(): void }>(item: T) => {
     disposables.push(item)
     return item
   }
+  const layout = reviewLayout(reviews.length)
+  const L = layout.length
+  const zMid = TUNNEL.z0 - L / 2
+  const baseY = groundHeight(0, zMid)
+  const W2 = TUNNEL.halfWidth
+  const H = TUNNEL.height
+
+  // Warm, bright materials that read without environment reflections (phones have none).
+  const plaster = track(new MeshStandardMaterial({ color: 0xe7ddc8, roughness: 0.75, metalness: 0.05, emissive: 0x6d5a3c, emissiveIntensity: 0.38 }))
+  const wainscot = track(new MeshStandardMaterial({ color: 0x8a6a46, roughness: 0.55, metalness: 0.1, emissive: 0x2c1e0e, emissiveIntensity: 0.55 }))
+  const floorMaterial = track(new MeshStandardMaterial({ color: 0x4a3f36, roughness: 0.38, metalness: 0.25, emissive: 0x2a2018, emissiveIntensity: 0.55, envMapIntensity: 0.7 }))
+  const runner = track(new MeshStandardMaterial({ color: 0xc89a46, roughness: 0.5, metalness: 0.2, emissive: 0x6b4a14, emissiveIntensity: 0.55 }))
+  const brass = track(new MeshStandardMaterial({ color: 0xd9b25e, metalness: 0.55, roughness: 0.32, emissive: 0x4a3410, emissiveIntensity: 0.7, envMapIntensity: 0.9 }))
+  const ribMaterial = track(new MeshStandardMaterial({ color: 0xb59a68, roughness: 0.5, metalness: 0.3, emissive: 0x4a3a1c, emissiveIntensity: 0.5 }))
+  const ceilingLight = track(new MeshBasicMaterial({ color: 0xfff1d6, toneMapped: false }))
+  const ceilingMaterial = track(new MeshStandardMaterial({ color: 0xf0e8d6, roughness: 0.8, emissive: 0x8a7650, emissiveIntensity: 0.55 }))
+
+  const add = (geometry: { dispose(): void }, material: MeshStandardMaterial | MeshBasicMaterial, x: number, y: number, z: number) => {
+    const mesh = new Mesh(track(geometry) as never, material)
+    mesh.position.set(x, baseY + y, z)
+    group.add(mesh)
+    return mesh
+  }
+
+  // Shell: floor, runner, walls, wainscot, ceiling.
+  add(new BoxGeometry(W2 * 2 + 1.6, 0.5, L), floorMaterial, 0, 0.25, zMid)
+  add(new BoxGeometry(5.2, 0.12, L - 1), runner, 0, 0.56, zMid)
+  ;[-1, 1].forEach(side => {
+    add(new BoxGeometry(0.7, H, L), plaster, side * (W2 + 0.35), H / 2, zMid)
+    add(new BoxGeometry(0.28, 1.4, L), wainscot, side * (W2 - 0.1), 0.95, zMid)
+    add(new BoxGeometry(0.24, 0.12, L), brass, side * (W2 - 0.12), 1.68, zMid)
+  })
+  add(new BoxGeometry(W2 * 2 + 1.6, 0.6, L), ceilingMaterial, 0, H + 0.3, zMid)
+
+  // Slim brass piers sit between the paintings (never behind one), each with a warm light panel above and a sconce.
+  const sconce = track(new BoxGeometry(0.3, 0.9, 0.2))
+  const sconceLight = track(new MeshBasicMaterial({ color: 0xffe3b0, toneMapped: false }))
+  for (let k = 0; k <= layout.pairs; k += 1) {
+    const z = TUNNEL.z0 - FIRST_OFFSET + PAIR_SPACING / 2 - k * PAIR_SPACING
+    if (z > TUNNEL.z0 - 0.5 || z < layout.zEnd + 0.5) continue
+    add(new BoxGeometry(W2 * 2 + 1.4, 0.5, 0.6), ribMaterial, 0, H - 0.1, z)
+    add(new BoxGeometry(2.6, 0.08, 0.6), ceilingLight, -3.4, H - 0.42, z)
+    add(new BoxGeometry(2.6, 0.08, 0.6), ceilingLight, 3.4, H - 0.42, z)
+    ;[-1, 1].forEach(side => {
+      add(new BoxGeometry(0.5, H, 0.5), ribMaterial, side * (W2 + 0.02), H / 2, z)
+      const lamp = new Mesh(sconce, sconceLight)
+      lamp.position.set(side * (W2 - 0.35), baseY + 7.4, z)
+      group.add(lamp)
+    })
+  }
+  add(new BoxGeometry(2.4, 0.07, L - 2), ceilingLight, 0, H - 0.42, zMid)
+
+  // The corridor sign, just inside the mouth, readable as the visitor walks in from the cylinder.
+  const sign = createSign(6)
+  track(sign)
+  sign.repaint(copy.tunnel.sign)
+  const signMesh = new Mesh(track(new PlaneGeometry(7.6, 7.6 / 6)), track(new MeshBasicMaterial({ map: sign.texture, transparent: true, toneMapped: false })))
+  signMesh.position.set(0, baseY + H - 1.55, TUNNEL.z0 - 1.2)
+  signMesh.rotation.y = 0
+  group.add(signMesh)
+
+  // Exit: a framed doorway of light at the far end, opening onto the climb.
+  const exitZ = TUNNEL.z0 - L
+  add(new BoxGeometry(0.9, H, 0.9), brass, -W2 + 0.2, H / 2, exitZ)
+  add(new BoxGeometry(0.9, H, 0.9), brass, W2 - 0.2, H / 2, exitZ)
+  add(new BoxGeometry(W2 * 2, 0.9, 0.9), brass, 0, H - 0.2, exitZ)
   const glow = track(glowTexture())
-  const frameGeometry = track(new BoxGeometry(PANEL_W + 0.8, PANEL_H + 0.8, 0.9))
-  const panelGeometry = track(new PlaneGeometry(PANEL_W, PANEL_H))
-  const haloGeometry = track(new PlaneGeometry(PANEL_W * 2.4, PANEL_H * 1.9))
-  const baseGeometry = track(new BoxGeometry(2.6, 3, 2.2))
-  const stripGeometry = track(new BoxGeometry(PANEL_W + 0.9, 0.18, 0.2))
-  const frameMaterial = track(new MeshStandardMaterial({ color: 0x0b1424, metalness: 0.9, roughness: 0.28, envMapIntensity: 1.2 }))
+  add(new PlaneGeometry(W2 * 2 - 1, H - 1.2), track(new MeshBasicMaterial({ map: glow, color: 0xffe2b0, transparent: true, blending: AdditiveBlending, depthWrite: false, toneMapped: false, opacity: 0.9 })), 0, H / 2, exitZ + 0.5)
 
+  // Paintings.
+  const outerGeometry = track(new BoxGeometry(FRAME_W + 0.95, FRAME_H + 0.95, 0.5))
+  const matGeometry = track(new BoxGeometry(FRAME_W + 0.25, FRAME_H + 0.25, 0.4))
+  const faceGeometry = track(new PlaneGeometry(FRAME_W, FRAME_H))
+  const matMaterial = track(new MeshStandardMaterial({ color: 0xf6f0e3, roughness: 0.8, emissive: 0x6a5e48, emissiveIntensity: 0.45 }))
+  const haloGeometry = track(new PlaneGeometry(FRAME_W * 2.3, FRAME_H * 1.8))
+  const spotGeometry = track(new PlaneGeometry(FRAME_W * 1.7, 5.6))
+  const lampGeometry = track(new BoxGeometry(FRAME_W * 0.55, 0.14, 0.42))
+  const ringGeometry = track(new RingGeometry(0.34, 0.4, 40))
   const items = reviews.map((review, k) => {
-    const color = new Color(review.color)
-    const hsl = { h: 0, s: 0, l: 0 }
-    color.getHSL(hsl)
-    if (hsl.l < 0.4) color.setHSL(hsl.h, Math.max(hsl.s, 0.4), 0.58)
-    const { x, z } = reviewPos(k)
-    const side = reviewSide(k)
+    const accent = review.color
+    const pose = layout.frame(k)
     const root = new Group()
-    root.position.set(x, groundHeight(x, z), z)
-    root.rotation.y = -side * 0.45
+    root.position.set(pose.x, baseY + pose.y + 0.4, pose.z)
+    root.rotation.y = pose.side < 0 ? Math.PI / 2 : -Math.PI / 2
     group.add(root)
-
-    const plinth = new Mesh(baseGeometry, frameMaterial)
-    plinth.position.y = 1.5
-    const body = new Group()
-    body.position.y = 3 + PANEL_H / 2 + 0.4
-    const frame = new Mesh(frameGeometry, frameMaterial)
-    const faceMaterial = track(new MeshBasicMaterial({ map: track(panelTexture(review, color)), toneMapped: false, color: 0x777777 }))
-    const face = new Mesh(panelGeometry, faceMaterial)
-    face.position.z = 0.47
-    const edge = track(new MeshBasicMaterial({ color, toneMapped: false }))
-    const strip = new Mesh(stripGeometry, edge)
-    strip.position.set(0, -(PANEL_H / 2 + 0.5), 0.5)
-    const haloMaterial = track(new MeshBasicMaterial({ map: glow, color, transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false, toneMapped: false, side: DoubleSide }))
+    const frame = new Mesh(outerGeometry, brass)
+    frame.position.z = -0.1
+    const mat = new Mesh(matGeometry, matMaterial)
+    mat.position.z = 0.02
+    const canvas = document.createElement('canvas')
+    canvas.width = CARD_W
+    canvas.height = CARD_H
+    let logoImage: HTMLImageElement | null = null
+    paintCard(canvas, review, accent, null)
+    const texture = track(new CanvasTexture(canvas))
+    texture.colorSpace = SRGBColorSpace
+    texture.anisotropy = 6
+    const logoInfo = LOGOS[review.slug]
+    if (logoInfo) {
+      const image = new Image()
+      image.onload = () => {
+        logoImage = image
+        paintCard(canvas, reviews[k], accent, image)
+        texture.needsUpdate = true
+      }
+      image.src = logoInfo.src
+    }
+    const faceMaterial = track(new MeshBasicMaterial({ map: texture, toneMapped: false, color: 0xffffff }))
+    const face = new Mesh(faceGeometry, faceMaterial)
+    face.position.z = 0.27
+    const lamp = new Mesh(lampGeometry, brass)
+    lamp.position.set(0, FRAME_H / 2 + 0.95, 0.4)
+    const spotMaterial = track(new MeshBasicMaterial({ map: glow, color: 0xfff0d0, transparent: true, opacity: 0.2, blending: AdditiveBlending, depthWrite: false, toneMapped: false, side: DoubleSide }))
+    const spot = new Mesh(spotGeometry, spotMaterial)
+    spot.position.set(0, FRAME_H / 2 - 1.4, 0.45)
+    const haloMaterial = track(new MeshBasicMaterial({ map: glow, color: 0xffe9bd, transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false, toneMapped: false, side: DoubleSide }))
     const halo = new Mesh(haloGeometry, haloMaterial)
-    halo.position.z = -0.8
-    body.add(frame, face, strip, halo)
-    root.add(plinth, body)
-    return { root, body, faceMaterial, haloMaterial, color }
+    halo.position.z = 0.55
+    const ringMaterial = track(new MeshBasicMaterial({ color: 0xffbf43, transparent: true, opacity: 0.8, toneMapped: false, depthWrite: false }))
+    const ring = new Mesh(ringGeometry, ringMaterial)
+    ring.position.set(FRAME_W / 2 - 1.2, -FRAME_H / 2 + 1.4, 0.34)
+    root.add(frame, mat, face, lamp, spot, halo, ring)
+    return {
+      root,
+      face,
+      faceMaterial,
+      haloMaterial,
+      spotMaterial,
+      ringMaterial,
+      ring,
+      repaint: () => {
+        paintCard(canvas, reviews[k], accent, logoImage)
+        texture.needsUpdate = true
+      }
+    }
   })
 
-  const light = new PointLight(0xffffff, 0, 46, 1.6)
+  const light = new PointLight(0xfff0d8, 0, 34, 1.5)
   group.add(light)
-  const white = new Color(0xffffff)
+  const warm = new Vector3()
 
   return {
     group,
-    update(time, focus, weight) {
+    pick(raycaster) {
+      const hit = raycaster.intersectObjects(items.map(item => item.face), false)[0]
+      return hit ? items.findIndex(item => item.face === hit.object) : -1
+    },
+    hotspotAnchor(index, out) {
+      const pose = layout.frame(index)
+      out.set(pose.x - pose.side * 0.6, baseY + pose.y + 0.4 - FRAME_H / 2 + 1.1, pose.z)
+    },
+    setLocale(next, data) {
+      sign.repaint(next.tunnel.sign)
+      if (data.length === reviews.length) reviews = data
+      items.forEach(item => item.repaint())
+    },
+    update(time, active, focusAmount, weight) {
       items.forEach((item, k) => {
-        const e = clamp(1 - Math.abs(focus - k) * 0.9)
-        const lift = e * e * (3 - 2 * e)
-        item.faceMaterial.color.setScalar((0.5 + 0.4 * lift) * (0.4 + 0.6 * weight))
-        item.haloMaterial.opacity = 0.05 + 0.2 * lift
-        item.body.position.y = 3 + PANEL_H / 2 + 0.4 + Math.sin(time * 0.6 + k) * 0.08
+        const selected = k === active ? 1 : 0
+        // The open painting stays fully lit; the others recede only slightly so they remain readable.
+        const emphasis = focusAmount > 0.01 ? (selected ? 1 : 1 - 0.28 * focusAmount) : 1
+        item.faceMaterial.color.setScalar((0.72 + 0.28 * emphasis) * (0.5 + 0.5 * weight))
+        item.haloMaterial.opacity = (0.05 + 0.2 * selected * focusAmount) * weight
+        item.spotMaterial.opacity = 0.16 * weight * (0.7 + 0.3 * emphasis)
+        const pulse = 1 + 0.18 * Math.sin(time * 2.4 + k)
+        item.ring.scale.setScalar(pulse * (1 - 0.6 * focusAmount))
+        item.ringMaterial.opacity = (0.85 - 0.5 * Math.sin(time * 2.4 + k) * 0.3) * (1 - focusAmount) * weight
       })
-      const active = clamp(Math.round(focus), 0, items.length - 1)
-      const p = reviewPos(active)
-      light.color.copy(items[active].color).lerp(white, 0.3)
-      light.position.set(p.x - reviewSide(active) * 7, groundHeight(p.x, p.z) + 9, p.z + 9)
-      light.intensity = 420 * weight
+      const pose = layout.frame(clamp(Math.round(active), 0, items.length - 1))
+      warm.set(-pose.side * 2, baseY + 6.5, pose.z + 4)
+      light.position.copy(warm)
+      light.intensity = low ? 0 : 160 * weight
     },
     dispose() {
       disposables.forEach(item => item.dispose())

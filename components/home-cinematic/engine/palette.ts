@@ -25,14 +25,14 @@ const beats: Beat[] = [
   { u: 0.0, skyTop: 0x040a1e, skyMid: 0x112a52, skyHorizon: 0xe0955a, fog: 0x1a3356, fogDensity: 0.0046, sun: 0xffa860, sunIntensity: 1.0, ambientSky: 0x2c4c80, ambientGround: 0x0a1424, exposure: 0.95, bloom: 0.85, stars: 0.9, clouds: 0.45, grade: 0x2a6bff, gradeAmount: 0.1 },
   { u: 0.9, skyTop: 0x0a1d48, skyMid: 0x2c58a0, skyHorizon: 0xffae62, fog: 0x3f6296, fogDensity: 0.0034, sun: 0xffc78a, sunIntensity: 1.9, ambientSky: 0x5580b8, ambientGround: 0x182234, exposure: 1.05, bloom: 0.8, stars: 0.15, clouds: 0.7, grade: 0xffb35a, gradeAmount: 0.08 },
   { u: 1.6, skyTop: 0x06173a, skyMid: 0x1c4a8c, skyHorizon: 0x6aa2e6, fog: 0x2c5690, fogDensity: 0.0040, sun: 0xffe8c0, sunIntensity: 1.7, ambientSky: 0x3f6fb0, ambientGround: 0x12203a, exposure: 1.05, bloom: 0.65, stars: 0, clouds: 0.8, grade: 0x159bff, gradeAmount: 0.07 },
-  { u: 2.6, skyTop: 0x06173a, skyMid: 0x1c4a8c, skyHorizon: 0x6aa2e6, fog: 0x2c5690, fogDensity: 0.0040, sun: 0xffe8c0, sunIntensity: 1.7, ambientSky: 0x3f6fb0, ambientGround: 0x12203a, exposure: 1.05, bloom: 0.65, stars: 0, clouds: 0.8, grade: 0x159bff, gradeAmount: 0.07 },
-  { u: 3.7, skyTop: 0x0c2252, skyMid: 0x3a62a0, skyHorizon: 0xffb870, fog: 0x6a7fa6, fogDensity: 0.0040, sun: 0xffd29a, sunIntensity: 2.0, ambientSky: 0x5a7eb4, ambientGround: 0x201f30, exposure: 1.05, bloom: 0.75, stars: 0, clouds: 0.8, grade: 0xffbf43, gradeAmount: 0.09 },
-  { u: 4.0, skyTop: 0x03050f, skyMid: 0x0b1428, skyHorizon: 0x1c2c4e, fog: 0x0c162a, fogDensity: 0.0050, sun: 0x86a8ff, sunIntensity: 0.55, ambientSky: 0x1c2c4c, ambientGround: 0x080c18, exposure: 0.95, bloom: 0.95, stars: 0.55, clouds: 0.2, grade: 0x3a5cff, gradeAmount: 0.1 },
-  { u: 4.92, skyTop: 0x03050f, skyMid: 0x0b1428, skyHorizon: 0x1c2c4e, fog: 0x0c162a, fogDensity: 0.0048, sun: 0x86a8ff, sunIntensity: 0.55, ambientSky: 0x1c2c4c, ambientGround: 0x080c18, exposure: 0.95, bloom: 0.95, stars: 0.55, clouds: 0.2, grade: 0x3a5cff, gradeAmount: 0.1 },
-  { u: 5.1, skyTop: 0x1a2f66, skyMid: 0x9a5646, skyHorizon: 0xe89a58, fog: 0x7a5048, fogDensity: 0.0034, sun: 0xffb060, sunIntensity: 1.7, ambientSky: 0x84647a, ambientGround: 0x241a24, exposure: 0.82, bloom: 0.7, stars: 0, clouds: 0.9, grade: 0xffaa3c, gradeAmount: 0.14 },
-  { u: 5.9, skyTop: 0x141f50, skyMid: 0x8a4260, skyHorizon: 0xe0804a, fog: 0x6a4a6c, fogDensity: 0.0034, sun: 0xff9a4a, sunIntensity: 1.4, ambientSky: 0x8a6a98, ambientGround: 0x2a2236, exposure: 1.0, bloom: 0.85, stars: 0.1, clouds: 0.85, grade: 0xff7a5a, gradeAmount: 0.12 },
-  { u: 6.3, skyTop: 0x090f33, skyMid: 0x3a2a6a, skyHorizon: 0xff7e5a, fog: 0x45386f, fogDensity: 0.0030, sun: 0xff8a50, sunIntensity: 1.1, ambientSky: 0x4a4a90, ambientGround: 0x14142c, exposure: 1.0, bloom: 1.0, stars: 0.5, clouds: 0.7, grade: 0x7c3aed, gradeAmount: 0.12 },
-  { u: 7.0, skyTop: 0x03061a, skyMid: 0x14214f, skyHorizon: 0xd98a52, fog: 0x1a2750, fogDensity: 0.0011, sun: 0xff9a5a, sunIntensity: 1.6, ambientSky: 0x4a64c0, ambientGround: 0x1a2250, exposure: 1.18, bloom: 1.25, stars: 0.9, clouds: 0.5, grade: 0xffa04a, gradeAmount: 0.1 }
+  { u: 3.6, skyTop: 0x06173a, skyMid: 0x1c4a8c, skyHorizon: 0x6aa2e6, fog: 0x2c5690, fogDensity: 0.0040, sun: 0xffe8c0, sunIntensity: 1.7, ambientSky: 0x3f6fb0, ambientGround: 0x12203a, exposure: 1.05, bloom: 0.65, stars: 0, clouds: 0.8, grade: 0x159bff, gradeAmount: 0.07 },
+  { u: 5.3, skyTop: 0x0c2252, skyMid: 0x3a62a0, skyHorizon: 0xffb870, fog: 0x6a7fa6, fogDensity: 0.0040, sun: 0xffd29a, sunIntensity: 2.0, ambientSky: 0x5a7eb4, ambientGround: 0x201f30, exposure: 1.05, bloom: 0.75, stars: 0, clouds: 0.8, grade: 0xffbf43, gradeAmount: 0.09 },
+  { u: 5.95, skyTop: 0x16346e, skyMid: 0x3f6aa8, skyHorizon: 0xf0c79a, fog: 0x6f86ab, fogDensity: 0.0034, sun: 0xffe2b8, sunIntensity: 1.6, ambientSky: 0x5c7cb0, ambientGround: 0x202a40, exposure: 1.0, bloom: 0.6, stars: 0, clouds: 0.75, grade: 0xffc78a, gradeAmount: 0.06 },
+  { u: 6.97, skyTop: 0x16346e, skyMid: 0x3f6aa8, skyHorizon: 0xf0c79a, fog: 0x6f86ab, fogDensity: 0.0034, sun: 0xffe2b8, sunIntensity: 1.6, ambientSky: 0x5c7cb0, ambientGround: 0x202a40, exposure: 1.0, bloom: 0.6, stars: 0, clouds: 0.75, grade: 0xffc78a, gradeAmount: 0.06 },
+  { u: 7.1, skyTop: 0x1a2f66, skyMid: 0x9a5646, skyHorizon: 0xe89a58, fog: 0x7a5048, fogDensity: 0.0034, sun: 0xffb060, sunIntensity: 1.7, ambientSky: 0x84647a, ambientGround: 0x241a24, exposure: 0.82, bloom: 0.7, stars: 0, clouds: 0.9, grade: 0xffaa3c, gradeAmount: 0.14 },
+  { u: 7.9, skyTop: 0x141f50, skyMid: 0x8a4260, skyHorizon: 0xe0804a, fog: 0x6a4a6c, fogDensity: 0.0034, sun: 0xff9a4a, sunIntensity: 1.4, ambientSky: 0x8a6a98, ambientGround: 0x2a2236, exposure: 1.0, bloom: 0.85, stars: 0.1, clouds: 0.85, grade: 0xff7a5a, gradeAmount: 0.12 },
+  { u: 8.3, skyTop: 0x090f33, skyMid: 0x3a2a6a, skyHorizon: 0xff7e5a, fog: 0x45386f, fogDensity: 0.0030, sun: 0xff8a50, sunIntensity: 1.1, ambientSky: 0x4a4a90, ambientGround: 0x14142c, exposure: 1.0, bloom: 1.0, stars: 0.5, clouds: 0.7, grade: 0x7c3aed, gradeAmount: 0.12 },
+  { u: 9.0, skyTop: 0x0a1646, skyMid: 0x3a4a92, skyHorizon: 0xf2a064, fog: 0x4a4c86, fogDensity: 0.0013, sun: 0xffa060, sunIntensity: 2.1, ambientSky: 0x6a74c0, ambientGround: 0x30386e, exposure: 1.15, bloom: 0.9, stars: 0.4, clouds: 0.6, grade: 0xffa04a, gradeAmount: 0.1 }
 ]
 
 const scratch = new Color()
@@ -98,7 +98,7 @@ export function evaluateAtmosphere(u: number, day: number, out: Atmosphere) {
   mix(out.ambientSky, a.ambientSky, b.ambientSky)
   mix(out.ambientGround, a.ambientGround, b.ambientGround)
   mix(out.grade, a.grade, b.grade)
-  out.fogDensity = num(a.fogDensity, b.fogDensity) * (1 - 0.15 * day)
+  out.fogDensity = num(a.fogDensity, b.fogDensity) * (1 - 0.15 * day) * 0.92
   out.sunIntensity = num(a.sunIntensity, b.sunIntensity) * (1 + 0.15 * day)
   out.ambientSky.multiplyScalar(1 + 0.7 * day)
   out.ambientGround.multiplyScalar(1 + 1.2 * day)

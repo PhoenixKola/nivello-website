@@ -4,17 +4,19 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowLeft, ArrowRight, ArrowUpRight, ExternalLink, Globe2, LayoutDashboard } from 'lucide-react'
-import { cinematic } from '@/lib/cinematic/store'
+import { ArrowLeft, ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, ExternalLink, Globe2, LayoutDashboard } from 'lucide-react'
+import { cinematic, useCinematic } from '@/lib/cinematic/store'
 import { getProjectPath, getProjects, type Project } from '@/lib/projects'
 import { getRoutePath, type Locale } from '@/lib/site'
 import { useHydratedReducedMotion } from '@/lib/useHydratedReducedMotion'
 
 /**
- * Chapter 03 — The Work. The six real projects hang in a monumental hall inside the world; this overlay is
- * only the typography and controls. Selecting a project sends the camera (and the hall's light) to its portal.
+ * Chapter 07, The Work. The real projects hang as holograms on the wall of a cylinder. Overview: the view turns by
+ * dragging (or the look buttons) and every project has a hotspot under it. Opening a hotspot flies the view to that
+ * project and shows its information; scrolling stays locked until Back returns to the chamber.
  *
  * ProGreen additionally exposes a website/app switch. The app view only ever uses the pre-redacted screenshot.
+ * Without WebGL the hotspots become a plain list and the information panel stays visible.
  */
 
 const copy = {
@@ -24,7 +26,12 @@ const copy = {
     title: 'Real projects, brought on stage.',
     intro: 'From the website a customer first sees to the tools a team uses every day. Pick a project to bring it into focus.',
     allWork: 'See all work',
-    indexLabel: 'Choose a project',
+    hint: 'Drag to look around. Select a project to open it.',
+    lookLeft: 'Look left',
+    lookRight: 'Look right',
+    open: 'Open project',
+    back: 'Back',
+    backLabel: 'Back to all projects',
     caseStudy: 'View case study',
     liveSite: 'Visit live site',
     website: 'Website',
@@ -33,8 +40,7 @@ const copy = {
     websiteCategory: 'Public website',
     appCategory: 'Operations web app',
     result: 'Result',
-    previous: 'Previous project',
-    next: 'Next project',
+    list: 'Projects',
     websiteAlt: (title: string) => `${title} website preview`,
     appAlt: (title: string) => `Anonymised preview of the ${title} web app`
   },
@@ -44,7 +50,12 @@ const copy = {
     title: 'Progetti reali, portati in scena.',
     intro: 'Dal sito che un cliente vede per primo agli strumenti che un team usa ogni giorno. Scegli un progetto per metterlo a fuoco.',
     allWork: 'Vedi tutti i lavori',
-    indexLabel: 'Scegli un progetto',
+    hint: 'Trascina per guardarti intorno. Scegli un progetto per aprirlo.',
+    lookLeft: 'Guarda a sinistra',
+    lookRight: 'Guarda a destra',
+    open: 'Apri il progetto',
+    back: 'Indietro',
+    backLabel: 'Torna a tutti i progetti',
     caseStudy: 'Vedi il case study',
     liveSite: 'Visita il sito live',
     website: 'Sito',
@@ -53,8 +64,7 @@ const copy = {
     websiteCategory: 'Sito pubblico',
     appCategory: 'Gestionale operativo',
     result: 'Risultato',
-    previous: 'Progetto precedente',
-    next: 'Progetto successivo',
+    list: 'Progetti',
     websiteAlt: (title: string) => `Anteprima del sito ${title}`,
     appAlt: (title: string) => `Anteprima anonimizzata dell’app web ${title}`
   }
@@ -70,7 +80,12 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
   }, [locale])
   const reducedMotion = useHydratedReducedMotion()
   const baseId = useId()
-  const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const spotRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const backRef = useRef<HTMLButtonElement>(null)
+  const live = useCinematic(state => state.mode === 'live', false)
+  const detail = useCinematic(state => state.workDetail, false)
+  const chapter = useCinematic(state => state.chapter, 0)
+  const inChamber = useCinematic(state => state.inChamber, false)
 
   const [activeIndex, setActiveIndex] = useState(0)
   const [appMode, setAppMode] = useState(false)
@@ -83,45 +98,40 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
     cinematic.set({ workIndex: activeIndex, workApp: showingApp })
   }, [activeIndex, showingApp])
 
-  useEffect(() => {
-    const tab = tabRefs.current[activeIndex]
-    const list = tab?.parentElement
-    if (!tab || !list) return
-    list.scrollTo({ left: tab.offsetLeft - (list.clientWidth - tab.offsetWidth) / 2, behavior: 'smooth' })
-  }, [activeIndex])
-
-  const select = useCallback((index: number) => {
+  const open = useCallback((index: number) => {
     setActiveIndex(index)
     setAppMode(false)
+    cinematic.set({ workIndex: index, workApp: false, workDetail: true })
   }, [])
 
-  const move = useCallback(
-    (delta: number, focusTab = false) => {
-      const next = (activeIndex + delta + projects.length) % projects.length
-      select(next)
-      if (focusTab) tabRefs.current[next]?.focus()
+  const close = useCallback(() => {
+    cinematic.set({ workDetail: false, workApp: false })
+    window.requestAnimationFrame(() => spotRefs.current[cinematic.get().workIndex]?.focus({ preventScroll: true }))
+  }, [])
+
+  // Move focus into the opened project, and always release the rail if the chapter is left or the page unmounts.
+  useEffect(() => {
+    if (detail && live) window.requestAnimationFrame(() => backRef.current?.focus({ preventScroll: true }))
+  }, [detail, live])
+  useEffect(() => {
+    if (chapter !== 6 && cinematic.get().workDetail) cinematic.set({ workDetail: false })
+  }, [chapter])
+  useEffect(() => {
+    if (!detail) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') close()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [detail, close])
+  useEffect(
+    () => () => {
+      cinematic.set({ workDetail: false })
     },
-    [activeIndex, projects.length, select]
+    []
   )
 
-  const onTabKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
-      event.preventDefault()
-      move(1, true)
-    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
-      event.preventDefault()
-      move(-1, true)
-    } else if (event.key === 'Home') {
-      event.preventDefault()
-      select(0)
-      tabRefs.current[0]?.focus()
-    } else if (event.key === 'End') {
-      event.preventDefault()
-      const last = projects.length - 1
-      select(last)
-      tabRefs.current[last]?.focus()
-    }
-  }
+  const look = (direction: 1 | -1) => window.dispatchEvent(new CustomEvent('nivello:look', { detail: direction }))
 
   const fast = reducedMotion ? { duration: 0 } : { duration: 0.42, ease: [0.22, 0.61, 0.36, 1] as const }
   const mediaKey = `${project.slug}-${showingApp ? 'app' : 'site'}`
@@ -135,9 +145,9 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
   const sectionStyle = { '--project-accent': project.color } as React.CSSProperties
 
   return (
-    <section id="cinematic-work" className="cin-ov cin-ov--work" data-cin-overlay="4" style={sectionStyle} aria-labelledby="home-work-heading">
+    <section id="cinematic-work" className="cin-ov cin-ov--work" data-cin-overlay="6" data-detail={detail ? 'true' : 'false'} data-chamber={inChamber ? 'true' : 'false'} style={sectionStyle} aria-labelledby="home-work-heading">
       <header className="cin-head">
-        <p className="cin-eyebrow"><i aria-hidden="true" /><span className="cin-head__no">05</span><span className="cin-head__name">{t.chapter}</span><span className="cin-head__sep" aria-hidden="true" /><span className="cin-head__kind">{t.eyebrow}</span></p>
+        <p className="cin-eyebrow"><i aria-hidden="true" /><span className="cin-head__no">07</span><span className="cin-head__name">{t.chapter}</span><span className="cin-head__sep" aria-hidden="true" /><span className="cin-head__kind">{t.eyebrow}</span></p>
         <h2 id="home-work-heading" className="cin-head__title">{t.title}</h2>
         <p className="cin-head__intro">{t.intro}</p>
       </header>
@@ -152,7 +162,52 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
         <Image src={media} alt={mediaAlt} width={1600} height={900} sizes="(max-width: 768px) 92vw, 720px" />
       </figure>
 
-      <div id={`${baseId}-panel`} role="tabpanel" aria-labelledby={`${baseId}-tab-${project.slug}`} className="cin-work-info">
+      <div className="cin-look" aria-hidden={detail}>
+        <p className="cin-look__hint">{t.hint}</p>
+        <div className="cin-look__buttons">
+          <button type="button" onClick={() => look(-1)} aria-label={t.lookLeft} tabIndex={detail ? -1 : 0}>
+            <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+          </button>
+          <button type="button" onClick={() => look(1)} aria-label={t.lookRight} tabIndex={detail ? -1 : 0}>
+            <ChevronRight className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+
+      <ul className="cin-hotspots" aria-label={t.list}>
+        {projects.map((item, index) => (
+          <li key={item.slug}>
+            <button
+              ref={node => {
+                spotRefs.current[index] = node
+              }}
+              type="button"
+              className="cin-hotspot"
+              data-cin-hotspot="work"
+              data-index={index}
+              data-show="false"
+              aria-label={`${t.open}: ${item.title}`}
+              aria-expanded={detail && activeIndex === index}
+              aria-controls={`${baseId}-panel`}
+              tabIndex={detail ? -1 : 0}
+              onClick={() => open(index)}
+            >
+              <span className="cin-hotspot__dot" aria-hidden="true" />
+              <span className="cin-hotspot__label">
+                <span className="cin-hotspot__no">{String(index + 1).padStart(2, '0')}</span>
+                {item.title}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      <button ref={backRef} type="button" className="cin-back" onClick={close} aria-label={t.backLabel} tabIndex={detail ? 0 : -1}>
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        {t.back}
+      </button>
+
+      <div id={`${baseId}-panel`} role="region" aria-label={project.title} className="cin-work-info" data-open={detail ? 'true' : 'false'} data-scroll-ok>
         <AnimatePresence initial={false} mode="wait">
           <motion.div
             key={mediaKey}
@@ -168,8 +223,8 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
             <h3 className="cin-work-info__title">{project.title}</h3>
             <p className="cin-work-info__body">{body}</p>
             <ul className="cin-work-info__bullets">
-              {bullets.map(detail => (
-                <li key={detail}>{detail}</li>
+              {bullets.map(detailItem => (
+                <li key={detailItem}>{detailItem}</li>
               ))}
             </ul>
             {result && (
@@ -192,9 +247,7 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
             </div>
           </motion.div>
         </AnimatePresence>
-      </div>
 
-      <div className="cin-work-controls">
         {hasApp && (
           <div role="group" aria-label={t.surfaceLabel} className="cin-surface">
             {[
@@ -208,43 +261,6 @@ export default function HomeProjectStage({ locale }: { locale: Locale }) {
             ))}
           </div>
         )}
-
-        <div role="tablist" aria-label={t.indexLabel} className="cin-index">
-          {projects.map((item, index) => {
-            const isActive = index === activeIndex
-            return (
-              <button
-                key={item.slug}
-                ref={node => {
-                  tabRefs.current[index] = node
-                }}
-                type="button"
-                role="tab"
-                id={`${baseId}-tab-${item.slug}`}
-                aria-selected={isActive}
-                aria-controls={`${baseId}-panel`}
-                tabIndex={isActive ? 0 : -1}
-                onClick={() => select(index)}
-                onKeyDown={onTabKeyDown}
-                className="cin-index__tab"
-              >
-                <span className="cin-index__no">{String(index + 1).padStart(2, '0')}</span>
-                <span className="cin-index__name">{item.title}</span>
-                <span className="cin-index__dot" aria-hidden="true" style={{ backgroundColor: item.color }} />
-              </button>
-            )
-          })}
-        </div>
-
-        <div className="cin-pager">
-          <button type="button" onClick={() => move(-1)} aria-label={t.previous}>
-            <ArrowLeft className="h-4 w-4" />
-          </button>
-          <span aria-hidden="true">{String(activeIndex + 1).padStart(2, '0')} / {String(projects.length).padStart(2, '0')}</span>
-          <button type="button" onClick={() => move(1)} aria-label={t.next}>
-            <ArrowRight className="h-4 w-4" />
-          </button>
-        </div>
       </div>
     </section>
   )

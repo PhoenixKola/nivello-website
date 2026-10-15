@@ -141,7 +141,7 @@ export function createSky(low = false): Sky {
   }
   const dome = new Mesh(
     new SphereGeometry(900, 32, 24),
-    new ShaderMaterial({ vertexShader: skyVertex, fragmentShader: low ? skyFragment.replace('i < 5', 'i < 3') : skyFragment, uniforms, side: BackSide, depthWrite: false, fog: false })
+    new ShaderMaterial({ vertexShader: skyVertex, fragmentShader: low ? skyFragment.replace('i < 5', 'i < 3').replace('float c2 = fbm(cp * 1.4 - vec2(uTime * 0.006, 1.0));', 'float c2 = c1;') : skyFragment, uniforms, side: BackSide, depthWrite: false, fog: false })
   )
   dome.renderOrder = -10
   dome.frustumCulled = false

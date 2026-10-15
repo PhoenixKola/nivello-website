@@ -3,6 +3,7 @@ import {
   BufferAttribute,
   CanvasTexture,
   Color,
+  CircleGeometry,
   CylinderGeometry,
   DoubleSide,
   ExtrudeGeometry,
@@ -312,13 +313,20 @@ export async function createMonument(options: MonumentOptions = MONUMENT): Promi
     clearcoatRoughness: 0.1,
     envMapIntensity: 0.55
   })
+  // The closing mark is seen from the front on the summit but from behind on the climb: keep it matte-bright so the rear
+  // shows the same brand colours as the front (no environment reflections tinting one side).
+  if (P.final) {
+    material.metalness = 0.04
+    material.clearcoat = 0.15
+    material.envMapIntensity = 0.2
+  }
   const mark = new Mesh(smoothGeometry, material)
 
   const group = new Group()
   const baseY = groundHeight(P.x, P.z)
   const plinthHeight = 3.4
-  const stone = new MeshStandardMaterial({ color: 0x1b2638, metalness: 0.7, roughness: 0.3, envMapIntensity: 1.2 })
-  const plinthTop = new MeshStandardMaterial({ color: 0x0a101c, metalness: 0.9, roughness: 0.16, emissive: 0x0c2a55, emissiveIntensity: 0.6 })
+  const stone = new MeshStandardMaterial({ color: 0xcdd6e6, metalness: 0.3, roughness: 0.45, emissive: 0x5d6f90, emissiveIntensity: 0.45, envMapIntensity: 1 })
+  const plinthTop = new MeshStandardMaterial({ color: 0xe8eef8, metalness: 0.3, roughness: 0.3, emissive: 0xb89a55, emissiveIntensity: 0.5 })
   const steps = [
     new Mesh(new CylinderGeometry(P.size * 0.36, P.size * 0.42, 1.4, 8), stone),
     new Mesh(new CylinderGeometry(P.size * 0.3, P.size * 0.35, 1.2, 8), stone),
@@ -335,7 +343,8 @@ export async function createMonument(options: MonumentOptions = MONUMENT): Promi
   mark.position.y = plinthHeight + P.size / 2 + 1.2
   group.add(mark)
   group.position.set(P.x, baseY - 1.2, P.z)
-  group.rotation.y = -0.23
+  // The identity mark turns a little toward the road; the closing mark faces back down the journey (toward -z).
+  group.rotation.y = P.final ? Math.PI + 0.22 : -0.23
 
   // Ground halo + beam (beam is the finale's "light structure" seen from far away).
   const haloMaterial = new MeshBasicMaterial({ map: glowTexture(), color: 0xffbf43, transparent: true, blending: AdditiveBlending, depthWrite: false, opacity: 0.4 })
@@ -371,12 +380,20 @@ export async function createMonument(options: MonumentOptions = MONUMENT): Promi
 
   // A flat luminous emblem on the ground so the closing mark still reads from directly above.
   const emblemMaterial = new MeshBasicMaterial({ map: new TextureLoader().load('/nivello-icon.png'), transparent: true, opacity: 0, depthWrite: false, toneMapped: false })
-  const emblem = new Mesh(new PlaneGeometry(P.size * 1.7, P.size * 1.7), emblemMaterial)
+  const emblem = new Mesh(new PlaneGeometry(P.size * 2.1, P.size * 2.1), emblemMaterial)
   emblem.rotation.x = -Math.PI / 2
-  emblem.position.set(0, 2.2, P.size * 1.15)
-  if (P.final) group.add(emblem)
+  emblem.position.set(0, 2.4, P.size * 1.15)
+  // dark plate + gold ring behind the emblem lift it off the ground; both fade in with it
+  const plateMaterial = new MeshBasicMaterial({ color: 0x050a16, transparent: true, opacity: 0, depthWrite: false })
+  const plate = new Mesh(new CircleGeometry(P.size * 1.5, 64), plateMaterial)
+  plate.rotation.x = -Math.PI / 2
+  plate.position.set(0, 2.25, P.size * 1.15)
+  const plateRingMaterial = new MeshBasicMaterial({ color: 0xffbf43, transparent: true, opacity: 0, depthWrite: false, toneMapped: false })
+  const plateRing = new Mesh(new RingGeometry(P.size * 1.5, P.size * 1.56, 96), plateRingMaterial)
+  plateRing.rotation.x = -Math.PI / 2
+  plateRing.position.set(0, 2.3, P.size * 1.15)
   const glow = glowTexture()
-  const disposables: { dispose(): void }[] = [emblemMaterial, emblem.geometry, smoothGeometry, material, colorMap, stone, plinthTop, haloMaterial, ringMaterial, beamMaterial, shaft, glow, ...steps.map(s => s.geometry), halo.geometry, ring.geometry]
+  const disposables: { dispose(): void }[] = [emblemMaterial, emblem.geometry, plateMaterial, plate.geometry, plateRingMaterial, plateRing.geometry, smoothGeometry, material, colorMap, stone, plinthTop, haloMaterial, ringMaterial, beamMaterial, shaft, glow, ...steps.map(s => s.geometry), halo.geometry, ring.geometry]
   beams.children.forEach(child => disposables.push((child as Mesh).geometry))
 
   return {
@@ -384,22 +401,26 @@ export async function createMonument(options: MonumentOptions = MONUMENT): Promi
     material,
     top: baseY + plinthHeight + P.size,
     update(u, time, finale, teaser = 0) {
-      const emerge = ease.inOut(P.final ? smoothstep(5.55, 6.05, u) : smoothstep(0.8, 1.5, u))
-      const settle = ease.out(P.final ? smoothstep(5.3, 6.4, u) : smoothstep(0.6, 1.6, u))
+      // The closing mark is always fully formed and solid; the identity mark rises as the road reaches it.
+      const emerge = P.final ? 1 : ease.inOut(smoothstep(0.7, 1.45, u))
+      const settle = P.final ? 1 : ease.out(smoothstep(0.6, 1.6, u))
       mark.position.y = plinthHeight + P.size / 2 + 1.2 - (1 - emerge) * 10
-      if (P.final) {
-        mark.visible = emerge > 0.02
-        mark.scale.setScalar(0.5 + 0.5 * emerge)
-      }
       mark.rotation.y = Math.sin(time * 0.2) * 0.03 + (1 - settle) * 0.25
       const pulse = 0.88 + 0.12 * Math.sin(time * 1.6)
-      material.emissiveIntensity = (0.16 + 0.7 * emerge) * pulse + finale * 0.25
-      emblemMaterial.opacity = P.final ? smoothstep(6.3, 6.9, u) * 0.95 : 0
+      material.emissiveIntensity = (P.final ? 0.78 : 0.3 + 0.55 * emerge) * pulse + finale * 0.25
+      const emblemIn = 0
+      const grow = 1
+      emblem.scale.setScalar(grow)
+      plate.scale.setScalar(grow)
+      plateRing.scale.setScalar(grow)
+      emblemMaterial.opacity = emblemIn
+      plateMaterial.opacity = emblemIn * 0.82
+      plateRingMaterial.opacity = emblemIn * 0.9
       haloMaterial.opacity = 0.06 + 0.14 * emerge + finale * 0.12
       light.intensity = (40 + 900 * emerge) * (1 + finale * 0.4)
       goldLight.intensity = (30 + 650 * emerge) * (1 + finale * 0.4)
       const beam = Math.max(0.3 - 0.18 * emerge + teaser, finale)
-      beamMaterial.opacity = Math.min(0.6, beam * 0.5)
+      beamMaterial.opacity = P.final ? 0 : Math.min(0.6, beam * 0.5) * (1 - smoothstep(1.7, 2.3, u))
       beams.scale.x = beams.scale.z = 0.6 + beam * 1.6
       beams.rotation.y = time * 0.05
       const pulseT = (time * 0.28) % 1

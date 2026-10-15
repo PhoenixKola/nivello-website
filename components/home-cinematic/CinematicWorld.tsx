@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import type { Engine } from './engine'
 import Image from 'next/image'
 import { cinematic } from '@/lib/cinematic/store'
 import { proofQuotes } from '@/components/ProofSection'
@@ -11,6 +12,15 @@ function orderedProjects(locale: Locale) {
   const all = getProjects(locale)
   const proGreen = all.find(item => item.slug === 'progreen')
   return proGreen ? [proGreen, ...all.filter(item => item.slug !== 'progreen')] : all
+}
+
+/** Review paintings use each locale's own testimonial text; nothing is machine-translated here. */
+function reviewsFor(locale: Locale) {
+  const projects = orderedProjects(locale)
+  return proofQuotes[locale].flatMap(quote => {
+    const project = projects.find(item => item.slug === quote.slug)
+    return project ? [{ slug: quote.slug, name: quote.name, role: quote.role, quote: quote.quote, color: project.color, title: project.title }] : []
+  })
 }
 
 function webglAvailable() {
@@ -28,6 +38,14 @@ function webglAvailable() {
  */
 export default function CinematicWorld({ locale }: { locale: Locale }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const engineRef = useRef<Engine | null>(null)
+  const localeRef = useRef(locale)
+  localeRef.current = locale
+
+  // The world is built once. A locale change (route switch) repaints the words in place instead of rebuilding it.
+  useEffect(() => {
+    engineRef.current?.setLocale(locale, { reviews: reviewsFor(locale) })
+  }, [locale])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -44,7 +62,8 @@ export default function CinematicWorld({ locale }: { locale: Locale }) {
 
     let cancelled = false
     let dispose: (() => void) | undefined
-    const projects = orderedProjects(locale)
+    const first = localeRef.current
+    const projects = orderedProjects(first)
 
     const unsubscribe = cinematic.subscribe(() => {
       if (cinematic.get().mode === 'static') root.dataset.mode = 'static'
@@ -55,11 +74,9 @@ export default function CinematicWorld({ locale }: { locale: Locale }) {
         createEngine({
           canvas,
           root,
-          projects: projects.map(project => ({ shot: project.shot, appShot: project.appShot, color: project.color })),
-          reviews: proofQuotes[locale].flatMap(quote => {
-            const project = projects.find(item => item.slug === quote.slug)
-            return project ? [{ name: quote.name, role: quote.role, quote: quote.quote, color: project.color }] : []
-          }),
+          locale: first,
+          projects: projects.map(project => ({ shot: project.shot, appShot: project.appShot, color: project.color, title: project.title })),
+          reviews: reviewsFor(first),
           lowPower:
             window.innerWidth < 900 ||
             window.matchMedia('(pointer: coarse)').matches ||
@@ -72,7 +89,10 @@ export default function CinematicWorld({ locale }: { locale: Locale }) {
           engine.dispose()
           return
         }
+        engineRef.current = engine
         dispose = engine.dispose
+        // the route may have changed language while the engine was loading
+        if (localeRef.current !== first) engine.setLocale(localeRef.current, { reviews: reviewsFor(localeRef.current) })
         root.dataset.mode = 'live'
         cinematic.set({ mode: 'live' })
       })
@@ -87,10 +107,11 @@ export default function CinematicWorld({ locale }: { locale: Locale }) {
     return () => {
       cancelled = true
       unsubscribe()
+      engineRef.current = null
       dispose?.()
       cinematic.set({ mode: 'pending', chapter: 0, processStage: 0 })
     }
-  }, [locale])
+  }, [])
 
   return (
     <div className="cin-world" aria-hidden="true">
