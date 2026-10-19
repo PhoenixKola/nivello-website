@@ -759,6 +759,9 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     sky.ridgeMaterials.forEach(material => {
       const mixAmount = material.userData.mix as number
       material.color.copy(a.fog).lerp(a.skyHorizon, 0.35).multiplyScalar(0.55 + 0.5 * mixAmount)
+      // painted ridges are transparent, so they would paint over the real far mountains seen from the summit
+      material.opacity = 1 - smoothstep(8.1, 8.5, u)
+      material.visible = material.opacity > 0.01
     })
 
     const fog = scene.fog as FogExp2
