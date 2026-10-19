@@ -68,8 +68,8 @@ export const FINAL = { x: -30, z: -770, size: 26 }
 export const SUMMIT = { z: -800, height: 68 }
 export const SUN_DIR: [number, number, number] = [-0.42, 0.34, -0.84]
 
-/** Length of the corridor for a number of reviews: two displays per section, so more reviews simply lengthen it. */
-export const tunnelLength = (reviews: number) => 12 + (Math.ceil(Math.max(1, reviews) / 2) - 1) * REVIEW_SPACING + 14
+/** Length of the corridor for a number of reviews: one wall per review, so more reviews simply lengthen it. */
+export const tunnelLength = (reviews: number) => 15 + (Math.max(1, reviews) - 1) * REVIEW_SPACING + 14
 
 /** Fix the places that depend on the number of reviews. Call once, before the terrain and the camera track are built. */
 export function configureWorld(reviewCount: number) {
