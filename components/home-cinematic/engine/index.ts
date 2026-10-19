@@ -585,7 +585,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
       let lx = 0
       let lz = travelZ - 40
       let ly = eyeY + 0.4
-      let fov = phone ? 74 : 46
+      let fov = phone ? 80 : 46
       if (reviewFocusAmount > 0.001 && focusedReview >= 0 && focusedReview < reviewData.length) {
         // Inspecting one painting: stand back toward the opposite wall at an angle and face it. Phones stay further back.
         const frame = tunnel.frame(focusedReview)
@@ -700,7 +700,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     const logoBeat = smoothstep(1.0, 1.5, u) * (1 - smoothstep(1.9, 2.3, u))
     monument.update(u, time, logoBeat * 0.6, 0.45 * smoothstep(0.55, 1, introE) * (1 - smoothstep(0.85, 1.25, u)))
     finalMark.update(u, time, smoothstep(8.2, 8.6, u) * 0.4, 0)
-    if (!lookBack) reviews.update(time, reviewFocusAmount > 0.01 && focusedReview >= 0 ? focusedReview : nearest, reviewFocusAmount, smoothstep(6.9, 7.05, u))
+    if (!lookBack) reviews.update(time, reviewFocusAmount > 0.01 && focusedReview >= 0 ? focusedReview : nearest, reviewFocusAmount, smoothstep(6.9, 7.05, u), smoothstep(7.9, 7.98, u))
     if (u > 6.95 && u < 8.05) cinematic.set({ proofIndex: nearest })
 
     // atmosphere -> materials

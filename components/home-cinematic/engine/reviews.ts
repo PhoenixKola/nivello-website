@@ -37,7 +37,7 @@ const FRAME_H = 6.6
 const EYE_Y = 4.9
 // Paintings follow each other along both walls with only a narrow brass pier between them.
 const PAIR_SPACING = REVIEW_SPACING
-const FIRST_OFFSET = 12
+const FIRST_OFFSET = 17
 const END_MARGIN = 14
 
 /** Corridor geometry derived from the number of reviews: two per section, one on each wall, so more reviews just lengthen it. */
@@ -178,7 +178,7 @@ export type Reviews = {
   group: Group
   pick(raycaster: Raycaster): number
   hotspotAnchor(index: number, out: Vector3): void
-  update(time: number, active: number, focusAmount: number, weight: number): void
+  update(time: number, active: number, focusAmount: number, weight: number, exit?: number): void
   /** The corridor sign and every painting's text, repainted in place when the locale changes. */
   setLocale(copy: SceneCopy, reviews: ReviewData[]): void
   dispose(): void
@@ -204,14 +204,14 @@ export function createReviews(initial: ReviewData[], copy: SceneCopy, low = fals
   const H = TUNNEL.height
 
   // Warm, bright materials that read without environment reflections (phones have none).
-  const plaster = track(new MeshStandardMaterial({ color: 0xe7ddc8, roughness: 0.75, metalness: 0.05, emissive: 0x6d5a3c, emissiveIntensity: 0.38 }))
-  const wainscot = track(new MeshStandardMaterial({ color: 0x8a6a46, roughness: 0.55, metalness: 0.1, emissive: 0x2c1e0e, emissiveIntensity: 0.55 }))
+  const plaster = track(new MeshStandardMaterial({ color: 0xa89878, roughness: 0.8, metalness: 0.05, emissive: 0x3a2e1c, emissiveIntensity: 0.3 }))
+  const wainscot = track(new MeshStandardMaterial({ color: 0x5e4630, roughness: 0.55, metalness: 0.1, emissive: 0x1c1208, emissiveIntensity: 0.45 }))
   const floorMaterial = track(new MeshStandardMaterial({ color: 0x4a3f36, roughness: 0.38, metalness: 0.25, emissive: 0x2a2018, emissiveIntensity: 0.55, envMapIntensity: 0.7 }))
-  const runner = track(new MeshStandardMaterial({ color: 0xc89a46, roughness: 0.5, metalness: 0.2, emissive: 0x6b4a14, emissiveIntensity: 0.55 }))
+  const runner = track(new MeshStandardMaterial({ color: 0x9c7634, roughness: 0.5, metalness: 0.2, emissive: 0x4a3210, emissiveIntensity: 0.45 }))
   const brass = track(new MeshStandardMaterial({ color: 0xd9b25e, metalness: 0.55, roughness: 0.32, emissive: 0x4a3410, emissiveIntensity: 0.7, envMapIntensity: 0.9 }))
   const ribMaterial = track(new MeshStandardMaterial({ color: 0xb59a68, roughness: 0.5, metalness: 0.3, emissive: 0x4a3a1c, emissiveIntensity: 0.5 }))
-  const ceilingLight = track(new MeshBasicMaterial({ color: 0xfff1d6, toneMapped: false }))
-  const ceilingMaterial = track(new MeshStandardMaterial({ color: 0xf0e8d6, roughness: 0.8, emissive: 0x8a7650, emissiveIntensity: 0.55 }))
+  const ceilingLight = track(new MeshBasicMaterial({ color: 0xc9b48a, toneMapped: false }))
+  const ceilingMaterial = track(new MeshStandardMaterial({ color: 0x8a8070, roughness: 0.85, emissive: 0x4a3c26, emissiveIntensity: 0.3 }))
 
   const add = (geometry: { dispose(): void }, material: MeshStandardMaterial | MeshBasicMaterial, x: number, y: number, z: number) => {
     const mesh = new Mesh(track(geometry) as never, material)
@@ -232,7 +232,7 @@ export function createReviews(initial: ReviewData[], copy: SceneCopy, low = fals
 
   // Slim brass piers sit between the paintings (never behind one), each with a warm light panel above and a sconce.
   const sconce = track(new BoxGeometry(0.3, 0.9, 0.2))
-  const sconceLight = track(new MeshBasicMaterial({ color: 0xffe3b0, toneMapped: false }))
+  const sconceLight = track(new MeshBasicMaterial({ color: 0xd4b078, toneMapped: false }))
   for (let k = 0; k <= layout.pairs; k += 1) {
     const z = TUNNEL.z0 - FIRST_OFFSET + PAIR_SPACING / 2 - k * PAIR_SPACING
     if (z > TUNNEL.z0 - 0.5 || z < layout.zEnd + 0.5) continue
@@ -263,13 +263,19 @@ export function createReviews(initial: ReviewData[], copy: SceneCopy, low = fals
   add(new BoxGeometry(0.9, H, 0.9), brass, W2 - 0.2, H / 2, exitZ)
   add(new BoxGeometry(W2 * 2, 0.9, 0.9), brass, 0, H - 0.2, exitZ)
   const glow = track(glowTexture())
-  add(new PlaneGeometry(W2 * 2 - 1, H - 1.2), track(new MeshBasicMaterial({ map: glow, color: 0xffe2b0, transparent: true, blending: AdditiveBlending, depthWrite: false, toneMapped: false, opacity: 0.9 })), 0, H / 2, exitZ + 0.5)
+  // Two brass door leaves close the far end and slide apart only as the visitor moves on.
+  const doorMaterial = track(new MeshStandardMaterial({ color: 0x6e5428, roughness: 0.4, metalness: 0.5, emissive: 0x2a1c08, emissiveIntensity: 0.5 }))
+  const leafW = W2 - 0.5
+  const leaves = [-1, 1].map(side => {
+    const leaf = add(new BoxGeometry(leafW, H - 1, 0.5), doorMaterial, side * leafW / 2, (H - 1) / 2 + 0.2, exitZ + 0.4)
+    return { leaf, side }
+  })
 
   // Paintings.
   const outerGeometry = track(new BoxGeometry(FRAME_W + 0.95, FRAME_H + 0.95, 0.5))
   const matGeometry = track(new BoxGeometry(FRAME_W + 0.25, FRAME_H + 0.25, 0.4))
   const faceGeometry = track(new PlaneGeometry(FRAME_W, FRAME_H))
-  const matMaterial = track(new MeshStandardMaterial({ color: 0xf6f0e3, roughness: 0.8, emissive: 0x6a5e48, emissiveIntensity: 0.45 }))
+  const matMaterial = track(new MeshStandardMaterial({ color: 0xcfc4ae, roughness: 0.8, emissive: 0x3e3626, emissiveIntensity: 0.3 }))
   const haloGeometry = track(new PlaneGeometry(FRAME_W * 2.3, FRAME_H * 1.8))
   const spotGeometry = track(new PlaneGeometry(FRAME_W * 1.7, 5.6))
   const lampGeometry = track(new BoxGeometry(FRAME_W * 0.55, 0.14, 0.42))
@@ -308,7 +314,7 @@ export function createReviews(initial: ReviewData[], copy: SceneCopy, low = fals
     face.position.z = 0.27
     const lamp = new Mesh(lampGeometry, brass)
     lamp.position.set(0, FRAME_H / 2 + 0.95, 0.4)
-    const spotMaterial = track(new MeshBasicMaterial({ map: glow, color: 0xfff0d0, transparent: true, opacity: 0.2, blending: AdditiveBlending, depthWrite: false, toneMapped: false, side: DoubleSide }))
+    const spotMaterial = track(new MeshBasicMaterial({ map: glow, color: 0xfff0d0, transparent: true, opacity: 0.1, blending: AdditiveBlending, depthWrite: false, toneMapped: false, side: DoubleSide }))
     const spot = new Mesh(spotGeometry, spotMaterial)
     spot.position.set(0, FRAME_H / 2 - 1.4, 0.45)
     const haloMaterial = track(new MeshBasicMaterial({ map: glow, color: 0xffe9bd, transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false, toneMapped: false, side: DoubleSide }))
@@ -352,14 +358,17 @@ export function createReviews(initial: ReviewData[], copy: SceneCopy, low = fals
       if (data.length === reviews.length) reviews = data
       items.forEach(item => item.repaint())
     },
-    update(time, active, focusAmount, weight) {
+    update(time, active, focusAmount, weight, exit = 0) {
+      leaves.forEach(({ leaf, side }) => {
+        leaf.position.x = side * (leafW / 2 + exit * leafW)
+      })
       items.forEach((item, k) => {
         const selected = k === active ? 1 : 0
         // The open painting stays fully lit; the others recede only slightly so they remain readable.
         const emphasis = focusAmount > 0.01 ? (selected ? 1 : 1 - 0.28 * focusAmount) : 1
-        item.faceMaterial.color.setScalar((0.72 + 0.28 * emphasis) * (0.5 + 0.5 * weight))
-        item.haloMaterial.opacity = (0.05 + 0.2 * selected * focusAmount) * weight
-        item.spotMaterial.opacity = 0.16 * weight * (0.7 + 0.3 * emphasis)
+        item.faceMaterial.color.setScalar((0.6 + 0.2 * emphasis) * (0.5 + 0.5 * weight))
+        item.haloMaterial.opacity = (0.02 + 0.1 * selected * focusAmount) * weight
+        item.spotMaterial.opacity = 0.07 * weight * (0.7 + 0.3 * emphasis)
         const pulse = 1 + 0.18 * Math.sin(time * 2.4 + k)
         item.ring.scale.setScalar(pulse * (1 - 0.6 * focusAmount))
         item.ringMaterial.opacity = (0.85 - 0.5 * Math.sin(time * 2.4 + k) * 0.3) * (1 - focusAmount) * weight
@@ -367,7 +376,7 @@ export function createReviews(initial: ReviewData[], copy: SceneCopy, low = fals
       const pose = layout.frame(clamp(Math.round(active), 0, items.length - 1))
       warm.set(-pose.side * 2, baseY + 6.5, pose.z + 4)
       light.position.copy(warm)
-      light.intensity = low ? 0 : 160 * weight
+      light.intensity = low ? 0 : 90 * weight
     },
     dispose() {
       disposables.forEach(item => item.dispose())

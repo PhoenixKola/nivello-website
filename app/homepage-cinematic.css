@@ -794,3 +794,9 @@ html:has(.cin) { overscroll-behavior-y: none; }
   .cin-start__actions { margin-top: 0.8rem; }
   .cin-start__status { min-height: 0; margin-top: 0.5rem; }
 }
+
+/* Phones: the Back button gets its own row above the review so it never sits on the text */
+@media (max-width: 767px), (pointer: coarse) and (max-width: 1024px) {
+  .cin-review__card { padding-top: 4rem; }
+  .cin-review__client { padding-right: 0; }
+}
