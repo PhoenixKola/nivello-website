@@ -391,6 +391,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
   let detailAmount = 0
   let proofFocus = 0
   let reviewFocusAmount = 0
+  let lastFocused = -1
   let time = 0
   let last = performance.now()
   let frame = 0
@@ -527,6 +528,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
 
     // Review corridor: where the camera is, and which painting is nearest (or open).
     const focusedReview = store.reviewFocus
+    if (focusedReview >= 0) lastFocused = focusedReview
     const travelZ = travelAt(u)
     let nearest = 0
     for (let k = 1; k < reviewData.length; k += 1) {
@@ -586,15 +588,15 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
       let lz = travelZ - 40
       let ly = eyeY + 0.4
       let fov = phone ? 80 : 46
-      if (reviewFocusAmount > 0.001 && focusedReview >= 0 && focusedReview < reviewData.length) {
+      if (reviewFocusAmount > 0.001 && lastFocused >= 0 && lastFocused < reviewData.length) {
         // Inspecting one painting: stand back toward the opposite wall at an angle and face it. Phones stay further back.
-        const frame = tunnel.frame(focusedReview)
-        px = lerp(px, -frame.side * (phone ? 0.8 : 2.4), reviewFocusAmount)
-        pz = lerp(pz, frame.z + (phone ? 10 : 7), reviewFocusAmount)
+        const frame = tunnel.frame(lastFocused)
+        px = lerp(px, frame.x - frame.side * 6.6, reviewFocusAmount)
+        pz = lerp(pz, frame.z, reviewFocusAmount)
         lx = lerp(lx, frame.x, reviewFocusAmount)
         lz = lerp(lz, frame.z, reviewFocusAmount)
-        ly = lerp(ly, groundHeight(0, frame.z) + frame.y + 0.4 + (phone ? 1.4 : 0), reviewFocusAmount)
-        fov = lerp(fov, phone ? 50 : 40, reviewFocusAmount)
+        ly = lerp(ly, groundHeight(0, frame.z) + frame.y + 0.4, reviewFocusAmount)
+        fov = lerp(fov, phone ? 80 : 56, reviewFocusAmount)
       }
       pose.px = lerp(pose.px, px, rw)
       pose.py = lerp(pose.py, eyeY, rw)
@@ -700,7 +702,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     const logoBeat = smoothstep(1.0, 1.5, u) * (1 - smoothstep(1.9, 2.3, u))
     monument.update(u, time, logoBeat * 0.6, 0.45 * smoothstep(0.55, 1, introE) * (1 - smoothstep(0.85, 1.25, u)))
     finalMark.update(u, time, smoothstep(8.2, 8.6, u) * 0.4, 0)
-    if (!lookBack) reviews.update(time, reviewFocusAmount > 0.01 && focusedReview >= 0 ? focusedReview : nearest, reviewFocusAmount, smoothstep(6.9, 7.05, u), smoothstep(7.9, 7.98, u))
+    if (!lookBack) reviews.update(time, reviewFocusAmount > 0.01 && lastFocused >= 0 ? lastFocused : nearest, reviewFocusAmount, smoothstep(6.9, 7.05, u), smoothstep(7.9, 7.98, u))
     if (u > 6.95 && u < 8.05) cinematic.set({ proofIndex: nearest })
 
     // atmosphere -> materials

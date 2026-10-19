@@ -364,6 +364,7 @@ export function createReviews(initial: ReviewData[], copy: SceneCopy, low = fals
       })
       items.forEach((item, k) => {
         const selected = k === active ? 1 : 0
+        item.root.visible = selected === 1 || focusAmount < 0.5
         // The open painting stays fully lit; the others recede only slightly so they remain readable.
         const emphasis = focusAmount > 0.01 ? (selected ? 1 : 1 - 0.28 * focusAmount) : 1
         item.faceMaterial.color.setScalar((0.6 + 0.2 * emphasis) * (0.5 + 0.5 * weight))
