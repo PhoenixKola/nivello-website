@@ -438,11 +438,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     for (let i = 0; i < travelKeys.length - 1; i += 1) {
       const a = travelKeys[i]
       const b = travelKeys[i + 1]
-      if (value <= b.u) {
-        // a steady walk: mostly linear, softened only at the start and the end
-        const t = clamp((value - a.u) / (b.u - a.u))
-        return lerp(a.z, b.z, lerp(t, ease.inOut(t), 0.3))
-      }
+      if (value <= b.u) return lerp(a.z, b.z, ease.inOut(clamp((value - a.u) / (b.u - a.u))))
     }
     return travelKeys[travelKeys.length - 1].z
   }
@@ -589,19 +585,16 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
       let lx = 0
       let lz = travelZ - 40
       let ly = eyeY + 0.4
-      let fov = phone ? 56 : 46
+      let fov = phone ? 74 : 46
       if (reviewFocusAmount > 0.001 && focusedReview >= 0 && focusedReview < reviewData.length) {
-        // Opening one review: step toward its wall and face it, a little back along its normal. Only this moves sideways.
+        // Inspecting one painting: stand back toward the opposite wall at an angle and face it. Phones stay further back.
         const frame = tunnel.frame(focusedReview)
-        const standoff = phone ? 11 : 8.5
-        const nx = Math.sin(frame.yaw)
-        const nz = Math.cos(frame.yaw)
-        px = lerp(px, frame.x + nx * standoff, reviewFocusAmount)
-        pz = lerp(pz, frame.z + nz * standoff, reviewFocusAmount)
+        px = lerp(px, -frame.side * (phone ? 0.8 : 2.4), reviewFocusAmount)
+        pz = lerp(pz, frame.z + (phone ? 10 : 7), reviewFocusAmount)
         lx = lerp(lx, frame.x, reviewFocusAmount)
         lz = lerp(lz, frame.z, reviewFocusAmount)
-        ly = lerp(ly, groundHeight(0, frame.z) + frame.y + 0.8, reviewFocusAmount)
-        fov = lerp(fov, phone ? 54 : 42, reviewFocusAmount)
+        ly = lerp(ly, groundHeight(0, frame.z) + frame.y + 0.4 + (phone ? 1.4 : 0), reviewFocusAmount)
+        fov = lerp(fov, phone ? 50 : 40, reviewFocusAmount)
       }
       pose.px = lerp(pose.px, px, rw)
       pose.py = lerp(pose.py, eyeY, rw)
@@ -656,7 +649,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
     forward.subVectors(lookAt, camPos).normalize()
     right.crossVectors(forward, upVec).normalize()
     // A small pointer parallax gives the world depth; it fades out while the rail is held on a project or review.
-    const parallax = (phone ? 0.25 : 1) * (1 - 0.85 * Math.max(detailAmount, reviewFocusAmount)) * (1 - 0.6 * gw) * (1 - 0.9 * rw * (1 - reviewFocusAmount))
+    const parallax = (phone ? 0.25 : 1) * (1 - 0.85 * Math.max(detailAmount, reviewFocusAmount)) * (1 - 0.6 * gw)
     camPos.addScaledVector(right, pointer.x * 0.9 * parallax).addScaledVector(upVec, -pointer.y * 0.5 * parallax)
     lookAt.addScaledVector(right, pointer.x * 0.5 * parallax)
     const clearance = groundHeight(camPos.x, camPos.z) + 2.4
@@ -845,7 +838,7 @@ export async function createEngine(options: EngineOptions): Promise<Engine> {
           else reviews.hotspotAnchor(Math.min(spot.index, reviewData.length - 1), hotspotVector)
           const dist = camera.position.distanceTo(hotspotVector)
           hotspotVector.project(camera)
-          show = hotspotVector.z < 1 && Math.abs(hotspotVector.x) < 1.05 && Math.abs(hotspotVector.y) < 1.05 && (spot.kind === 'work' || dist < 26)
+          show = hotspotVector.z < 1 && Math.abs(hotspotVector.x) < 1.05 && Math.abs(hotspotVector.y) < 1.05 && (spot.kind === 'work' || dist < 52)
           x = (hotspotVector.x * 0.5 + 0.5) * width
           y = (-hotspotVector.y * 0.5 + 0.5) * height
         }

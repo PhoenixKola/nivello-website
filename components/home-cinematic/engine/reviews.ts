@@ -22,7 +22,7 @@ import { glowTexture } from './textures'
 
 export type ReviewData = { slug: string; name: string; role: string; quote: string; color: string; title: string }
 
-/** Logos for the review cards. `invert` flips a white logo so it reads on the light logo plate. */
+/** Logos for the review cards. `invert` flips a white logo so it reads on the light card. */
 const LOGOS: Record<string, { src: string; invert?: boolean }> = {
   'rombo-nord': { src: '/client-logos/rombo-nord.webp' },
   'le-camelie': { src: '/client-logos/le-camelie.webp' },
@@ -32,29 +32,24 @@ const LOGOS: Record<string, { src: string; invert?: boolean }> = {
   progreen: { src: '/client-logos/progreen.webp' }
 }
 
-// Each review is its own free-standing wall, one face turned toward the visitor, staggered left and right of the path.
-// They stand close to the centre line, so a portrait phone sees every one of them straight ahead while walking.
-const FRAME_W = 3.5
-const FRAME_H = 4.44
-const PANEL_W = 4.4
-const PANEL_H = 7.2
-const PANEL_X = 2.5
-const TURN = 0.62
-const EYE_Y = 4.5
-const FIRST_OFFSET = 15
+const FRAME_W = 5.2
+const FRAME_H = 6.6
+const EYE_Y = 4.9
+// Paintings follow each other along both walls with only a narrow brass pier between them.
+const PAIR_SPACING = REVIEW_SPACING
+const FIRST_OFFSET = 12
 const END_MARGIN = 14
 
-/** Corridor geometry derived from the number of reviews: one wall per review, so more reviews just lengthen it. */
+/** Corridor geometry derived from the number of reviews: two per section, one on each wall, so more reviews just lengthen it. */
 export function reviewLayout(count: number) {
-  const n = Math.max(1, count)
-  const length = FIRST_OFFSET + (n - 1) * REVIEW_SPACING + END_MARGIN
+  const pairs = Math.max(1, Math.ceil(count / 2))
+  const length = FIRST_OFFSET + (pairs - 1) * PAIR_SPACING + END_MARGIN
   const zEnd = TUNNEL.z0 - length
   const frame = (k: number) => {
     const side = k % 2 ? 1 : -1
-    // yaw turns the wall's face toward the path; (sin yaw, cos yaw) is its outward normal
-    return { side, x: side * PANEL_X, y: EYE_Y, z: TUNNEL.z0 - FIRST_OFFSET - k * REVIEW_SPACING, yaw: -side * TURN }
+    return { side, x: side * (TUNNEL.halfWidth - 0.3), y: EYE_Y, z: TUNNEL.z0 - FIRST_OFFSET - Math.floor(k / 2) * PAIR_SPACING }
   }
-  return { stations: n, length, zEnd, frame }
+  return { pairs, length, zEnd, frame }
 }
 
 function wrap(ctx: CanvasRenderingContext2D, text: string, maxWidth: number) {
@@ -75,20 +70,6 @@ function wrap(ctx: CanvasRenderingContext2D, text: string, maxWidth: number) {
 const CARD_W = 780
 const CARD_H = 990
 
-function plate(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
-  ctx.beginPath()
-  ctx.moveTo(x + r, y)
-  ctx.arcTo(x + w, y, x + w, y + h, r)
-  ctx.arcTo(x + w, y + h, x, y + h, r)
-  ctx.arcTo(x, y + h, x, y, r)
-  ctx.arcTo(x, y, x + w, y, r)
-  ctx.closePath()
-}
-
-/**
- * A review card: a deep slate card with the client's logo on a light plate (so every logo stays legible), the opening
- * line in warm ivory, who said it, and a clear "open" affordance. No ratings are shown (there is no rating data).
- */
 function paintCard(canvas: HTMLCanvasElement, review: ReviewData, accent: string, logo: HTMLImageElement | null) {
   const ctx = canvas.getContext('2d')!
   const bg = ctx.createLinearGradient(0, 0, 0, CARD_H)
@@ -204,9 +185,8 @@ export type Reviews = {
 }
 
 /**
- * The review corridor: a calm, warm gallery that starts right at the cylinder's exit portal. The long side walls are
- * continuous (no piers or dividers). Each review has its own free-standing wall, staggered left and right just off the
- * centre line and turned toward the visitor, so walking straight ahead shows them one after another.
+ * The review corridor: a warm museum gallery that starts right at the cylinder's exit bulkhead. Each section holds a
+ * pair of framed paintings, one on each wall, and ends in a doorway of light that opens onto the climb.
  */
 export function createReviews(initial: ReviewData[], copy: SceneCopy, low = false): Reviews {
   let reviews = initial
@@ -223,15 +203,15 @@ export function createReviews(initial: ReviewData[], copy: SceneCopy, low = fals
   const W2 = TUNNEL.halfWidth
   const H = TUNNEL.height
 
-  // Calm, mid-toned materials: warm plaster, dark timber, brass. Nothing here is near white, so the cards read clearly.
-  const plaster = track(new MeshStandardMaterial({ color: 0xb9ab92, roughness: 0.78, metalness: 0.05, emissive: 0x4a3d2a, emissiveIntensity: 0.4 }))
-  const wainscot = track(new MeshStandardMaterial({ color: 0x5a432c, roughness: 0.55, metalness: 0.1, emissive: 0x24180c, emissiveIntensity: 0.6 }))
-  const floorMaterial = track(new MeshStandardMaterial({ color: 0x3a3029, roughness: 0.38, metalness: 0.25, emissive: 0x241a14, emissiveIntensity: 0.6, envMapIntensity: 0.7 }))
-  const runner = track(new MeshStandardMaterial({ color: 0x9b7a3c, roughness: 0.5, metalness: 0.2, emissive: 0x4d3510, emissiveIntensity: 0.6 }))
+  // Warm, bright materials that read without environment reflections (phones have none).
+  const plaster = track(new MeshStandardMaterial({ color: 0xe7ddc8, roughness: 0.75, metalness: 0.05, emissive: 0x6d5a3c, emissiveIntensity: 0.38 }))
+  const wainscot = track(new MeshStandardMaterial({ color: 0x8a6a46, roughness: 0.55, metalness: 0.1, emissive: 0x2c1e0e, emissiveIntensity: 0.55 }))
+  const floorMaterial = track(new MeshStandardMaterial({ color: 0x4a3f36, roughness: 0.38, metalness: 0.25, emissive: 0x2a2018, emissiveIntensity: 0.55, envMapIntensity: 0.7 }))
+  const runner = track(new MeshStandardMaterial({ color: 0xc89a46, roughness: 0.5, metalness: 0.2, emissive: 0x6b4a14, emissiveIntensity: 0.55 }))
   const brass = track(new MeshStandardMaterial({ color: 0xd9b25e, metalness: 0.55, roughness: 0.32, emissive: 0x4a3410, emissiveIntensity: 0.7, envMapIntensity: 0.9 }))
-  const panelMaterial = track(new MeshStandardMaterial({ color: 0x2b2420, roughness: 0.6, metalness: 0.15, emissive: 0x16110d, emissiveIntensity: 0.7 }))
-  const ceilingLight = track(new MeshBasicMaterial({ color: 0xe8cf9f, toneMapped: false }))
-  const ceilingMaterial = track(new MeshStandardMaterial({ color: 0x8c7b60, roughness: 0.8, emissive: 0x3e3220, emissiveIntensity: 0.6 }))
+  const ribMaterial = track(new MeshStandardMaterial({ color: 0xb59a68, roughness: 0.5, metalness: 0.3, emissive: 0x4a3a1c, emissiveIntensity: 0.5 }))
+  const ceilingLight = track(new MeshBasicMaterial({ color: 0xfff1d6, toneMapped: false }))
+  const ceilingMaterial = track(new MeshStandardMaterial({ color: 0xf0e8d6, roughness: 0.8, emissive: 0x8a7650, emissiveIntensity: 0.55 }))
 
   const add = (geometry: { dispose(): void }, material: MeshStandardMaterial | MeshBasicMaterial, x: number, y: number, z: number) => {
     const mesh = new Mesh(track(geometry) as never, material)
@@ -240,18 +220,33 @@ export function createReviews(initial: ReviewData[], copy: SceneCopy, low = fals
     return mesh
   }
 
-  // Shell: floor, runner, continuous walls and cornice, ceiling. No ribs, no piers.
+  // Shell: floor, runner, walls, wainscot, ceiling.
   add(new BoxGeometry(W2 * 2 + 1.6, 0.5, L), floorMaterial, 0, 0.25, zMid)
-  add(new BoxGeometry(3.2, 0.12, L - 1), runner, 0, 0.56, zMid)
+  add(new BoxGeometry(5.2, 0.12, L - 1), runner, 0, 0.56, zMid)
   ;[-1, 1].forEach(side => {
     add(new BoxGeometry(0.7, H, L), plaster, side * (W2 + 0.35), H / 2, zMid)
     add(new BoxGeometry(0.28, 1.4, L), wainscot, side * (W2 - 0.1), 0.95, zMid)
     add(new BoxGeometry(0.24, 0.12, L), brass, side * (W2 - 0.12), 1.68, zMid)
-    add(new BoxGeometry(0.3, 0.2, L), brass, side * (W2 - 0.1), H - 0.5, zMid)
   })
   add(new BoxGeometry(W2 * 2 + 1.6, 0.6, L), ceilingMaterial, 0, H + 0.3, zMid)
-  // continuous soft light strips overhead
-  ;[-4.4, 0, 4.4].forEach(x => add(new BoxGeometry(x === 0 ? 1.6 : 1.1, 0.07, L - 2), ceilingLight, x, H - 0.42, zMid))
+
+  // Slim brass piers sit between the paintings (never behind one), each with a warm light panel above and a sconce.
+  const sconce = track(new BoxGeometry(0.3, 0.9, 0.2))
+  const sconceLight = track(new MeshBasicMaterial({ color: 0xffe3b0, toneMapped: false }))
+  for (let k = 0; k <= layout.pairs; k += 1) {
+    const z = TUNNEL.z0 - FIRST_OFFSET + PAIR_SPACING / 2 - k * PAIR_SPACING
+    if (z > TUNNEL.z0 - 0.5 || z < layout.zEnd + 0.5) continue
+    add(new BoxGeometry(W2 * 2 + 1.4, 0.5, 0.6), ribMaterial, 0, H - 0.1, z)
+    add(new BoxGeometry(2.6, 0.08, 0.6), ceilingLight, -3.4, H - 0.42, z)
+    add(new BoxGeometry(2.6, 0.08, 0.6), ceilingLight, 3.4, H - 0.42, z)
+    ;[-1, 1].forEach(side => {
+      add(new BoxGeometry(0.5, H, 0.5), ribMaterial, side * (W2 + 0.02), H / 2, z)
+      const lamp = new Mesh(sconce, sconceLight)
+      lamp.position.set(side * (W2 - 0.35), baseY + 7.4, z)
+      group.add(lamp)
+    })
+  }
+  add(new BoxGeometry(2.4, 0.07, L - 2), ceilingLight, 0, H - 0.42, zMid)
 
   // The corridor sign, just inside the mouth, readable as the visitor walks in from the cylinder.
   const sign = createSign(6)
@@ -259,6 +254,7 @@ export function createReviews(initial: ReviewData[], copy: SceneCopy, low = fals
   sign.repaint(copy.tunnel.sign)
   const signMesh = new Mesh(track(new PlaneGeometry(7.6, 7.6 / 6)), track(new MeshBasicMaterial({ map: sign.texture, transparent: true, toneMapped: false })))
   signMesh.position.set(0, baseY + H - 1.55, TUNNEL.z0 - 1.2)
+  signMesh.rotation.y = 0
   group.add(signMesh)
 
   // Exit: a framed doorway of light at the far end, opening onto the climb.
@@ -267,37 +263,28 @@ export function createReviews(initial: ReviewData[], copy: SceneCopy, low = fals
   add(new BoxGeometry(0.9, H, 0.9), brass, W2 - 0.2, H / 2, exitZ)
   add(new BoxGeometry(W2 * 2, 0.9, 0.9), brass, 0, H - 0.2, exitZ)
   const glow = track(glowTexture())
-  add(new PlaneGeometry(W2 * 2 - 1, H - 1.2), track(new MeshBasicMaterial({ map: glow, color: 0xffd9a0, transparent: true, blending: AdditiveBlending, depthWrite: false, toneMapped: false, opacity: 0.4 })), 0, H / 2, exitZ + 0.5)
+  add(new PlaneGeometry(W2 * 2 - 1, H - 1.2), track(new MeshBasicMaterial({ map: glow, color: 0xffe2b0, transparent: true, blending: AdditiveBlending, depthWrite: false, toneMapped: false, opacity: 0.9 })), 0, H / 2, exitZ + 0.5)
 
-  // Review walls.
-  const slabGeometry = track(new BoxGeometry(PANEL_W, PANEL_H, 0.5))
-  const edgeH = track(new BoxGeometry(PANEL_W + 0.1, 0.12, 0.62))
-  const edgeV = track(new BoxGeometry(0.12, PANEL_H, 0.62))
-  const outerGeometry = track(new BoxGeometry(FRAME_W + 0.55, FRAME_H + 0.55, 0.3))
+  // Paintings.
+  const outerGeometry = track(new BoxGeometry(FRAME_W + 0.95, FRAME_H + 0.95, 0.5))
+  const matGeometry = track(new BoxGeometry(FRAME_W + 0.25, FRAME_H + 0.25, 0.4))
   const faceGeometry = track(new PlaneGeometry(FRAME_W, FRAME_H))
-  const haloGeometry = track(new PlaneGeometry(FRAME_W * 1.9, FRAME_H * 1.5))
-  const lampGeometry = track(new BoxGeometry(FRAME_W * 0.6, 0.12, 0.34))
-  const ringGeometry = track(new RingGeometry(0.28, 0.33, 40))
+  const matMaterial = track(new MeshStandardMaterial({ color: 0xf6f0e3, roughness: 0.8, emissive: 0x6a5e48, emissiveIntensity: 0.45 }))
+  const haloGeometry = track(new PlaneGeometry(FRAME_W * 2.3, FRAME_H * 1.8))
+  const spotGeometry = track(new PlaneGeometry(FRAME_W * 1.7, 5.6))
+  const lampGeometry = track(new BoxGeometry(FRAME_W * 0.55, 0.14, 0.42))
+  const ringGeometry = track(new RingGeometry(0.34, 0.4, 40))
   const items = reviews.map((review, k) => {
     const accent = review.color
     const pose = layout.frame(k)
     const root = new Group()
-    root.position.set(pose.x, baseY + PANEL_H / 2 + 0.5, pose.z)
-    root.rotation.y = pose.yaw
+    root.position.set(pose.x, baseY + pose.y + 0.4, pose.z)
+    root.rotation.y = pose.side < 0 ? Math.PI / 2 : -Math.PI / 2
     group.add(root)
-
-    const slab = new Mesh(slabGeometry, panelMaterial)
-    const top = new Mesh(edgeH, brass)
-    top.position.set(0, PANEL_H / 2, 0.02)
-    const bottom = new Mesh(edgeH, brass)
-    bottom.position.set(0, -PANEL_H / 2, 0.02)
-    const left = new Mesh(edgeV, brass)
-    left.position.set(-PANEL_W / 2, 0, 0.02)
-    const right = new Mesh(edgeV, brass)
-    right.position.set(PANEL_W / 2, 0, 0.02)
     const frame = new Mesh(outerGeometry, brass)
-    frame.position.set(0, 0.3, 0.33)
-
+    frame.position.z = -0.1
+    const mat = new Mesh(matGeometry, matMaterial)
+    mat.position.z = 0.02
     const canvas = document.createElement('canvas')
     canvas.width = CARD_W
     canvas.height = CARD_H
@@ -318,22 +305,25 @@ export function createReviews(initial: ReviewData[], copy: SceneCopy, low = fals
     }
     const faceMaterial = track(new MeshBasicMaterial({ map: texture, toneMapped: false, color: 0xffffff }))
     const face = new Mesh(faceGeometry, faceMaterial)
-    face.position.set(0, 0.3, 0.5)
+    face.position.z = 0.27
     const lamp = new Mesh(lampGeometry, brass)
-    lamp.position.set(0, FRAME_H / 2 + 0.85, 0.5)
-    const haloMaterial = track(new MeshBasicMaterial({ map: glow, color: 0xffe3b0, transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false, toneMapped: false, side: DoubleSide }))
+    lamp.position.set(0, FRAME_H / 2 + 0.95, 0.4)
+    const spotMaterial = track(new MeshBasicMaterial({ map: glow, color: 0xfff0d0, transparent: true, opacity: 0.2, blending: AdditiveBlending, depthWrite: false, toneMapped: false, side: DoubleSide }))
+    const spot = new Mesh(spotGeometry, spotMaterial)
+    spot.position.set(0, FRAME_H / 2 - 1.4, 0.45)
+    const haloMaterial = track(new MeshBasicMaterial({ map: glow, color: 0xffe9bd, transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false, toneMapped: false, side: DoubleSide }))
     const halo = new Mesh(haloGeometry, haloMaterial)
-    halo.position.set(0, 0.3, 0.7)
+    halo.position.z = 0.55
     const ringMaterial = track(new MeshBasicMaterial({ color: 0xffbf43, transparent: true, opacity: 0.8, toneMapped: false, depthWrite: false }))
     const ring = new Mesh(ringGeometry, ringMaterial)
-    ring.position.set(FRAME_W / 2 - 0.95, -FRAME_H / 2 + 1.1, 0.53)
-    root.add(slab, top, bottom, left, right, frame, face, lamp, ring)
-    if (!low) root.add(halo)
+    ring.position.set(FRAME_W / 2 - 1.2, -FRAME_H / 2 + 1.4, 0.34)
+    root.add(frame, mat, face, lamp, spot, halo, ring)
     return {
       root,
       face,
       faceMaterial,
       haloMaterial,
+      spotMaterial,
       ringMaterial,
       ring,
       repaint: () => {
@@ -343,7 +333,7 @@ export function createReviews(initial: ReviewData[], copy: SceneCopy, low = fals
     }
   })
 
-  const light = new PointLight(0xffe9c8, 0, 30, 1.5)
+  const light = new PointLight(0xfff0d8, 0, 34, 1.5)
   group.add(light)
   const warm = new Vector3()
 
@@ -354,10 +344,8 @@ export function createReviews(initial: ReviewData[], copy: SceneCopy, low = fals
       return hit ? items.findIndex(item => item.face === hit.object) : -1
     },
     hotspotAnchor(index, out) {
-      // on the card itself, in its lower third, nudged toward the viewer
       const pose = layout.frame(index)
-      const lift = -FRAME_H / 2 + 1.5
-      out.set(pose.x + Math.sin(pose.yaw) * 0.6, baseY + PANEL_H / 2 + 0.5 + 0.3 + lift, pose.z + Math.cos(pose.yaw) * 0.6)
+      out.set(pose.x - pose.side * 0.6, baseY + pose.y + 0.4 - FRAME_H / 2 + 1.1, pose.z)
     },
     setLocale(next, data) {
       sign.repaint(next.tunnel.sign)
@@ -367,21 +355,33 @@ export function createReviews(initial: ReviewData[], copy: SceneCopy, low = fals
     update(time, active, focusAmount, weight) {
       items.forEach((item, k) => {
         const selected = k === active ? 1 : 0
-        // The open card stays fully lit; the others recede only slightly so they remain readable.
-        const emphasis = focusAmount > 0.01 ? (selected ? 1 : 1 - 0.3 * focusAmount) : 1
-        item.faceMaterial.color.setScalar((0.82 + 0.18 * emphasis) * (0.55 + 0.45 * weight))
-        item.haloMaterial.opacity = (0.03 + 0.1 * selected * focusAmount) * weight
-        const pulse = 1 + 0.16 * Math.sin(time * 2.4 + k)
+        // The open painting stays fully lit; the others recede only slightly so they remain readable.
+        const emphasis = focusAmount > 0.01 ? (selected ? 1 : 1 - 0.28 * focusAmount) : 1
+        item.faceMaterial.color.setScalar((0.72 + 0.28 * emphasis) * (0.5 + 0.5 * weight))
+        item.haloMaterial.opacity = (0.05 + 0.2 * selected * focusAmount) * weight
+        item.spotMaterial.opacity = 0.16 * weight * (0.7 + 0.3 * emphasis)
+        const pulse = 1 + 0.18 * Math.sin(time * 2.4 + k)
         item.ring.scale.setScalar(pulse * (1 - 0.6 * focusAmount))
         item.ringMaterial.opacity = (0.85 - 0.5 * Math.sin(time * 2.4 + k) * 0.3) * (1 - focusAmount) * weight
       })
       const pose = layout.frame(clamp(Math.round(active), 0, items.length - 1))
-      warm.set(0, baseY + 6.5, pose.z + 5)
+      warm.set(-pose.side * 2, baseY + 6.5, pose.z + 4)
       light.position.copy(warm)
-      light.intensity = low ? 0 : 110 * weight
+      light.intensity = low ? 0 : 160 * weight
     },
     dispose() {
       disposables.forEach(item => item.dispose())
     }
   }
+}function plate(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath()
+  ctx.moveTo(x + r, y)
+  ctx.arcTo(x + w, y, x + w, y + h, r)
+  ctx.arcTo(x + w, y + h, x, y + h, r)
+  ctx.arcTo(x, y + h, x, y, r)
+  ctx.arcTo(x, y, x + w, y, r)
+  ctx.closePath()
 }
+
+
+
