@@ -1,0 +1,385 @@
+'use client'
+
+import { useCallback, useId, useMemo, useRef, useState } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { AnimatePresence, motion } from 'framer-motion'
+import { ArrowLeft, ArrowRight, ArrowUpRight, ExternalLink, Globe2, LayoutDashboard, Lock } from 'lucide-react'
+import { getProjectPath, getProjects, type Project } from '@/lib/projects'
+import { getRoutePath, type Locale } from '@/lib/site'
+import { useHydratedReducedMotion } from '@/lib/useHydratedReducedMotion'
+
+/**
+ * Live Project Stage — the homepage featured-work section.
+ *
+ * Real projects from lib/projects.ts are the visual content: a project index
+ * (tablist) drives one dominant stage, and the media + metadata resolve in
+ * together on every change (CONNECT -> RESOLVE).
+ *
+ * ProGreen additionally exposes a website/app switch, because it is the one
+ * project with both a public site and an internal product. The app view only
+ * ever uses the pre-redacted screenshot and never shows a reachable URL.
+ */
+
+const copy = {
+  en: {
+    eyebrow: 'Featured work',
+    title: 'Real projects, brought on stage.',
+    intro: 'From the website a customer first sees to the tools a team uses every day. Pick a project to bring it into focus.',
+    allWork: 'See all work',
+    indexLabel: 'Choose a project',
+    caseStudy: 'View case study',
+    liveSite: 'Visit live site',
+    website: 'Website',
+    app: 'Web app',
+    surfaceLabel: 'Project surface',
+    websiteCategory: 'Public website',
+    appCategory: 'Operations web app',
+    privateWorkspace: 'Private workspace',
+    result: 'Result',
+    previous: 'Previous project',
+    next: 'Next project',
+    websiteAlt: (title: string) => `${title} website preview`,
+    appAlt: (title: string) => `Anonymised preview of the ${title} web app`
+  },
+  it: {
+    eyebrow: 'Lavori selezionati',
+    title: 'Progetti reali, portati in scena.',
+    intro: 'Dal sito che un cliente vede per primo agli strumenti che un team usa ogni giorno. Scegli un progetto per metterlo a fuoco.',
+    allWork: 'Vedi tutti i lavori',
+    indexLabel: 'Scegli un progetto',
+    caseStudy: 'Vedi il case study',
+    liveSite: 'Visita il sito live',
+    website: 'Sito',
+    app: 'App web',
+    surfaceLabel: 'Esperienza',
+    websiteCategory: 'Sito pubblico',
+    appCategory: 'Gestionale operativo',
+    privateWorkspace: 'Spazio riservato',
+    result: 'Risultato',
+    previous: 'Progetto precedente',
+    next: 'Progetto successivo',
+    websiteAlt: (title: string) => `Anteprima del sito ${title}`,
+    appAlt: (title: string) => `Anteprima anonimizzata dell’app web ${title}`
+  }
+} satisfies Record<Locale, Record<string, unknown>>
+
+function getDomain(href: string) {
+  try {
+    return new URL(href).hostname.replace(/^www\./, '')
+  } catch {
+    return href
+  }
+}
+
+export default function HomeProjectStage({ locale }: { locale: Locale }) {
+  const t = copy[locale]
+  const projects = useMemo(() => {
+    const allProjects = getProjects(locale)
+    const proGreen = allProjects.find(item => item.slug === 'progreen')
+
+    return proGreen ? [proGreen, ...allProjects.filter(item => item.slug !== 'progreen')] : allProjects
+  }, [locale])
+  const reducedMotion = useHydratedReducedMotion()
+  const baseId = useId()
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
+
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [appMode, setAppMode] = useState(false)
+
+  const project: Project = projects[activeIndex]
+  const hasApp = project.kinds.includes('app') && Boolean(project.app && project.appShot)
+  const showingApp = appMode && hasApp
+
+  const select = useCallback((index: number) => {
+    setActiveIndex(index)
+    setAppMode(false)
+  }, [])
+
+  const move = useCallback(
+    (delta: number, focusTab = false) => {
+      const next = (activeIndex + delta + projects.length) % projects.length
+      select(next)
+      if (focusTab) tabRefs.current[next]?.focus()
+    },
+    [activeIndex, projects.length, select]
+  )
+
+  const onTabKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      event.preventDefault()
+      move(1, true)
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      event.preventDefault()
+      move(-1, true)
+    } else if (event.key === 'Home') {
+      event.preventDefault()
+      select(0)
+      tabRefs.current[0]?.focus()
+    } else if (event.key === 'End') {
+      event.preventDefault()
+      const last = projects.length - 1
+      select(last)
+      tabRefs.current[last]?.focus()
+    }
+  }
+
+  const fast = reducedMotion ? { duration: 0 } : { duration: 0.32, ease: [0.22, 0.61, 0.36, 1] as const }
+  const mediaKey = `${project.slug}-${showingApp ? 'app' : 'site'}`
+
+  const media = showingApp ? project.appShot! : project.shot
+  const mediaAlt = showingApp ? t.appAlt(project.title) : t.websiteAlt(project.title)
+  const category = hasApp ? (showingApp ? t.appCategory : t.websiteCategory) : project.category
+  const body = showingApp ? project.app!.description : project.website?.description ?? project.websiteSummary ?? project.desc
+  const bullets = showingApp ? project.app!.details : project.website?.details ?? project.details
+  const result = showingApp ? project.app!.result : project.website?.result ?? project.result
+  const sectionStyle = { '--project-accent': project.color } as React.CSSProperties
+
+  return (
+    <section className="home-work-stage" style={sectionStyle} aria-labelledby="home-work-heading">
+      <div className="mx-auto max-w-[1280px] px-4 py-20 md:px-6 md:py-28">
+        <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-blue)] dark:text-[var(--brand-gold)]">
+              {t.eyebrow}
+            </p>
+            <h2
+              id="home-work-heading"
+              className="font-display text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.75rem] dark:text-white"
+            >
+              {t.title}
+            </h2>
+            <p className="mt-3 max-w-2xl text-base leading-relaxed text-slate-500 dark:text-slate-300/80">{t.intro}</p>
+          </div>
+          <Link
+            href={getRoutePath('work', locale)}
+            className="group inline-flex shrink-0 cursor-pointer items-center gap-2 text-sm font-semibold text-[var(--brand-blue)] hover:text-blue-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--brand-blue)] dark:text-[var(--brand-gold)] dark:hover:text-yellow-300 dark:focus-visible:outline-[var(--brand-gold)]"
+          >
+            {t.allWork}
+            <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          </Link>
+        </div>
+
+        {/* ── Project index ── */}
+        <div
+          role="tablist"
+          aria-label={t.indexLabel}
+          className="home-work-tabs -mx-4 mb-8 flex snap-x overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden"
+        >
+          {projects.map((item, index) => {
+            const isActive = index === activeIndex
+            return (
+              <button
+                key={item.slug}
+                ref={node => {
+                  tabRefs.current[index] = node
+                }}
+                type="button"
+                role="tab"
+                id={`${baseId}-tab-${item.slug}`}
+                aria-selected={isActive}
+                aria-controls={`${baseId}-panel`}
+                tabIndex={isActive ? 0 : -1}
+                onClick={() => select(index)}
+                onKeyDown={onTabKeyDown}
+                className="home-work-tab snap-start"
+              >
+                <span
+                  className="h-2 w-2 shrink-0 rounded-full ring-1 ring-black/10 dark:ring-white/20"
+                  style={{ backgroundColor: item.color }}
+                />
+                {item.title}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* ── Stage ── */}
+        <div
+          id={`${baseId}-panel`}
+          role="tabpanel"
+          aria-labelledby={`${baseId}-tab-${project.slug}`}
+          className="grid gap-8 lg:grid-cols-[1.72fr_0.88fr] lg:gap-12"
+        >
+          {/* media frame */}
+          <div className="min-w-0">
+            <div className="home-work-shell">
+              <div className="home-work-chrome flex items-center gap-2 px-3 py-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-slate-300 dark:bg-slate-600" />
+                <span className="h-2.5 w-2.5 rounded-full bg-slate-300 dark:bg-slate-600" />
+                <span className="h-2.5 w-2.5 rounded-full bg-slate-300 dark:bg-slate-600" />
+                <span className="ml-2 inline-flex min-w-0 items-center gap-1.5 truncate rounded-md bg-white px-2.5 py-1 text-[11px] text-slate-500 dark:bg-slate-950/60 dark:text-slate-400">
+                  {showingApp ? (
+                    <>
+                      <Lock className="h-3 w-3 shrink-0" aria-hidden="true" />
+                      <span className="truncate">
+                        {project.title} · {t.privateWorkspace}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="truncate">{getDomain(project.href)}</span>
+                  )}
+                </span>
+              </div>
+
+              <div className="relative aspect-[16/9] overflow-hidden bg-slate-100 dark:bg-slate-950">
+                <AnimatePresence initial={false} mode="wait">
+                  <motion.div
+                    key={mediaKey}
+                    className="absolute inset-0"
+                    initial={{ opacity: 0, scale: 1.012 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.998 }}
+                    transition={fast}
+                  >
+                    <Image
+                      src={media}
+                      alt={mediaAlt}
+                      fill
+                      sizes="(max-width: 768px) 92vw, (max-width: 1280px) 60vw, 700px"
+                      className="object-cover object-top"
+                    />
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* website / app switch + prev-next */}
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              {hasApp ? (
+                <div className="w-full sm:w-auto">
+                  <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+                    {t.surfaceLabel}
+                  </p>
+                  <div
+                    role="group"
+                    aria-label={t.surfaceLabel}
+                    className="relative isolate grid min-h-12 w-full grid-cols-2 rounded-2xl border border-slate-200 bg-slate-100/80 p-1 shadow-sm sm:w-[248px] dark:border-white/15 dark:bg-slate-950/75 dark:shadow-none"
+                  >
+                    <motion.span
+                      aria-hidden="true"
+                      className="absolute inset-y-1 left-1 -z-10 w-[calc(50%-4px)] rounded-xl bg-slate-900 shadow-[0_8px_20px_-12px_rgba(15,23,42,0.8)] dark:bg-white dark:shadow-none"
+                      initial={false}
+                      animate={{ x: showingApp ? '100%' : '0%' }}
+                      transition={fast}
+                    />
+                    {[
+                      { label: t.website, active: !showingApp, onClick: () => setAppMode(false), Icon: Globe2 },
+                      { label: t.app, active: showingApp, onClick: () => setAppMode(true), Icon: LayoutDashboard }
+                    ].map(option => (
+                      <button
+                        key={option.label}
+                        type="button"
+                        aria-pressed={option.active}
+                        onClick={option.onClick}
+                        className={`relative z-10 inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-xl px-3 text-sm font-semibold transition-colors active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-blue)] dark:focus-visible:outline-[var(--brand-gold)] ${
+                          option.active
+                            ? 'text-white dark:text-slate-950'
+                            : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                        }`}
+                      >
+                        <option.Icon className={`h-3.5 w-3.5 ${option.active ? 'text-[var(--brand-gold)] dark:text-[var(--brand-blue)]' : ''}`} aria-hidden="true" />
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <span />
+              )}
+
+              <div className="flex items-center gap-2">
+                <span className="mr-1 text-xs font-medium tabular-nums text-slate-400 dark:text-slate-500">
+                  {String(activeIndex + 1).padStart(2, '0')} / {String(projects.length).padStart(2, '0')}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => move(-1)}
+                  aria-label={t.previous}
+                  className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-slate-200 text-slate-600 transition-all hover:-translate-y-0.5 hover:border-slate-400 hover:text-slate-900 active:translate-y-0 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-blue)] dark:border-white/12 dark:text-slate-300 dark:hover:border-white/30 dark:hover:text-white dark:focus-visible:outline-[var(--brand-gold)]"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => move(1)}
+                  aria-label={t.next}
+                  className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-slate-200 text-slate-600 transition-all hover:-translate-y-0.5 hover:border-slate-400 hover:text-slate-900 active:translate-y-0 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand-blue)] dark:border-white/12 dark:text-slate-300 dark:hover:border-white/30 dark:hover:text-white dark:focus-visible:outline-[var(--brand-gold)]"
+                >
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* metadata */}
+          <AnimatePresence initial={false} mode="wait">
+            <motion.div
+              key={mediaKey}
+              className="flex min-w-0 flex-col lg:max-w-[27rem] lg:self-center lg:py-5 xl:py-7"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={fast}
+            >
+              <div className="flex items-center gap-2.5">
+                <span
+                  className="h-2.5 w-2.5 shrink-0 rounded-full ring-1 ring-black/10 dark:ring-white/20"
+                  style={{ backgroundColor: project.color }}
+                />
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                  {category}
+                </p>
+              </div>
+
+              <h3 className="mt-3 font-display text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
+                {project.title}
+              </h3>
+
+              <p className="mt-4 text-base leading-relaxed text-slate-500 dark:text-slate-300/80">{body}</p>
+
+              <ul className="mt-6 space-y-3">
+                {bullets.map(detail => (
+                  <li key={detail} className="flex items-start gap-2.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                    <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--brand-blue)] dark:bg-[var(--brand-gold)]" />
+                    {detail}
+                  </li>
+                ))}
+              </ul>
+
+              {result && (
+                <div className="home-work-outcome">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+                    {t.result}
+                  </p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{result}</p>
+                </div>
+              )}
+
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <Link
+                  href={getProjectPath(project.slug, locale)}
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--brand-blue)] dark:bg-white dark:text-slate-950 dark:focus-visible:outline-[var(--brand-gold)]"
+                >
+                  {t.caseStudy}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                {!showingApp && (
+                  <a
+                    href={project.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 px-5 py-2.5 text-sm font-medium text-slate-600 transition-all hover:-translate-y-0.5 hover:border-slate-400 hover:text-slate-900 active:translate-y-0 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--brand-blue)] dark:border-white/12 dark:text-slate-300 dark:hover:border-white/30 dark:hover:text-white dark:focus-visible:outline-[var(--brand-gold)]"
+                  >
+                    {t.liveSite}
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                )}
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
+    </section>
+  )
+}

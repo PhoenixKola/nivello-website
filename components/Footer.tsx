@@ -39,7 +39,6 @@ export default function Footer() {
   const pathname = usePathname() || '/'
   const locale = getPathLocale(pathname)
   const content = footerCopy[locale]
-  const isHome = findRouteByPath(pathname)?.key === 'home'
   const year = new Date().getFullYear()
   const contactPath = getRoutePath('contact', locale)
   // The contact page ends with its own form, so a second pitch there would compete with it.
@@ -48,9 +47,6 @@ export default function Footer() {
   const companyLinks = footerRoutes
     .filter(route => route.key !== 'contact')
     .map(route => ({ href: route.paths[locale], label: route.labels[locale] }))
-
-  // The immersive homepage renders its own footer inside the cinematic stage.
-  if (isHome) return null
 
   return (
     <footer id="site-footer" className="bg-stone-50 text-slate-900 dark:bg-slate-950/95 dark:text-white">

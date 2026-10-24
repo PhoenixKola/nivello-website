@@ -1,66 +1,26 @@
-import HomeFooter from '@/components/home-cinematic/HomeFooter'
-import HomeBuildingStage from '@/components/HomeBuildingStage'
-import HomeDesignStage from '@/components/HomeDesignStage'
-import HomePlanningStage from '@/components/HomePlanningStage'
-import HomeDevelopmentStage from '@/components/HomeDevelopmentStage'
-import HomeLogoReveal from '@/components/HomeLogoReveal'
-import HomeHero from '@/components/HomeHero'
-import HomeProjectStage from '@/components/HomeProjectStage'
-import ProofSection from '@/components/ProofSection'
-import ProjectLauncher from '@/components/ProjectLauncher'
-import CinematicWorld from '@/components/home-cinematic/CinematicWorld'
-import HomeImmersiveChrome from '@/components/home-cinematic/HomeImmersiveChrome'
-import { CHAPTER_IDS, CHAPTER_LENGTHS } from '@/lib/cinematic/chapters'
+import ClientLogoMarquee from '@/components/ClientLogoMarquee'
+import HomeBuildPipeline from '@/components/home-classic/HomeBuildPipeline'
+import HomeHero from '@/components/home-classic/HomeHero'
+import HomeProjectStage from '@/components/home-classic/HomeProjectStage'
+import ProofSection from '@/components/home-classic/ProofSection'
+import ProjectLauncher from '@/components/home-classic/ProjectLauncher'
 import type { Locale } from '@/lib/site'
 
-// Without JavaScript the story still reads top to bottom, and the normal navigation stays visible.
-const noScript = `
-  html:has(.cin) [data-site-header]{position:sticky!important;transform:none!important;visibility:visible!important}
-  .cin .cin-pin{position:relative!important;height:auto!important;overflow:visible!important}
-  .cin .cin-spacers,.cin .cin-canvas{display:none!important}
-  .cin .cin-foot>*,.cin .cin-hero>*{opacity:1!important;transform:none!important}
-  .cin .cin-fallback{opacity:1!important}
-  .cin .cin-intro-mark{display:none!important}
-  .cin .cin-ov{position:relative!important;opacity:1!important;visibility:visible!important;transform:none!important}
-`
-
-/**
- * Immersive homepage: one persistent WebGL world (the sticky stage) driven by the document scroll, with five
- * chapters of HTML overlays on top. The spacers below the stage only provide scroll length; every chapter's
- * content lives in the DOM for crawlers, keyboards and the non-WebGL fallback.
- */
+// Server-rendered homepage shell; interactive sections remain isolated client islands.
 export default function HomePage({ locale }: { locale: Locale }) {
   return (
-    <main id="main-content" tabIndex={-1} className="cin flex-1 outline-none" data-cin-root data-mode="pending">
-      <noscript><style>{noScript}</style></noscript>
-      <HomeImmersiveChrome locale={locale} />
-      <div className="cin-scroll">
-        <div className="cin-pin">
-          <CinematicWorld locale={locale} />
-          <div className="cin-overlays">
-            <HomeHero locale={locale} />
-            <HomeLogoReveal locale={locale} />
-            <HomePlanningStage locale={locale} />
-            <HomeDesignStage locale={locale} />
-            <HomeDevelopmentStage locale={locale} />
-            <HomeBuildingStage locale={locale} />
-            <HomeProjectStage locale={locale} />
-            <ProofSection locale={locale} />
-            <ProjectLauncher locale={locale} />
-            <HomeFooter locale={locale} />
-          </div>
-        </div>
-        <div className="cin-spacers" data-cin-spacers aria-hidden="true">
-          {CHAPTER_IDS.map((id, index) => (
-            <div
-              key={id}
-              className="cin-spacer"
-              data-chapter={id}
-              style={{ height: `${(CHAPTER_LENGTHS[index] + (index === CHAPTER_IDS.length - 1 ? 1 : 0)) * 100}svh` }}
-            />
-          ))}
-        </div>
+    <main id="main-content" tabIndex={-1} className="flex-1 bg-stone-50 outline-none dark:bg-slate-950/95">
+      <div className="bg-stone-50 dark:bg-slate-950/95">
+        <HomeHero locale={locale} />
+        <section className="relative -mt-14 overflow-hidden pb-3 pt-2 min-[901px]:-mt-36">
+          <ClientLogoMarquee locale={locale} />
+        </section>
       </div>
+
+      <HomeBuildPipeline locale={locale} />
+      <HomeProjectStage locale={locale} />
+      <ProofSection locale={locale} />
+      <ProjectLauncher locale={locale} />
     </main>
   )
 }
